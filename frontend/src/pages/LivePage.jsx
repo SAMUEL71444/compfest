@@ -251,14 +251,88 @@ export default function LivePage() {
 
       {/* ── Konten utama ───────────────────────────────────────────── */}
       <main style={{ flex: 1, maxWidth: 1200, width: '100%', margin: '0 auto', padding: '32px 20px 60px' }}>
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 800, color: 'var(--ink)', letterSpacing: '-0.02em', marginBottom: 6 }}>
-            Mode Live — Demo Webcam
+        <div style={{ marginBottom: 32, textAlign: 'center' }}>
+          <h1 style={{
+            fontFamily: "'Plus Jakarta Sans', sans-serif",
+            fontSize: 'clamp(26px, 4.5vw, 40px)',
+            fontWeight: 800,
+            marginBottom: 12,
+            color: 'var(--ink)',
+            letterSpacing: '-0.03em',
+          }}>
+            Analisis Klip Video CCTV
           </h1>
-          <p style={{ fontSize: 14, color: 'var(--ink-soft)', lineHeight: 1.6, maxWidth: 600 }}>
-            Pipeline yang sama persis dengan analisis upload — hanya sumber video berbeda (webcam vs file).
-            Ini adalah pratinjau visi produksi, <strong>bukan bagian dari submission inti yang dinilai juri</strong>.
+          <p style={{ color: 'var(--ink-soft)', fontSize: 16, maxWidth: 520, margin: '0 auto', lineHeight: 1.6, marginBottom: 32 }}>
+            Mendeteksi pelanggan tampak butuh bantuan & kejadian jatuh — hanya dari{' '}
+            <span style={{ color: 'var(--waspada)', fontWeight: 600 }}>pose/kerangka tubuh</span>,
+            tanpa mengenali wajah atau identitas.
           </p>
+
+          {/* ── Mode Selector (Tab) ─────────────────────────────────────── */}
+          <div style={{ display: 'flex', justifyContent: 'center' }}>
+            <div style={{
+              display: 'inline-flex',
+              background: 'var(--surface)',
+              border: '1.5px solid var(--garis)',
+              borderRadius: 999,
+              padding: 6,
+              boxShadow: 'var(--shadow-sm)',
+              position: 'relative'
+            }}>
+              <button
+                type="button"
+                onClick={() => { stopLive(); navigate('/analisis') }}
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--ink-soft)',
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8
+                }}
+                onMouseOver={e => { e.currentTarget.style.color = 'var(--ink)' }}
+                onMouseOut={e => { e.currentTarget.style.color = 'var(--ink-soft)' }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="17 8 12 3 7 8"></polyline>
+                  <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Unggah Video
+              </button>
+              
+              <button
+                type="button"
+                style={{
+                  padding: '10px 24px',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: 'var(--waspada-soft)',
+                  color: 'var(--waspada-dark)',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  cursor: 'default',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 2px 8px rgba(193, 69, 59, 0.15)'
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                  <circle cx="12" cy="13" r="4"></circle>
+                </svg>
+                Kamera Real-time
+              </button>
+            </div>
+          </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, alignItems: 'start' }}>

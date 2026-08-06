@@ -1,0 +1,34 @@
+services:
+  # ── Backend FastAPI ──────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+    container_name: sapa-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount bobot model dari host (isi setelah dapat file .pt dari tim)
+      - ./backend/models:/app/models
+      # Persist video beranotasi hasil analisis
+      - ./backend/outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s   # beri waktu load model pertama kali
+
+  # ── Frontend React + nginx ───────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+    container_name: sapa-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped

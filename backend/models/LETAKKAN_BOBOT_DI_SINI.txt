@@ -1,0 +1,5 @@
+# Placeholder — bobot model akan ditaruh di sini
+# fall_head.pt
+# interaction_head.pt
+# Kedua file ini HARUS ada sebelum docker compose up agar model bisa dimuat.
+# File .json config sudah tersedia di direktori ini.

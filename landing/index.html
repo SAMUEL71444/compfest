@@ -1,0 +1,1644 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAPA — Safety & Assistance through Pose Analytics</title>
+  <meta name="description" content="SAPA adalah sistem analitik toko berbasis CCTV yang mendeteksi pelanggan butuh bantuan & kejadian jatuh hanya dari pose tubuh — tanpa mengenali wajah atau identitas. Privacy-by-Design." />
+  <meta name="keywords" content="AI, pose analytics, keamanan toko, privacy, CCTV, deteksi jatuh, COMPFEST 18" />
+  <meta property="og:title" content="SAPA — Safety & Assistance through Pose Analytics" />
+  <meta property="og:description" content="Melihat Kebutuhan, Bukan Wajah. AI analitik pose untuk keamanan retail yang privacy-first." />
+  <meta property="og:type" content="website" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦴</text></svg>" />
+
+  <style>
+    /* ── DESIGN TOKENS ──────────────────────────────────────────────── */
+    :root {
+      --bg-base:        #03060e;
+      --bg-surface:     #070d1c;
+      --bg-elevated:    #0c1528;
+
+      --glass-bg:       rgba(255, 255, 255, 0.03);
+      --glass-bg-hover: rgba(255, 255, 255, 0.06);
+      --glass-border:   rgba(255, 255, 255, 0.07);
+      --glass-blur:     20px;
+
+      --primary:        #00d4c8;
+      --primary-dim:    #00a89f;
+      --primary-glow:   rgba(0, 212, 200, 0.18);
+      --primary-glow2:  rgba(0, 212, 200, 0.06);
+
+      --accent:         #7c3aed;
+      --accent-dim:     #5b21b6;
+      --accent-glow:    rgba(124, 58, 237, 0.18);
+
+      --fall:           #ff3d5a;
+      --fall-glow:      rgba(255, 61, 90, 0.25);
+      --fall-dim:       rgba(255, 61, 90, 0.12);
+
+      --help:           #ff9d2e;
+      --help-glow:      rgba(255, 157, 46, 0.25);
+      --help-dim:       rgba(255, 157, 46, 0.12);
+
+      --success:        #10d97a;
+
+      --text-primary:   #edf0f7;
+      --text-secondary: #8b9ab5;
+      --text-muted:     #4a5a78;
+
+      --radius-sm:  8px;
+      --radius-md:  14px;
+      --radius-lg:  20px;
+      --radius-xl:  28px;
+      --radius-2xl: 40px;
+
+      --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.6);
+      --glow-primary: 0 0 60px rgba(0, 212, 200, 0.2), 0 0 120px rgba(0, 212, 200, 0.08);
+
+      --ease: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --duration-fast: 150ms;
+      --duration-mid:  300ms;
+      --duration-slow: 500ms;
+    }
+
+    /* ── RESET ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── AMBIENT BACKGROUND ─────────────────────────────────────────── */
+    .ambient {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .ambient-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.35;
+    }
+    .orb-1 {
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(0,212,200,0.5) 0%, transparent 70%);
+      top: -200px; left: -150px;
+      animation: orbFloat1 18s ease-in-out infinite alternate;
+    }
+    .orb-2 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(124,58,237,0.5) 0%, transparent 70%);
+      bottom: -150px; right: -100px;
+      animation: orbFloat2 22s ease-in-out infinite alternate;
+    }
+    .orb-3 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(0,212,200,0.3) 0%, transparent 70%);
+      top: 60%; left: 50%;
+      transform: translateX(-50%);
+      animation: orbFloat3 16s ease-in-out infinite alternate;
+    }
+
+    @keyframes orbFloat1 { 0% { transform: translate(0, 0); } 100% { transform: translate(80px, 60px); } }
+    @keyframes orbFloat2 { 0% { transform: translate(0, 0); } 100% { transform: translate(-60px, -80px); } }
+    @keyframes orbFloat3 { 0% { transform: translateX(-50%) scale(1); } 100% { transform: translateX(-50%) scale(1.3); } }
+
+    /* ── NOISE OVERLAY ───────────────────────────────────────────────── */
+    .noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    /* ── LAYOUT ─────────────────────────────────────────────────────── */
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── NAVBAR ──────────────────────────────────────────────────────── */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 68px;
+      border-bottom: 1px solid var(--glass-border);
+      background: rgba(3, 6, 14, 0.75);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+    }
+    .navbar-inner {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+    }
+    .nav-logo {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px;
+      box-shadow: 0 0 20px rgba(0,212,200,0.35);
+      flex-shrink: 0;
+    }
+    .nav-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.04em;
+    }
+    .nav-tagline {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--primary);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .nav-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 5px 14px;
+    }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+      color: #03060e;
+      font-weight: 700;
+      font-size: 13px;
+      font-family: inherit;
+      padding: 9px 20px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--duration-mid) var(--ease);
+      box-shadow: 0 4px 20px rgba(0,212,200,0.3);
+    }
+    .nav-cta:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(0,212,200,0.45);
+    }
+
+    /* ── HERO SECTION ────────────────────────────────────────────────── */
+    .hero {
+      min-height: calc(100vh - 68px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 0 100px;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,212,200,0.08);
+      border: 1px solid rgba(0,212,200,0.2);
+      border-radius: 50px;
+      padding: 7px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      animation: fadeSlideUp 0.6s var(--ease) both;
+    }
+    .hero-eyebrow .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--primary);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .hero-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(42px, 7vw, 80px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      margin-bottom: 12px;
+      animation: fadeSlideUp 0.6s 0.1s var(--ease) both;
+    }
+    .hero-title .line1 {
+      display: block;
+      background: linear-gradient(135deg, var(--text-primary) 0%, rgba(237,240,247,0.6) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-title .line2 {
+      display: block;
+      background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-quote {
+      font-size: clamp(16px, 2vw, 22px);
+      font-weight: 400;
+      color: var(--text-secondary);
+      font-style: italic;
+      margin-bottom: 20px;
+      animation: fadeSlideUp 0.6s 0.15s var(--ease) both;
+    }
+    .hero-desc {
+      font-size: clamp(15px, 1.8vw, 18px);
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-bottom: 48px;
+      animation: fadeSlideUp 0.6s 0.2s var(--ease) both;
+    }
+    .hero-desc strong { color: var(--primary); font-weight: 600; }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeSlideUp 0.6s 0.3s var(--ease) both;
+    }
+    .btn-hero-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dim));
+      color: #03060e;
+      font-weight: 700;
+      font-size: 16px;
+      font-family: inherit;
+      padding: 16px 36px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--duration-mid) var(--ease-spring);
+      box-shadow: 0 4px 30px rgba(0,212,200,0.35), 0 0 0 0 rgba(0,212,200,0.2);
+    }
+    .btn-hero-primary:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 12px 40px rgba(0,212,200,0.5), 0 0 0 8px rgba(0,212,200,0.08);
+    }
+    .btn-hero-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 16px;
+      font-family: inherit;
+      padding: 16px 36px;
+      border-radius: 50px;
+      border: 1px solid var(--glass-border);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all var(--duration-mid) var(--ease);
+    }
+    .btn-hero-ghost:hover {
+      background: var(--glass-bg);
+      color: var(--text-primary);
+      border-color: rgba(0,212,200,0.25);
+      transform: translateY(-2px);
+    }
+
+    /* ── SKELETON VISUALIZER ─────────────────────────────────────────── */
+    .hero-visual {
+      margin-top: 72px;
+      position: relative;
+      animation: fadeSlideUp 0.8s 0.4s var(--ease) both;
+    }
+    .visual-container {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      backdrop-filter: blur(var(--glass-blur));
+      overflow: hidden;
+      padding: 40px;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+    }
+    .visual-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 50% 40% at 30% 50%, rgba(0,212,200,0.05) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 70% 50%, rgba(124,58,237,0.04) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .visual-label {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+    }
+    .visual-label .rec-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--fall);
+      box-shadow: 0 0 8px var(--fall);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .skeleton-stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 80px;
+      padding: 20px 0;
+    }
+    .skeleton-figure {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .skeleton-figure svg {
+      transition: all 0.5s var(--ease);
+    }
+    .skeleton-figure-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 20px;
+    }
+    .label-normal { color: var(--primary); background: rgba(0,212,200,0.1); border: 1px solid rgba(0,212,200,0.2); }
+    .label-fall   { color: var(--fall);    background: rgba(255,61,90,0.1);  border: 1px solid rgba(255,61,90,0.2); }
+    .label-help   { color: var(--help);    background: rgba(255,157,46,0.1); border: 1px solid rgba(255,157,46,0.2); }
+
+    /* ── STATS BAR ───────────────────────────────────────────────────── */
+    .stats-bar {
+      margin-top: 0;
+      padding: 0;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--glass-border);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-top: 60px;
+    }
+    .stat-item {
+      background: var(--bg-surface);
+      padding: 36px 28px;
+      text-align: center;
+      transition: background var(--duration-mid) var(--ease);
+    }
+    .stat-item:hover { background: var(--bg-elevated); }
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: block;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    /* ── SECTION HEADER ─────────────────────────────────────────────── */
+    .section-header {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+    .section-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      line-height: 1.1;
+      margin-bottom: 16px;
+    }
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin: 0 auto;
+      line-height: 1.7;
+    }
+
+    /* ── FEATURES SECTION ───────────────────────────────────────────── */
+    .features {
+      padding: 120px 0;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .feature-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 36px 32px;
+      backdrop-filter: blur(var(--glass-blur));
+      transition: all var(--duration-mid) var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity var(--duration-mid) var(--ease);
+      border-radius: var(--radius-xl);
+    }
+    .feature-card:hover { transform: translateY(-6px); border-color: rgba(0,212,200,0.2); }
+    .feature-card:hover::before { opacity: 1; }
+    .feature-card.fc-primary::before { background: radial-gradient(ellipse at top left, rgba(0,212,200,0.06), transparent 60%); }
+    .feature-card.fc-fall::before   { background: radial-gradient(ellipse at top left, rgba(255,61,90,0.06), transparent 60%); }
+    .feature-card.fc-help::before   { background: radial-gradient(ellipse at top left, rgba(255,157,46,0.06), transparent 60%); }
+    .feature-card.fc-accent::before { background: radial-gradient(ellipse at top left, rgba(124,58,237,0.06), transparent 60%); }
+    .feature-card.fc-success::before { background: radial-gradient(ellipse at top left, rgba(16,217,122,0.06), transparent 60%); }
+
+    .feature-icon-wrap {
+      width: 56px; height: 56px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+      margin-bottom: 24px;
+    }
+    .fi-primary { background: rgba(0,212,200,0.12);  box-shadow: 0 0 24px rgba(0,212,200,0.15); }
+    .fi-fall    { background: rgba(255,61,90,0.12);   box-shadow: 0 0 24px rgba(255,61,90,0.15); }
+    .fi-help    { background: rgba(255,157,46,0.12);  box-shadow: 0 0 24px rgba(255,157,46,0.15); }
+    .fi-accent  { background: rgba(124,58,237,0.12);  box-shadow: 0 0 24px rgba(124,58,237,0.15); }
+    .fi-success { background: rgba(16,217,122,0.12);  box-shadow: 0 0 24px rgba(16,217,122,0.15); }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 10px;
+      letter-spacing: -0.02em;
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+    .feature-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 18px;
+    }
+    .ftag {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.04em;
+    }
+    .ftag-primary { color: var(--primary); background: rgba(0,212,200,0.1); }
+    .ftag-fall    { color: var(--fall);    background: rgba(255,61,90,0.1); }
+    .ftag-help    { color: var(--help);    background: rgba(255,157,46,0.1); }
+    .ftag-accent  { color: #a78bfa;        background: rgba(124,58,237,0.1); }
+
+    /* ── HOW IT WORKS ────────────────────────────────────────────────── */
+    .how-it-works {
+      padding: 100px 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,212,200,0.02) 50%, transparent 100%);
+    }
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      position: relative;
+    }
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--glass-border), var(--primary-glow), var(--glass-border), transparent);
+    }
+    .step-item {
+      padding: 0 20px;
+      text-align: center;
+    }
+    .step-num {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 24px;
+      position: relative;
+      z-index: 1;
+      transition: all var(--duration-mid) var(--ease);
+    }
+    .step-item:hover .step-num {
+      border-color: var(--primary);
+      box-shadow: 0 0 30px rgba(0,212,200,0.2);
+    }
+    .step-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* ── ARCHITECTURE ────────────────────────────────────────────────── */
+    .architecture {
+      padding: 100px 0;
+    }
+    .arch-wrapper {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-2xl);
+      padding: 56px;
+      backdrop-filter: blur(var(--glass-blur));
+      position: relative;
+      overflow: hidden;
+    }
+    .arch-wrapper::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(0,212,200,0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      gap: 0;
+      align-items: center;
+    }
+    .arch-node {
+      background: var(--bg-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      text-align: center;
+      transition: all var(--duration-mid) var(--ease);
+    }
+    .arch-node:hover {
+      border-color: rgba(0,212,200,0.25);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+    }
+    .arch-node-icon { font-size: 32px; margin-bottom: 12px; }
+    .arch-node-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+    .arch-node-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      color: var(--primary);
+      font-size: 20px;
+      opacity: 0.5;
+    }
+    .arch-models {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 32px;
+    }
+    .arch-model-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .arch-model-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all var(--duration-mid) var(--ease);
+    }
+    .arch-model-item:hover {
+      border-color: rgba(0,212,200,0.2);
+      background: rgba(12, 21, 40, 1);
+    }
+    .ami-icon { font-size: 20px; flex-shrink: 0; }
+    .ami-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .ami-desc { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* ── PRIVACY SECTION ─────────────────────────────────────────────── */
+    .privacy {
+      padding: 100px 0;
+    }
+    .privacy-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+    .privacy-visual {
+      position: relative;
+    }
+    .privacy-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 40px;
+      backdrop-filter: blur(var(--glass-blur));
+      text-align: center;
+    }
+    .privacy-icon-big {
+      font-size: 80px;
+      line-height: 1;
+      margin-bottom: 20px;
+      display: block;
+      filter: drop-shadow(0 0 20px rgba(0,212,200,0.3));
+    }
+    .privacy-card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    .privacy-card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    .privacy-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .privacy-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .privacy-list .pi-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .pi-green { background: rgba(16,217,122,0.12); }
+    .pi-red   { background: rgba(255,61,90,0.12); }
+    .privacy-list strong { color: var(--text-primary); }
+
+    /* ── CAMERA MODES ────────────────────────────────────────────────── */
+    .camera-modes {
+      padding: 100px 0;
+    }
+    .camera-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+    .camera-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 40px 36px;
+      backdrop-filter: blur(var(--glass-blur));
+      transition: all var(--duration-mid) var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+    .camera-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-lg);
+    }
+    .camera-card.cc-fall {
+      border-color: rgba(255,61,90,0.15);
+    }
+    .camera-card.cc-fall:hover { border-color: rgba(255,61,90,0.35); box-shadow: 0 24px 60px rgba(255,61,90,0.12); }
+    .camera-card.cc-help {
+      border-color: rgba(255,157,46,0.15);
+    }
+    .camera-card.cc-help:hover { border-color: rgba(255,157,46,0.35); box-shadow: 0 24px 60px rgba(255,157,46,0.12); }
+
+    .camera-card-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .cc-icon {
+      width: 52px; height: 52px;
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .cci-fall { background: var(--fall-dim); box-shadow: 0 0 20px var(--fall-glow); }
+    .cci-help { background: var(--help-dim); box-shadow: 0 0 20px var(--help-glow); }
+    .cc-title { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .cc-subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .camera-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 24px; }
+    .camera-classes {
+      display: flex; flex-wrap: wrap; gap: 8px;
+    }
+    .cls-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    .cls-fall { color: var(--fall); background: var(--fall-dim); border: 1px solid rgba(255,61,90,0.2); }
+    .cls-help { color: var(--help); background: var(--help-dim); border: 1px solid rgba(255,157,46,0.2); }
+
+    /* ── CTA SECTION ─────────────────────────────────────────────────── */
+    .cta-section {
+      padding: 120px 0;
+    }
+    .cta-box {
+      background: linear-gradient(135deg, rgba(0,212,200,0.08) 0%, rgba(124,58,237,0.08) 100%);
+      border: 1px solid rgba(0,212,200,0.15);
+      border-radius: var(--radius-2xl);
+      padding: 80px 60px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-box::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: 50%; transform: translateX(-50%);
+      width: 200px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+    }
+    .cta-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--text-primary), rgba(237,240,247,0.7));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .cta-desc {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 500px;
+      margin: 0 auto 40px;
+      line-height: 1.65;
+    }
+    .cta-tags {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 40px;
+    }
+    .cta-tag {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      color: var(--text-muted);
+    }
+
+    /* ── FOOTER ─────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--glass-border);
+      padding: 40px 0;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .footer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .footer-logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+    }
+    .footer-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .footer-copy {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+    .footer-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--duration-fast) var(--ease);
+    }
+    .footer-link:hover { color: var(--primary); }
+
+    /* ── ANIMATIONS ─────────────────────────────────────────────────── */
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+    @keyframes skeletonWalk {
+      0%   { transform: rotate(-3deg) translate(0, 0); }
+      25%  { transform: rotate(0deg) translate(2px, -2px); }
+      50%  { transform: rotate(3deg) translate(0, 0); }
+      75%  { transform: rotate(0deg) translate(-2px, -2px); }
+      100% { transform: rotate(-3deg) translate(0, 0); }
+    }
+    @keyframes skeletonFall {
+      0%   { transform: rotate(0deg) translate(0, 0); }
+      40%  { transform: rotate(25deg) translate(4px, 4px); }
+      60%  { transform: rotate(70deg) translate(8px, 8px); }
+      100% { transform: rotate(85deg) translate(10px, 12px); }
+    }
+
+    /* scroll reveal */
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .reveal-delay-1 { transition-delay: 0.1s; }
+    .reveal-delay-2 { transition-delay: 0.2s; }
+    .reveal-delay-3 { transition-delay: 0.3s; }
+    .reveal-delay-4 { transition-delay: 0.4s; }
+
+    /* ── RESPONSIVE ─────────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+      .steps-grid::before { display: none; }
+      .arch-grid { grid-template-columns: 1fr; }
+      .arch-arrow { transform: rotate(90deg); }
+      .arch-model-row { grid-template-columns: 1fr; }
+      .privacy-grid { grid-template-columns: 1fr; }
+      .camera-grid { grid-template-columns: 1fr; }
+      .skeleton-stage { gap: 40px; }
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .nav-badge { display: none; }
+      .hero-title { font-size: 38px; }
+      .arch-wrapper { padding: 32px 20px; }
+      .cta-box { padding: 48px 24px; }
+      .footer-inner { flex-direction: column; text-align: center; }
+      .footer-links { flex-direction: column; align-items: center; }
+      .skeleton-stage { flex-direction: column; gap: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- AMBIENT -->
+  <div class="ambient" aria-hidden="true">
+    <div class="ambient-orb orb-1"></div>
+    <div class="ambient-orb orb-2"></div>
+    <div class="ambient-orb orb-3"></div>
+  </div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <!-- NAVBAR -->
+  <header class="navbar" role="banner">
+    <div class="container">
+      <nav class="navbar-inner" aria-label="Main navigation">
+        <a href="#hero" class="nav-brand">
+          <div class="nav-logo" aria-hidden="true">🦴</div>
+          <div>
+            <div class="nav-name">SAPA</div>
+            <div class="nav-tagline">Melihat Kebutuhan, Bukan Wajah</div>
+          </div>
+        </a>
+        <div class="nav-right">
+          <span class="nav-badge">Privacy-by-Design · COMPFEST 18</span>
+          <a href="http://localhost:5173" class="nav-cta" id="nav-cta-btn">
+            <span>🚀</span> Coba Sekarang
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main id="hero">
+    <!-- ══════════════════════════════════════════════════════════════════
+         HERO SECTION
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="container">
+        <div class="hero-eyebrow" role="status">
+          <span class="dot" aria-hidden="true"></span>
+          AI Innovation Challenge · COMPFEST 18
+        </div>
+
+        <h1 class="hero-title" id="hero-heading">
+          <span class="line1">Safety & Assistance</span>
+          <span class="line2">through Pose Analytics</span>
+        </h1>
+
+        <p class="hero-quote">"Melihat Kebutuhan, Bukan Wajah."</p>
+
+        <p class="hero-desc">
+          Sistem analitik toko berbasis CCTV yang mendeteksi pelanggan
+          <strong>butuh bantuan</strong> dan kejadian <strong>jatuh</strong> —
+          hanya dari pose/kerangka gerak tubuh,
+          <strong>tanpa mengenali wajah atau identitas</strong>.
+        </p>
+
+        <div class="hero-actions">
+          <a href="http://localhost:5173" class="btn-hero-primary" id="hero-cta-primary">
+            <span>🔍</span> Mulai Analisis
+          </a>
+          <a href="#cara-kerja" class="btn-hero-ghost" id="hero-cta-secondary">
+            <span>▾</span> Cara Kerja
+          </a>
+        </div>
+
+        <!-- ── Skeleton Pose Visualizer ────────────────────────────── -->
+        <div class="hero-visual" aria-label="Demo visualisasi pose skeletal">
+          <div class="visual-container">
+            <div class="visual-label" aria-hidden="true">
+              <span class="rec-dot"></span> LIVE DEMO · Deteksi Pose Real-time
+            </div>
+
+            <div class="skeleton-stage" id="skeleton-stage">
+              <!-- Normal walking figure -->
+              <div class="skeleton-figure">
+                <svg id="skel-normal" width="80" height="110" viewBox="0 0 80 110"
+                     style="filter: drop-shadow(0 0 12px rgba(0,212,200,0.6)); animation: skeletonWalk 2.4s ease-in-out infinite;"
+                     aria-label="Pose normal - berjalan">
+                  <!-- Head -->
+                  <circle cx="40" cy="12" r="9" fill="none" stroke="#00d4c8" stroke-width="2.5"/>
+                  <!-- Spine -->
+                  <line x1="40" y1="21" x2="40" y2="52" stroke="#00d4c8" stroke-width="2.5"/>
+                  <!-- Shoulders -->
+                  <line x1="40" y1="30" x2="18" y2="44" stroke="#00d4c8" stroke-width="2.5"/>
+                  <line x1="40" y1="30" x2="62" y2="44" stroke="#00d4c8" stroke-width="2.5"/>
+                  <!-- Arms -->
+                  <line x1="18" y1="44" x2="12" y2="62" stroke="#00d4c8" stroke-width="2.5"/>
+                  <line x1="62" y1="44" x2="68" y2="62" stroke="#00d4c8" stroke-width="2.5"/>
+                  <!-- Hips -->
+                  <line x1="40" y1="52" x2="27" y2="76" stroke="#00d4c8" stroke-width="2.5"/>
+                  <line x1="40" y1="52" x2="53" y2="76" stroke="#00d4c8" stroke-width="2.5"/>
+                  <!-- Legs -->
+                  <line x1="27" y1="76" x2="22" y2="100" stroke="#00d4c8" stroke-width="2.5"/>
+                  <line x1="53" y1="76" x2="58" y2="100" stroke="#00d4c8" stroke-width="2.5"/>
+                  <!-- Joints -->
+                  <circle cx="40" cy="21" r="3" fill="#00d4c8"/>
+                  <circle cx="18" cy="44" r="3" fill="#00d4c8"/>
+                  <circle cx="62" cy="44" r="3" fill="#00d4c8"/>
+                  <circle cx="12" cy="62" r="3" fill="#00d4c8"/>
+                  <circle cx="68" cy="62" r="3" fill="#00d4c8"/>
+                  <circle cx="40" cy="52" r="3" fill="#00d4c8"/>
+                  <circle cx="27" cy="76" r="3" fill="#00d4c8"/>
+                  <circle cx="53" cy="76" r="3" fill="#00d4c8"/>
+                  <circle cx="22" cy="100" r="3" fill="#00d4c8"/>
+                  <circle cx="58" cy="100" r="3" fill="#00d4c8"/>
+                </svg>
+                <span class="skeleton-figure-label label-normal">✓ Normal</span>
+              </div>
+
+              <!-- Fall detected figure -->
+              <div class="skeleton-figure">
+                <svg id="skel-fall" width="110" height="60" viewBox="0 0 110 60"
+                     style="filter: drop-shadow(0 0 12px rgba(255,61,90,0.6));"
+                     aria-label="Pose jatuh terdeteksi">
+                  <!-- Head (on ground) -->
+                  <circle cx="10" cy="20" r="9" fill="none" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <!-- Spine (horizontal) -->
+                  <line x1="19" y1="20" x2="58" y2="22" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <!-- Arms up -->
+                  <line x1="28" y1="18" x2="20" y2="6" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <line x1="40" y1="19" x2="50" y2="8" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <!-- Hips -->
+                  <line x1="58" y1="22" x2="72" y2="14" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <line x1="58" y1="22" x2="75" y2="30" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <!-- Legs -->
+                  <line x1="72" y1="14" x2="90" y2="10" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <line x1="75" y1="30" x2="95" y2="40" stroke="#ff3d5a" stroke-width="2.5"/>
+                  <!-- Joints -->
+                  <circle cx="28" cy="18" r="3" fill="#ff3d5a"/>
+                  <circle cx="40" cy="19" r="3" fill="#ff3d5a"/>
+                  <circle cx="20" cy="6" r="3" fill="#ff3d5a"/>
+                  <circle cx="50" cy="8" r="3" fill="#ff3d5a"/>
+                  <circle cx="58" cy="22" r="3" fill="#ff3d5a"/>
+                  <circle cx="72" cy="14" r="3" fill="#ff3d5a"/>
+                  <circle cx="75" cy="30" r="3" fill="#ff3d5a"/>
+                  <circle cx="90" cy="10" r="3" fill="#ff3d5a"/>
+                  <circle cx="95" cy="40" r="3" fill="#ff3d5a"/>
+                  <!-- Alert -->
+                  <text x="40" y="54" text-anchor="middle" font-size="10" fill="#ff3d5a" font-family="Inter, sans-serif" font-weight="700">⚠ JATUH TERDETEKSI</text>
+                </svg>
+                <span class="skeleton-figure-label label-fall">⚠ Jatuh</span>
+              </div>
+
+              <!-- Help needed figure -->
+              <div class="skeleton-figure">
+                <svg id="skel-help" width="80" height="110" viewBox="0 0 80 110"
+                     style="filter: drop-shadow(0 0 12px rgba(255,157,46,0.6));"
+                     aria-label="Pose pelanggan butuh bantuan">
+                  <!-- Head -->
+                  <circle cx="40" cy="12" r="9" fill="none" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <!-- Spine -->
+                  <line x1="40" y1="21" x2="40" y2="55" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <!-- Shoulders -->
+                  <line x1="40" y1="30" x2="16" y2="38" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <line x1="40" y1="30" x2="64" y2="38" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <!-- Arms reaching up/forward -->
+                  <line x1="16" y1="38" x2="8" y2="18" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <line x1="64" y1="38" x2="72" y2="16" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <!-- Hips -->
+                  <line x1="40" y1="55" x2="26" y2="78" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <line x1="40" y1="55" x2="54" y2="78" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <!-- Legs -->
+                  <line x1="26" y1="78" x2="22" y2="100" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <line x1="54" y1="78" x2="58" y2="100" stroke="#ff9d2e" stroke-width="2.5"/>
+                  <!-- Joints -->
+                  <circle cx="40" cy="21" r="3" fill="#ff9d2e"/>
+                  <circle cx="16" cy="38" r="3" fill="#ff9d2e"/>
+                  <circle cx="64" cy="38" r="3" fill="#ff9d2e"/>
+                  <circle cx="8" cy="18" r="3" fill="#ff9d2e"/>
+                  <circle cx="72" cy="16" r="3" fill="#ff9d2e"/>
+                  <circle cx="40" cy="55" r="3" fill="#ff9d2e"/>
+                  <circle cx="26" cy="78" r="3" fill="#ff9d2e"/>
+                  <circle cx="54" cy="78" r="3" fill="#ff9d2e"/>
+                  <circle cx="22" cy="100" r="3" fill="#ff9d2e"/>
+                  <circle cx="58" cy="100" r="3" fill="#ff9d2e"/>
+                </svg>
+                <span class="skeleton-figure-label label-help">🛒 Perlu Bantuan</span>
+              </div>
+            </div>
+
+            <!-- Confidence bars -->
+            <div style="margin-top: 32px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                  <span style="color: var(--primary); font-weight: 600;">Normal · Berjalan</span>
+                  <span style="color: var(--text-muted);">94%</span>
+                </div>
+                <div style="height: 4px; background: var(--glass-bg); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: 94%; background: linear-gradient(90deg, var(--primary), var(--primary-dim)); border-radius: 2px; animation: barLoad 1.5s var(--ease) both 0.5s;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                  <span style="color: var(--fall); font-weight: 600;">Jatuh Terdeteksi</span>
+                  <span style="color: var(--text-muted);">98%</span>
+                </div>
+                <div style="height: 4px; background: var(--glass-bg); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: 98%; background: linear-gradient(90deg, var(--fall), #ff6b82); border-radius: 2px; animation: barLoad 1.5s var(--ease) both 0.7s;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
+                  <span style="color: var(--help); font-weight: 600;">Inspeksi Rak</span>
+                  <span style="color: var(--text-muted);">87%</span>
+                </div>
+                <div style="height: 4px; background: var(--glass-bg); border-radius: 2px; overflow: hidden;">
+                  <div style="height: 100%; width: 87%; background: linear-gradient(90deg, var(--help), #ffb84d); border-radius: 2px; animation: barLoad 1.5s var(--ease) both 0.9s;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-grid reveal" role="region" aria-label="Statistik SAPA">
+          <div class="stat-item">
+            <span class="stat-value" aria-label="17 titik sendi">17</span>
+            <div class="stat-label">Titik Sendi COCO<br>per orang per frame</div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" aria-label="0 wajah dikenali">0</span>
+            <div class="stat-label">Wajah/Identitas<br>yang Dikenali</div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" aria-label="3 detik jendela analisis">3s</span>
+            <div class="stat-label">Jendela Analisis<br>BiLSTM per orang</div>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value" aria-label="6 kelas aksi">6+</span>
+            <div class="stat-label">Kelas Aksi<br>Terdeteksi</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         HOW IT WORKS
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="how-it-works" id="cara-kerja" aria-labelledby="steps-heading">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-tag">Cara Kerja</div>
+          <h2 class="section-title" id="steps-heading">Dari Video CCTV ke Insight Nyata</h2>
+          <p class="section-desc">Pipeline AI end-to-end yang bekerja sepenuhnya dari koordinat sendi tubuh — tanpa piksel wajah.</p>
+        </div>
+        <div class="steps-grid" role="list">
+          <div class="step-item reveal" role="listitem">
+            <div class="step-num" aria-hidden="true">📹</div>
+            <div class="step-title">Unggah Video</div>
+            <p class="step-desc">Upload klip .mp4 dari CCTV toko. Disarankan durasi ≤ 2 menit untuk proses yang lebih nyaman.</p>
+          </div>
+          <div class="step-item reveal reveal-delay-1" role="listitem">
+            <div class="step-num" aria-hidden="true">🦴</div>
+            <div class="step-title">Ekstraksi Pose</div>
+            <p class="step-desc">YOLOv8n-Pose mengekstrak 17 titik sendi COCO per orang per frame, lengkap dengan tracking multi-orang.</p>
+          </div>
+          <div class="step-item reveal reveal-delay-2" role="listitem">
+            <div class="step-num" aria-hidden="true">🧠</div>
+            <div class="step-title">Klasifikasi BiLSTM</div>
+            <p class="step-desc">Model BiLSTM menganalisis urutan pose per jendela 3 detik untuk mendeteksi jatuh dan interaksi rak.</p>
+          </div>
+          <div class="step-item reveal reveal-delay-3" role="listitem">
+            <div class="step-num" aria-hidden="true">📊</div>
+            <div class="step-title">Laporan & Timeline</div>
+            <p class="step-desc">Video beranotasi + timeline kejadian interaktif. Klik kejadian untuk langsung loncat ke momen tersebut.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         FEATURES SECTION
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="features" id="fitur" aria-labelledby="features-heading">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-tag">Fitur Unggulan</div>
+          <h2 class="section-title" id="features-heading">Teknologi di Balik SAPA</h2>
+          <p class="section-desc">Dirancang dengan privacy-by-design dari awal — bukan fitur tambahan belakangan.</p>
+        </div>
+        <div class="features-grid">
+          <div class="feature-card fc-fall reveal">
+            <div class="feature-icon-wrap fi-fall" aria-hidden="true">🚨</div>
+            <h3 class="feature-title">Deteksi Jatuh (BiLSTM)</h3>
+            <p class="feature-desc">Model BiLSTM menganalisis urutan pose dalam jendela 3 detik. Dikonfirmasi dengan geometri torso (sudut ≥ 55°) dan deteksi diam untuk mengurangi false positive.</p>
+            <div class="feature-tags">
+              <span class="ftag ftag-fall">Normal</span>
+              <span class="ftag ftag-fall">Oleng</span>
+              <span class="ftag ftag-fall">Jatuh</span>
+            </div>
+          </div>
+          <div class="feature-card fc-help reveal reveal-delay-1">
+            <div class="feature-icon-wrap fi-help" aria-hidden="true">🛒</div>
+            <h3 class="feature-title">Deteksi Interaksi Rak</h3>
+            <p class="feature-desc">Mengenali 6 jenis interaksi pelanggan dengan rak produk — dari inspeksi produk hingga retract — untuk membantu staf memberi layanan proaktif.</p>
+            <div class="feature-tags">
+              <span class="ftag ftag-help">Reach</span>
+              <span class="ftag ftag-help">Inspect</span>
+              <span class="ftag ftag-help">Retract</span>
+            </div>
+          </div>
+          <div class="feature-card fc-primary reveal reveal-delay-2">
+            <div class="feature-icon-wrap fi-primary" aria-hidden="true">🔒</div>
+            <h3 class="feature-title">Privacy-by-Design</h3>
+            <p class="feature-desc">Hanya koordinat sendi yang diproses — bukan piksel wajah. Zero face recognition, zero cloud upload. Seluruh inferensi berjalan lokal di server Anda.</p>
+            <div class="feature-tags">
+              <span class="ftag ftag-primary">No Face ID</span>
+              <span class="ftag ftag-primary">Local Only</span>
+            </div>
+          </div>
+          <div class="feature-card fc-accent reveal">
+            <div class="feature-icon-wrap fi-accent" aria-hidden="true">📍</div>
+            <h3 class="feature-title">Tracking Multi-Orang</h3>
+            <p class="feature-desc">YOLOv8 tracking memungkinkan analisis per-individu secara bersamaan. Setiap orang mendapat ID anonim dan urutan pose tersendiri.</p>
+            <div class="feature-tags">
+              <span class="ftag ftag-accent">Multi-track</span>
+              <span class="ftag ftag-accent">Per-ID</span>
+            </div>
+          </div>
+          <div class="feature-card fc-primary reveal reveal-delay-1">
+            <div class="feature-icon-wrap fi-primary" aria-hidden="true">🎬</div>
+            <h3 class="feature-title">Video Beranotasi</h3>
+            <p class="feature-desc">Output berupa video MP4 dengan skeleton overlay, label kelas per orang, dan banner kejadian. Langsung dapat diputar di browser.</p>
+            <div class="feature-tags">
+              <span class="ftag ftag-primary">MP4 Output</span>
+              <span class="ftag ftag-primary">Skeleton Overlay</span>
+            </div>
+          </div>
+          <div class="feature-card fc-success reveal reveal-delay-2">
+            <div class="feature-icon-wrap fi-success" aria-hidden="true">⚡</div>
+            <h3 class="feature-title">Normalisasi Pose Adaptif</h3>
+            <p class="feature-desc">Pose dinormalisasi terhadap hip sebagai origin dan torso sebagai skala — membuat prediksi invarian terhadap posisi kamera dan ukuran tubuh.</p>
+            <div class="feature-tags">
+              <span class="ftag ftag-primary">Scale-invariant</span>
+              <span class="ftag ftag-primary">Robust</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CAMERA MODES
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="camera-modes" id="mode-kamera" aria-labelledby="camera-heading">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-tag">Mode Kamera</div>
+          <h2 class="section-title" id="camera-heading">Pilih Sesuai Jenis Kamera Anda</h2>
+          <p class="section-desc">Hasil terbaik diperoleh dengan memilih mode yang sesuai dengan sudut pandang CCTV Anda.</p>
+        </div>
+        <div class="camera-grid">
+          <div class="camera-card cc-fall reveal">
+            <div class="camera-card-header">
+              <div class="cc-icon cci-fall" aria-hidden="true">🏃</div>
+              <div>
+                <div class="cc-title">Kamera Lorong</div>
+                <div class="cc-subtitle">Tampak samping / depan</div>
+              </div>
+            </div>
+            <p class="camera-desc">
+              Optimal untuk CCTV yang dipasang di sudut lorong atau pintu masuk toko dengan pandangan horizontal. Pose dari samping memungkinkan model mendeteksi postur tubuh dengan sangat akurat.
+            </p>
+            <div class="camera-classes" aria-label="Kelas yang terdeteksi">
+              <span class="cls-tag cls-fall">✓ Deteksi Jatuh</span>
+              <span class="cls-tag cls-fall">✓ Oleng / Terhuyung</span>
+              <span class="cls-tag cls-fall">✓ Normal Berjalan</span>
+            </div>
+          </div>
+          <div class="camera-card cc-help reveal reveal-delay-1">
+            <div class="camera-card-header">
+              <div class="cc-icon cci-help" aria-hidden="true">🛒</div>
+              <div>
+                <div class="cc-title">Kamera Rak (Atas)</div>
+                <div class="cc-subtitle">Top-down / menghadap rak</div>
+              </div>
+            </div>
+            <p class="camera-desc">
+              Optimal untuk CCTV yang dipasang tepat di atas rak produk (sudut top-down). Gerakan tangan dan interaksi pelanggan dengan produk dapat terbaca dengan jelas.
+            </p>
+            <div class="camera-classes" aria-label="Kelas yang terdeteksi">
+              <span class="cls-tag cls-help">✓ Inspect Product</span>
+              <span class="cls-tag cls-help">✓ Inspect Shelf</span>
+              <span class="cls-tag cls-help">✓ Reach & Retract</span>
+              <span class="cls-tag cls-help">✓ Hand in Shelf</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         ARCHITECTURE
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="architecture" id="arsitektur" aria-labelledby="arch-heading">
+      <div class="container">
+        <div class="section-header reveal">
+          <div class="section-tag">Arsitektur</div>
+          <h2 class="section-title" id="arch-heading">Pipeline AI End-to-End</h2>
+          <p class="section-desc">Dari frame video mentah ke insight kejadian dalam satu request.</p>
+        </div>
+        <div class="arch-wrapper reveal">
+          <div class="arch-grid" role="img" aria-label="Diagram arsitektur pipeline SAPA">
+            <div class="arch-node">
+              <div class="arch-node-icon" aria-hidden="true">🌐</div>
+              <div class="arch-node-title">Browser / React</div>
+              <div class="arch-node-desc">Upload video via multipart POST<br>Tampilkan hasil & timeline</div>
+            </div>
+            <div class="arch-arrow" aria-hidden="true">→</div>
+            <div class="arch-node">
+              <div class="arch-node-icon" aria-hidden="true">🔀</div>
+              <div class="arch-node-title">nginx Reverse Proxy</div>
+              <div class="arch-node-desc">Port 5173 → Backend :8000<br>Static file serving</div>
+            </div>
+            <div class="arch-arrow" aria-hidden="true">→</div>
+            <div class="arch-node">
+              <div class="arch-node-icon" aria-hidden="true">⚡</div>
+              <div class="arch-node-title">FastAPI Backend</div>
+              <div class="arch-node-desc">POST /api/analyze<br>Docker Container</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 32px;">
+            <div style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;">
+              AI Pipeline
+            </div>
+            <div class="arch-model-row">
+              <div class="arch-model-item">
+                <div class="ami-icon" aria-hidden="true">🦴</div>
+                <div>
+                  <div class="ami-name">YOLOv8n-Pose</div>
+                  <div class="ami-desc">17 titik sendi COCO + tracking</div>
+                </div>
+              </div>
+              <div class="arch-model-item">
+                <div class="ami-icon" aria-hidden="true">📐</div>
+                <div>
+                  <div class="ami-name">normalize.py</div>
+                  <div class="ami-desc">Origin hip, skala torso</div>
+                </div>
+              </div>
+              <div class="arch-model-item">
+                <div class="ami-icon" aria-hidden="true">🧠</div>
+                <div>
+                  <div class="ami-name">BiLSTM Fall Head</div>
+                  <div class="ami-desc">Normal / oleng / jatuh</div>
+                </div>
+              </div>
+              <div class="arch-model-item" style="margin-top: 0;">
+                <div class="ami-icon" aria-hidden="true">🧠</div>
+                <div>
+                  <div class="ami-name">BiLSTM Interaction Head</div>
+                  <div class="ami-desc">6 kelas interaksi rak</div>
+                </div>
+              </div>
+              <div class="arch-model-item">
+                <div class="ami-icon" aria-hidden="true">📐</div>
+                <div>
+                  <div class="ami-name">geometry.py</div>
+                  <div class="ami-desc">Konfirmasi torso ≥ 55° + diam</div>
+                </div>
+              </div>
+              <div class="arch-model-item">
+                <div class="ami-icon" aria-hidden="true">🎬</div>
+                <div>
+                  <div class="ami-name">render.py</div>
+                  <div class="ami-desc">OpenCV + ffmpeg → video anotasi</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         PRIVACY SECTION
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="privacy" id="privasi" aria-labelledby="privacy-heading">
+      <div class="container">
+        <div class="privacy-grid">
+          <div class="privacy-visual reveal">
+            <div class="privacy-card">
+              <span class="privacy-icon-big" aria-hidden="true">🔒</span>
+              <div class="privacy-card-title">Privacy-by-Design</div>
+              <p class="privacy-card-desc">
+                SAPA dirancang dari awal untuk tidak memproses identitas. Hanya koordinat geometris pose tubuh yang dianalisis — bukan piksel wajah.
+              </p>
+              <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--glass-border);">
+                <div style="font-size: 11px; font-weight: 600; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px;">Tagline</div>
+                <div style="font-size: 18px; font-weight: 700; font-style: italic; color: var(--primary);">"AI menandai, manusia memutuskan."</div>
+              </div>
+            </div>
+          </div>
+          <div class="reveal reveal-delay-1">
+            <div class="section-tag">Privasi & Etika</div>
+            <h2 class="section-title" id="privacy-heading" style="text-align: left;">Mengawasi Situasi,<br>Bukan Individu</h2>
+            <p class="section-desc" style="text-align: left; margin: 0 0 32px;">SAPA memberikan kemampuan analitik kepada retailer tanpa mengorbankan privasi pelanggan.</p>
+            <ul class="privacy-list" aria-label="Prinsip privasi SAPA">
+              <li>
+                <div class="pi-icon pi-green" aria-hidden="true">✓</div>
+                <div><strong>Hanya koordinat sendi</strong> — tidak ada piksel wajah yang pernah diproses atau disimpan.</div>
+              </li>
+              <li>
+                <div class="pi-icon pi-green" aria-hidden="true">✓</div>
+                <div><strong>Inferensi lokal</strong> — seluruh AI berjalan di server Anda. Tidak ada data dikirim ke cloud.</div>
+              </li>
+              <li>
+                <div class="pi-icon pi-green" aria-hidden="true">✓</div>
+                <div><strong>ID anonim</strong> — setiap orang hanya diidentifikasi sebagai nomor ID sesi, bukan identitas nyata.</div>
+              </li>
+              <li>
+                <div class="pi-icon pi-red" aria-hidden="true">✗</div>
+                <div><strong>Tidak ada face recognition</strong> — desain sistem secara teknis tidak bisa mengenali identitas siapapun.</div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════════════
+         CTA SECTION
+    ══════════════════════════════════════════════════════════════════ -->
+    <section class="cta-section" aria-labelledby="cta-heading">
+      <div class="container">
+        <div class="cta-box reveal">
+          <h2 class="cta-title" id="cta-heading">Siap Mencoba SAPA?</h2>
+          <p class="cta-desc">
+            Upload klip video CCTV Anda dan lihat bagaimana AI membaca situasi dari pose tubuh dalam hitungan menit.
+          </p>
+          <div class="cta-tags" aria-label="Fitur inklusif">
+            <span class="cta-tag">🔒 Privacy-first</span>
+            <span class="cta-tag">🏃 Deteksi Jatuh</span>
+            <span class="cta-tag">🛒 Deteksi Pelayanan</span>
+            <span class="cta-tag">🦴 Pose-only AI</span>
+            <span class="cta-tag">⚡ Proses Lokal</span>
+          </div>
+          <a href="http://localhost:5173" class="btn-hero-primary" id="cta-final-btn" style="font-size: 17px; padding: 18px 48px;">
+            <span>🔍</span> Mulai Analisis Video
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FOOTER -->
+  <footer role="contentinfo">
+    <div class="container">
+      <div class="footer-inner">
+        <div>
+          <div class="footer-brand">
+            <div class="footer-logo" aria-hidden="true">🦴</div>
+            <span class="footer-name">SAPA</span>
+          </div>
+          <div class="footer-copy" style="margin-top: 8px;">
+            Safety and Assistance through Pose Analytics<br>
+            AI Innovation Challenge · COMPFEST 18
+          </div>
+        </div>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="#cara-kerja" class="footer-link">Cara Kerja</a>
+          <a href="#fitur" class="footer-link">Fitur</a>
+          <a href="#mode-kamera" class="footer-link">Mode Kamera</a>
+          <a href="#arsitektur" class="footer-link">Arsitektur</a>
+          <a href="#privasi" class="footer-link">Privasi</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    @keyframes barLoad {
+      from { width: 0; }
+    }
+  </style>
+
+  <script>
+    // ── Scroll Reveal ──────────────────────────────────────────────────────
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ── Animated counter for stats ─────────────────────────────────────────
+    function animateCounter(el, target, suffix = '') {
+      let start = 0;
+      const duration = 1800;
+      const startTime = performance.now();
+      const isFloat = target % 1 !== 0;
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = isFloat ? (start + (target - start) * eased).toFixed(1) : Math.floor(start + (target - start) * eased);
+        el.textContent = current + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    const statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const statValues = entry.target.querySelectorAll('.stat-value');
+          const targets = [17, 0, 3, 6];
+          const suffixes = ['', '', 's', '+'];
+          statValues.forEach((el, i) => animateCounter(el, targets[i], suffixes[i]));
+          statsObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    const statsGrid = document.querySelector('.stats-grid');
+    if (statsGrid) statsObserver.observe(statsGrid);
+
+    // ── Navbar scroll effect ───────────────────────────────────────────────
+    const navbar = document.querySelector('.navbar');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) {
+        navbar.style.boxShadow = '0 8px 40px rgba(0,0,0,0.5)';
+      } else {
+        navbar.style.boxShadow = 'none';
+      }
+    }, { passive: true });
+
+    // ── Skeleton cycling animation ─────────────────────────────────────────
+    let skelPhase = 0;
+    const skelFall = document.getElementById('skel-fall');
+    
+    function cycleSkeleton() {
+      skelPhase = (skelPhase + 1) % 3;
+      if (skelPhase === 1 && skelFall) {
+        // Pulse the fall skeleton
+        skelFall.style.transform = 'scale(1.05)';
+        setTimeout(() => { if (skelFall) skelFall.style.transform = 'scale(1)'; }, 300);
+      }
+    }
+    setInterval(cycleSkeleton, 3000);
+
+    // ── Parallax on hero visual ─────────────────────────────────────────────
+    document.addEventListener('mousemove', (e) => {
+      const orbs = document.querySelectorAll('.ambient-orb');
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      orbs.forEach((orb, i) => {
+        const strength = (i + 1) * 12;
+        orb.style.transform = `translate(${x * strength}px, ${y * strength}px)`;
+      });
+    }, { passive: true });
+  </script>
+
+</body>
+</html>

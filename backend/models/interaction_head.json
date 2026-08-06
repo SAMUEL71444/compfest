@@ -1,0 +1,21 @@
+{
+  "arch": "InteractionLSTM",
+  "in_dim": 51,
+  "hidden": 128,
+  "layers": 2,
+  "dropout": 0.3,
+  "n_classes": 6,
+  "class_names": [
+    "background",
+    "reach",
+    "retract",
+    "hand_in_shelf",
+    "inspect_product",
+    "inspect_shelf"
+  ],
+  "use_channels": 3,
+  "inspect_idx": [4, 5],
+  "window": 45,
+  "stride": 15,
+  "fps": 15
+}

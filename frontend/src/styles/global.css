@@ -1,0 +1,644 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   SAPA — Global Stylesheet
+   Nada desain: hangat, manusiawi, tenang — bukan dashboard keamanan yang dingin.
+   Prinsip: "Membantu, bukan mengawasi."
+
+   Panduan warna:
+   - --sigap (hijau) = warna dominan UI (tombol, ikon, aksen)
+   - --bantu (amber) = HANYA untuk sinyal "butuh bantuan" di timeline/badge
+   - --waspada (merah bata) = HANYA untuk sinyal "jatuh" di timeline/badge
+   - Jangan pakai --bantu / --waspada sebagai warna dekoratif biasa
+───────────────────────────────────────────────────────────────────────────── */
+
+/* ── Design Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  /* ── Latar / Permukaan ──────────────────────────────────────────────── */
+  --paper:        #F5F3EA;   /* latar utama — putih-gading hangat */
+  --paper-2:      #EFEBDD;   /* latar sekunder — section/card alternatif */
+  --paper-3:      #EAE6D4;   /* latar tersier — hover ringan */
+  --surface:      #FFFFFF;   /* kartu putih bersih di atas --paper */
+
+  /* ── Teks ────────────────────────────────────────────────────────────── */
+  --ink:          #23261F;   /* teks utama — hitam kehijauan, bukan hitam pekat */
+  --ink-soft:     #5B5F52;   /* teks sekunder / caption */
+  --ink-faint:    #8A8F7E;   /* teks tersier / placeholder */
+  --ink-hairline: #C7C1AC;   /* warna dropzone dashed border */
+
+  /* ── Border & Garis ─────────────────────────────────────────────────── */
+  --garis:        #DBD6C6;   /* hairline border umum */
+  --garis-soft:   #EAE6D8;   /* border sangat tipis */
+
+  /* ── Brand / Sigap (hijau-teal tenang) — WARNA MEREK UTAMA ────────── */
+  --sigap:        #2F6B58;   /* tombol, ikon, aksen dominan */
+  --sigap-dark:   #234F41;   /* hover state */
+  --sigap-light:  #3D8870;   /* hover state lebih terang */
+  --sigap-soft:   #E3EEE7;   /* tint lembut — background section/chip */
+  --sigap-glow:   rgba(47, 107, 88, 0.15);
+
+  /* ── Bantu (amber hangat) — KHUSUS sinyal "butuh bantuan" ─────────── */
+  --bantu:        #DE9F3C;   /* HANYA untuk event butuh_bantuan */
+  --bantu-dark:   #B87E22;
+  --bantu-soft:   #FBEDD6;
+  --bantu-border: rgba(222, 159, 60, 0.35);
+
+  /* ── Waspada (merah bata hangat) — KHUSUS sinyal "jatuh" ─────────── */
+  --waspada:      #C1453B;   /* HANYA untuk event jatuh */
+  --waspada-dark: #9B3530;
+  --waspada-soft: #F7E3E0;
+  --waspada-border: rgba(193, 69, 59, 0.35);
+
+  /* ── Spacing & Radius ────────────────────────────────────────────────── */
+  --radius-sm:  6px;
+  --radius-md:  12px;
+  --radius-lg:  18px;
+  --radius-xl:  24px;
+
+  /* ── Shadow (hangat, tidak terlalu dramatis) ─────────────────────────── */
+  --shadow-xs:  0 1px 3px rgba(35, 38, 31, 0.06);
+  --shadow-sm:  0 2px 8px rgba(35, 38, 31, 0.08);
+  --shadow-md:  0 6px 24px rgba(35, 38, 31, 0.10);
+  --shadow-lg:  0 16px 48px rgba(35, 38, 31, 0.12);
+
+  /* ── Transisi ────────────────────────────────────────────────────────── */
+  --ease:         cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-spring:  cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast:     140ms;
+  --dur-mid:      260ms;
+  --dur-slow:     480ms;
+}
+
+/* ── Reset & Base ───────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background-color: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Tekstur latar tipis — memberi kesan "kertas" */
+  background-image:
+    radial-gradient(ellipse 70% 40% at 80% 10%, rgba(47, 107, 88, 0.04) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 20% 90%, rgba(47, 107, 88, 0.03) 0%, transparent 55%);
+}
+
+#root {
+  position: relative;
+}
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--paper-2); }
+::-webkit-scrollbar-thumb {
+  background: var(--garis);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
+
+/* ── Tipografi ───────────────────────────────────────────────────────────────
+   Fraunces   = display (headline besar, angka statistik)
+   Plus Jakarta Sans = body/UI (semua teks normal)
+   IBM Plex Mono = data (timestamp, track ID, nilai teknis)
+───────────────────────────────────────────────────────────────────────────── */
+h1, h2, h3 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+p { line-height: 1.65; }
+
+.font-display {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.font-mono {
+  font-family: 'IBM Plex Mono', 'Courier New', monospace;
+  font-size: 0.9em;
+  letter-spacing: 0.02em;
+}
+
+/* ── Komponen Kartu ─────────────────────────────────────────────────────────── */
+
+/* Kartu dasar — latar putih, shadow tipis */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-mid) var(--ease), border-color var(--dur-mid) var(--ease);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--sigap-soft);
+}
+
+/* Kartu paper — latar gading, bukan putih */
+.card-paper {
+  background: var(--paper-2);
+  border: 1px solid var(--garis);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xs);
+}
+
+/* Chip / badge kecil */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.chip-sigap {
+  background: var(--sigap-soft);
+  color: var(--sigap-dark);
+}
+
+.chip-bantu {
+  background: var(--bantu-soft);
+  color: var(--bantu-dark);
+}
+
+.chip-waspada {
+  background: var(--waspada-soft);
+  color: var(--waspada-dark);
+}
+
+/* ── Button ─────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 28px;
+  border-radius: 50px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  cursor: pointer;
+  border: none;
+  transition: all var(--dur-mid) var(--ease);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0);
+  transition: background var(--dur-fast);
+}
+
+.btn:hover::after {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn:active::after {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+/* Tombol utama — sigap hijau */
+.btn-primary {
+  background: var(--sigap);
+  color: #FFFFFF;
+  box-shadow: 0 2px 12px rgba(47, 107, 88, 0.30);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--sigap-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px rgba(47, 107, 88, 0.38);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(47, 107, 88, 0.25);
+}
+
+.btn-primary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Tombol ghost — border tipis */
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--garis);
+}
+
+.btn-ghost:hover {
+  background: var(--paper-2);
+  color: var(--ink);
+  border-color: var(--sigap);
+}
+
+/* Tombol outline sigap */
+.btn-outline {
+  background: transparent;
+  color: var(--sigap);
+  border: 1.5px solid var(--sigap);
+}
+
+.btn-outline:hover {
+  background: var(--sigap-soft);
+}
+
+/* ── Layout ─────────────────────────────────────────────────────────────────── */
+.page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* ── Transisi halaman masuk ─────────────────────────────────────────────────── */
+.page-enter {
+  animation: fadeSlideUp var(--dur-slow) var(--ease) both;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Animasi utilitas ────────────────────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50%       { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes progressSweep {
+  0%   { left: -45%; }
+  100% { left: 105%; }
+}
+
+@keyframes skeletonGlow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(47, 107, 88, 0.30)); }
+  50%       { filter: drop-shadow(0 0 14px rgba(47, 107, 88, 0.55)); }
+}
+
+/* ── Dropzone (kertas dengan border putus-putus) ────────────────────────────── */
+.dropzone {
+  width: 100%;
+  border-radius: var(--radius-xl);
+  border: 2px dashed var(--ink-hairline);
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all var(--dur-mid) var(--ease);
+  padding: 36px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.dropzone:hover,
+.dropzone.dragging {
+  border-color: var(--sigap);
+  background: var(--sigap-soft);
+  box-shadow: 0 0 0 4px var(--sigap-glow);
+}
+
+.dropzone.has-file {
+  border-color: var(--sigap);
+  border-style: solid;
+  background: rgba(47, 107, 88, 0.03);
+  cursor: default;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(245, 243, 234, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--garis);
+  box-shadow: var(--shadow-xs);
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.navbar-logo {
+  width: 36px;
+  height: 36px;
+  background: var(--sigap);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(47, 107, 88, 0.30);
+  flex-shrink: 0;
+}
+
+.navbar-title {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.03em;
+}
+
+.navbar-subtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sigap);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.navbar-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  background: var(--paper-2);
+  border: 1px solid var(--garis);
+  border-radius: 20px;
+  padding: 4px 12px;
+  letter-spacing: 0.02em;
+}
+
+/* ── Divider ─────────────────────────────────────────────────────────────────── */
+.divider {
+  height: 1px;
+  background: var(--garis);
+  margin: 24px 0;
+}
+
+/* ── Utilitas teks ──────────────────────────────────────────────────────────── */
+.text-sigap    { color: var(--sigap); }
+.text-bantu    { color: var(--bantu); }
+.text-waspada  { color: var(--waspada); }
+.text-muted    { color: var(--ink-soft); }
+.text-faint    { color: var(--ink-faint); }
+
+/* ── Kartu Kamera ─────────────────────────────────────────────────────────────
+   Dua kartu ilustratif pilihan jenis kamera — menggantikan dropdown biasa.
+───────────────────────────────────────────────────────────────────────────── */
+.camera-card {
+  flex: 1 1 0;
+  min-width: 160px;
+  padding: 20px 18px;
+  border-radius: var(--radius-md);
+  border: 2px solid var(--garis);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all var(--dur-mid) var(--ease);
+  text-align: left;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.camera-card:hover {
+  border-color: var(--sigap);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.camera-card.selected-lorong {
+  border-color: var(--waspada);
+  background: var(--waspada-soft);
+  box-shadow: 0 4px 16px rgba(193, 69, 59, 0.12);
+}
+
+.camera-card.selected-rak {
+  border-color: var(--bantu);
+  background: var(--bantu-soft);
+  box-shadow: 0 4px 16px rgba(222, 159, 60, 0.12);
+}
+
+.camera-card.selected-both {
+  border-color: var(--sigap);
+  background: var(--sigap-soft);
+  box-shadow: 0 4px 16px rgba(47, 107, 88, 0.12);
+}
+
+/* ── Kartu Event Timeline ─────────────────────────────────────────────────────
+   Border kiri berwarna sesuai tipe kejadian.
+───────────────────────────────────────────────────────────────────────────── */
+.event-card {
+  width: 100%;
+  padding: 14px 16px 14px 20px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--garis);
+  border-left: 4px solid var(--garis);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all var(--dur-mid) var(--ease);
+  position: relative;
+}
+
+.event-card.jatuh {
+  border-left-color: var(--waspada);
+}
+
+.event-card.bantu {
+  border-left-color: var(--bantu);
+}
+
+.event-card:hover {
+  border-color: var(--sigap);
+  border-left-color: var(--sigap);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(3px);
+}
+
+.event-card.active.jatuh {
+  background: var(--waspada-soft);
+  border-color: var(--waspada-border);
+  border-left-color: var(--waspada);
+  box-shadow: 0 4px 16px rgba(193, 69, 59, 0.10);
+  transform: translateX(4px);
+}
+
+.event-card.active.bantu {
+  background: var(--bantu-soft);
+  border-color: var(--bantu-border);
+  border-left-color: var(--bantu);
+  box-shadow: 0 4px 16px rgba(222, 159, 60, 0.10);
+  transform: translateX(4px);
+}
+
+/* ── Summary Badge ─────────────────────────────────────────────────────────── */
+.summary-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 24px 36px;
+  border-radius: var(--radius-lg);
+  flex: 1 1 0;
+  min-width: 130px;
+}
+
+.summary-badge.jatuh {
+  background: var(--waspada-soft);
+  border: 1px solid var(--waspada-border);
+}
+
+.summary-badge.bantu {
+  background: var(--bantu-soft);
+  border: 1px solid var(--bantu-border);
+}
+
+.summary-badge .number {
+  font-family: 'Fraunces', Georgia, serif;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.summary-badge.jatuh .number  { color: var(--waspada); }
+.summary-badge.bantu  .number  { color: var(--bantu); }
+
+/* ── Proses steps ────────────────────────────────────────────────────────────── */
+.process-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--garis);
+}
+
+.process-step:last-child {
+  border-bottom: none;
+}
+
+.process-step-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--sigap);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Privacy note bar ────────────────────────────────────────────────────────── */
+.privacy-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--ink-faint);
+  margin-top: 12px;
+}
+
+/* ── Info box / tip ─────────────────────────────────────────────────────────── */
+.info-box {
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--sigap-soft);
+  border: 1px solid rgba(47, 107, 88, 0.2);
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+/* ── Error banner ───────────────────────────────────────────────────────────── */
+.error-banner {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  background: var(--waspada-soft);
+  border: 1px solid var(--waspada-border);
+  color: var(--waspada-dark);
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ── Progress bar ───────────────────────────────────────────────────────────── */
+.progress-track {
+  width: 100%;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--garis);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-sweep {
+  position: absolute;
+  height: 100%;
+  width: 45%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--sigap), transparent);
+  animation: progressSweep 2.2s ease-in-out infinite;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .navbar-subtitle {
+    display: none;
+  }
+
+  .navbar-badge {
+    font-size: 10px;
+    padding: 3px 10px;
+  }
+}

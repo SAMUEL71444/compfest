@@ -116,6 +116,22 @@ def health():
     }
 
 
+@app.get("/api/status")
+def api_status():
+    """
+    Status ketersediaan model untuk ditampilkan di frontend.
+    Return:
+      fall_model    : bool — Kepala Jatuh (fall_head.pt) siap
+      inter_model   : bool — Kepala Interaksi (interaction_head.pt) siap
+      pipeline_ready: bool — minimal YOLO tersedia (YOLOv8 selalu ready jika terinstal)
+    """
+    return {
+        "fall_model":     _state["fall_model"] is not None,
+        "inter_model":    _state["inter_model"] is not None,
+        "pipeline_ready": True,  # YOLOv8-pose selalu di-load lazy saat pertama infer
+    }
+
+
 @app.post("/analyze")
 async def analyze_video(
     file: UploadFile = File(..., description="File video .mp4"),
@@ -163,32 +179,38 @@ async def analyze_video(
     run_fall = camera_type in ("lorong", "both")
     run_interaction = camera_type in ("rak", "both")
 
-    # dwell_ratio lebih tinggi untuk kamera top-down (torso terforeshorten)
-    dwell_ratio = 1.2 if camera_type == "rak" else 0.3
-
     # Ambil fall_joints dari config model jika tersedia
     fall_joints = _state["fall_cfg"].get("fall_joints", list(range(5, 17)))
+
+
 
     cfg = {
         "run_fall": run_fall,
         "run_interaction": run_interaction,
         # Threshold deteksi jatuh
-        "fall_thr": 0.80,
-        "fall_angle": 55.0,
+        "fall_thr":    0.80,
+        "fall_angle":  35.0,        # turunkan dari 55° agar tidak false positive
         "fall_confirm": True,
         "fall_joints": fall_joints,
-        # Threshold deteksi butuh bantuan
-        "inspect_idx": [4, 5],
-        "help_min_win": 3,            # 3 jendela ≈ 5 detik
-        # Geometri diam/dwell
-        "dwell_ratio": dwell_ratio,
+        # MERL classes: 0=background,1=reach,2=retract,3=hand_in_shelf,4=inspect_product,5=inspect_shelf
+        "inspect_idx": [1, 3, 4, 5],
+        # Untuk kamera rak: 1 window cukup (is_dwell di-skip, false positive rendah)
+        # Untuk kamera lorong: butuh 2 window berturut (tanpa dwell skip)
+        "help_min_win": 1 if camera_type == "rak" else 2,
+        # Geometri diam/dwell — top-down: skip sepenuhnya (lihat analyze.py skip_dwell)
+        "dwell_ratio": 3.0 if camera_type == "rak" else 0.4,
         # Pipeline normalisasi
         "target_fps": 15,
         "window": 45,
         "stride": 15,
-        # Ekstraksi
+        # Ekstraksi — filter false positive kamera sudut
         "min_track_frames": 10,
+        "det_conf": 0.45,
+        "min_bbox_ratio": 0.005 if camera_type == "rak" else 0.01,
+        "min_kp_conf": 0.25,
+        "min_visible_kp": 6,    # minimal 6 joint visible untuk bukan ghost
     }
+
 
     output_filename = f"{stem}_{uid}_anotasi.mp4"
     output_path = OUTPUTS_DIR / output_filename
@@ -196,16 +218,28 @@ async def analyze_video(
     try:
         logger.info(f"Mulai analisis [{camera_type}]: {upload_path.name}")
 
-        # Analisis
+        # Tentukan mode berdasarkan model yang tersedia
+        effective_run_fall = run_fall and _state["fall_model"] is not None
+        effective_run_inter = run_interaction and _state["inter_model"] is not None
+
+        if not effective_run_fall and run_fall:
+            logger.warning("fall_head.pt tidak tersedia — deteksi jatuh dilewati.")
+        if not effective_run_inter and run_interaction:
+            logger.warning("interaction_head.pt tidak tersedia — deteksi interaksi dilewati.")
+
+        # Analisis — camera_type menentukan kepala mana yg aktif (rak=no fall, lorong=no inter)
         result = analyze(
             str(upload_path),
             cfg,
-            fall_model=_state["fall_model"] if run_fall else None,
-            inter_model=_state["inter_model"] if run_interaction else None,
+            fall_model=_state["fall_model"] if effective_run_fall else None,
+            inter_model=_state["inter_model"] if effective_run_inter else None,
+            camera_type=camera_type,
         )
 
+
         # Render video beranotasi
-        render(str(upload_path), result, str(output_path))
+        render(str(upload_path), result, str(output_path), camera_type=camera_type)
+
 
         # Hitung ringkasan
         n_jatuh = sum(1 for e in result["timeline"] if e["tipe"] == "jatuh")
@@ -218,6 +252,10 @@ async def analyze_video(
             "fps": result["src_fps"],
             "timeline": result["timeline"],
             "annotated_video_url": f"/outputs/{output_filename}",
+            "model_mode": {
+                "fall": effective_run_fall,
+                "interaction": effective_run_inter,
+            },
             "summary": {
                 "jatuh": n_jatuh,
                 "butuh_bantuan": n_bantuan,

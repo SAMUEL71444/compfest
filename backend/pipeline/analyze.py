@@ -59,34 +59,20 @@ def analyze(
     cfg: dict,
     fall_model: Optional[BiLSTMHead] = None,
     inter_model: Optional[BiLSTMHead] = None,
+    camera_type: str = "both",
 ) -> dict:
     """
     Analisis penuh satu klip video.
 
-    video_path: path ke .mp4
-    cfg: konfigurasi — field yang relevan:
-        run_fall / run_interaction : bool — aktifkan tiap kepala
-        fall_thr      : float 0–1  — ambang probabilitas jatuh (default 0.80)
-        fall_angle    : float °    — ambang sudut torso konfirmasi jatuh (default 55°)
-        fall_confirm  : bool       — wajibkan gate geometri sudut torso (default True)
-        fall_joints   : list[int]  — 12 indeks sendi untuk Kepala Jatuh
-        inspect_idx   : list[int]  — indeks kelas inspect (default [4,5])
-        help_min_win  : int        — jendela berturut-turut untuk butuh_bantuan (default 3)
-        dwell_ratio   : float      — ambang gerak hip sebagai fraksi torso (default 0.3)
-        target_fps    : float      — fps target setelah resample (default 15)
-        window        : int        — panjang jendela frame (default 45)
-        stride        : int        — langkah jendela (default 15)
-        min_track_frames : int     — filter track terlalu pendek (default 10)
-
-    Returns: {
-        "timeline"          : [event_dict, ...]  — diurutkan by t0
-        "frame_annotations" : {frame_idx: [{track_id, keypoints, action_label}]}
-        "src_fps"           : float
-        "total_frames"      : int
-    }
+    camera_type: 'lorong' | 'rak' | 'both'
+      - 'rak'    → kamera top-down (atas rak) — fall detection DIMATIKAN karena
+                    sudut torso selalu ≈90° dari atas, pasti false positive.
+      - 'lorong' → kamera samping lorong — fall detection AKTIF, interaction OFF.
+      - 'both'   → kedua kepala aktif.
     """
-    # 1. Ekstraksi pose per track
-    tracks = extract_poses(video_path, cfg)
+    # 1. Ekstraksi pose per track (filter false positive berdasarkan camera_type)
+    tracks = extract_poses(video_path, cfg, camera_type=camera_type)
+
     if not tracks:
         logger.warning("Tidak ada track valid ditemukan di video.")
         return {"timeline": [], "frame_annotations": {}, "src_fps": 30.0, "total_frames": 0}
@@ -99,14 +85,33 @@ def analyze(
     dst_fps     = float(cfg.get("target_fps", 15))
     window_size = int(cfg.get("window", 45))
     stride      = int(cfg.get("stride", 15))
+    # camera_type menentukan kepala mana yang aktif
+    # Jangan batasi berdasar camera_type — selalu jalankan semua model yang ada.
+    # camera_type hanya mematikan FALL untuk kamera rak (false positive kamera atas).
     run_fall    = bool(cfg.get("run_fall", True))
     run_inter   = bool(cfg.get("run_interaction", True))
+    # Untuk kamera rak (top-down), jatuh hampir selalu false positive — nonaktifkan
+    if camera_type == "rak":
+        run_fall = False
+        logger.info("camera_type='rak' → deteksi jatuh DIMATIKAN (kamera top-down).")
     fall_thr    = float(cfg.get("fall_thr", 0.80))
-    fall_ang    = float(cfg.get("fall_angle", 55.0))
+    fall_ang    = float(cfg.get("fall_angle", 35.0))   # turunkan dari 55°
     fall_confirm= bool(cfg.get("fall_confirm", True))
-    inspect_idx = list(cfg.get("inspect_idx", [4, 5]))
-    help_min_win= int(cfg.get("help_min_win", 3))
-    dwell_ratio = float(cfg.get("dwell_ratio", 0.3))
+    # MERL label (dari geometry.py INTERACTION_CLASS_NAMES):
+    # 0=background, 1=reach, 2=retract, 3=hand_in_shelf, 4=inspect_product, 5=inspect_shelf
+    # Kelas 3,4,5 = aktivitas interaktif di rak (BUKAN 2 = retract)
+    inspect_idx = list(cfg.get("inspect_idx", [3, 4, 5]))
+    help_min_win= int(cfg.get("help_min_win", 2))
+    # dwell_ratio berbeda untuk top-down vs samping:
+    # top-down: torso_length sangat kecil karena kompresi perspektif → pakai nilai besar
+    # samping: gunakan default kecil
+    if camera_type == "rak":
+        dwell_ratio = float(cfg.get("dwell_ratio", 3.0))   # besar = toleran — top-down
+    else:
+        dwell_ratio = float(cfg.get("dwell_ratio", 0.4))
+    # Untuk kamera rak, is_dwell tidak diandalkan (YOLO top-down tidak akurat di pinggul)
+    # → skip dwell check sepenuhnya untuk kamera rak
+    skip_dwell = (camera_type == "rak")
 
     timeline: list = []
     frame_annotations: dict = {}
@@ -189,15 +194,34 @@ def analyze(
         # 5b. Deteksi kejadian BUTUH BANTUAN
         if inter_probs is not None:
             run_count, run_t0, run_t1 = 0, None, None
+            best_prob = 0.0
+
+            # Debug: log distribusi probabilitas semua kelas per jendela
+            logger.info(f"Track {track_id} — {W} jendela, inspect_idx={inspect_idx}, dwell_ratio={dwell_ratio}")
+            for w in range(min(W, 5)):  # log 5 jendela pertama saja
+                probs_str = " ".join(f"{v:.2f}" for v in inter_probs[w])
+                logger.info(f"  w={w}: probs=[{probs_str}], "
+                            f"inspect_sum={sum(inter_probs[w,i] for i in inspect_idx):.3f}, "
+                            f"is_dwell={is_dwell(raw_windows[w], dwell_ratio)}")
+
             for w, (wt0, wt1) in enumerate(window_times):
                 inspect_prob = float(sum(inter_probs[w, i] for i in inspect_idx))
-                stationary = is_dwell(raw_windows[w], dwell_ratio)
+                stationary   = skip_dwell or is_dwell(raw_windows[w], dwell_ratio)
 
-                if inspect_prob > 0.5 and stationary:
+                # Aktif jika inspect_prob cukup tinggi
+                # skip_dwell=True (kamera rak): cukup inspect_prob > 0.3
+                # skip_dwell=False (kamera lorong): butuh dwell ATAU inspect_prob sangat tinggi
+                if skip_dwell:
+                    active = inspect_prob > 0.30
+                else:
+                    active = (inspect_prob > 0.40) and (stationary or inspect_prob > 0.60)
+
+                if active:
                     if run_count == 0:
                         run_t0 = wt0
                     run_count += 1
                     run_t1 = wt1
+                    best_prob = max(best_prob, inspect_prob)
                 else:
                     if run_count >= help_min_win:
                         timeline.append({
@@ -205,9 +229,10 @@ def analyze(
                             "t0": float(run_t0),
                             "t1": float(run_t1),
                             "durasi_window": run_count,
+                            "skor": round(best_prob, 3),
                             "track_id": int(track_id),
                         })
-                    run_count, run_t0, run_t1 = 0, None, None
+                    run_count, run_t0, run_t1, best_prob = 0, None, None, 0.0
 
             # Flush run yang masih jalan di akhir sekuens
             if run_count >= help_min_win:
@@ -216,10 +241,12 @@ def analyze(
                     "t0": float(run_t0),
                     "t1": float(run_t1),
                     "durasi_window": run_count,
+                    "skor": round(best_prob, 3),
                     "track_id": int(track_id),
                 })
 
         logger.debug(f"Track {track_id}: {T_orig} frame → {W} jendela diproses.")
+
 
     timeline.sort(key=lambda x: x["t0"])
 

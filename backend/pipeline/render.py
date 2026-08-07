@@ -30,16 +30,30 @@ COCO_SKELETON = [
     (12, 14), (14, 16),       # kaki kanan
 ]
 
+# Skeleton khusus kamera top-down (atas/rak) — hanya koneksi utama yang masuk akal
+# dari pandangan atas. Lengan & kaki tidak digambar karena bercabang membingungkan.
+COCO_SKELETON_TOPDOWN = [
+    (5, 6),   # garis bahu (kiri–kanan)
+    (11, 12), # garis pinggul
+    (5, 11),  # sisi kiri torso
+    (6, 12),  # sisi kanan torso
+    # Lengan — hanya satu segmen agar tidak double-angle
+    (5, 7),   # lengan atas kiri
+    (6, 8),   # lengan atas kanan
+    (7, 9),   # lengan bawah kiri
+    (8, 10),  # lengan bawah kanan
+]
+
 # Bagian tubuh yang dipilah untuk warna gradient (opsional estetika)
 _UPPER_JOINTS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 _LOWER_JOINTS = {11, 12, 13, 14, 15, 16}
 
 # ── Palet warna BGR ───────────────────────────────────────────────────────────
-COLOR_NORMAL = (180, 220, 20)     # teal-hijau
-COLOR_FALL = (50, 50, 230)        # merah
-COLOR_HELP = (30, 150, 255)       # oranye
-COLOR_WHITE = (255, 255, 255)
-COLOR_BLACK = (0, 0, 0)
+COLOR_NORMAL = (80, 180, 80)      # Hijau  — gerakan normal biasa
+COLOR_FALL   = (40,  40, 210)     # Merah  — deteksi jatuh
+COLOR_HELP   = (30, 140, 240)     # Oranye — tampak butuh bantuan
+COLOR_WHITE  = (255, 255, 255)
+COLOR_BLACK  = (0,   0,   0)
 CONF_THRESHOLD = 0.3              # minimum confidence untuk menggambar sendi
 
 
@@ -52,17 +66,20 @@ def _get_person_color(events_active: list) -> tuple:
     return COLOR_NORMAL
 
 
-def _draw_skeleton(frame: np.ndarray, keypoints: np.ndarray, color: tuple, thickness: int = 2):
+def _draw_skeleton(frame: np.ndarray, keypoints: np.ndarray, color: tuple,
+                   thickness: int = 2, topdown: bool = False):
     """
     Gambar kerangka sendi pada frame.
 
-    keypoints: [17, 3] — (x, y, confidence)
-    color: BGR tuple
+    topdown=True  → gunakan COCO_SKELETON_TOPDOWN (kamera atas/rak),
+                    hanya tampilkan koneksi torso + lengan atas.
+    topdown=False → gunakan COCO_SKELETON penuh (kamera samping/lorong).
     """
     h, w = frame.shape[:2]
+    edges = COCO_SKELETON_TOPDOWN if topdown else COCO_SKELETON
 
     # Gambar garis penghubung sendi
-    for j1, j2 in COCO_SKELETON:
+    for j1, j2 in edges:
         x1, y1, c1 = keypoints[j1]
         x2, y2, c2 = keypoints[j2]
         if c1 > CONF_THRESHOLD and c2 > CONF_THRESHOLD:
@@ -71,25 +88,39 @@ def _draw_skeleton(frame: np.ndarray, keypoints: np.ndarray, color: tuple, thick
             cv2.line(frame, pt1, pt2, color, thickness, cv2.LINE_AA)
 
     # Gambar titik sendi
+    # Top-down: titik besar + ring tebal agar terlihat dari atas
     for j in range(17):
         x, y, c = keypoints[j]
         if c > CONF_THRESHOLD:
             cx = int(np.clip(x, 0, w - 1))
             cy = int(np.clip(y, 0, h - 1))
-            radius = 5 if j in _UPPER_JOINTS else 4
-            cv2.circle(frame, (cx, cy), radius, color, -1, cv2.LINE_AA)
-            cv2.circle(frame, (cx, cy), radius + 1, COLOR_BLACK, 1, cv2.LINE_AA)
+            r = (7 if j in _UPPER_JOINTS else 6) if topdown else (5 if j in _UPPER_JOINTS else 4)
+            cv2.circle(frame, (cx, cy), r,     color,       -1, cv2.LINE_AA)
+            cv2.circle(frame, (cx, cy), r + 1, COLOR_BLACK,  1, cv2.LINE_AA)
 
 
 def _draw_label(frame: np.ndarray, text: str, x: int, y: int, color: tuple):
-    """Gambar label teks dengan background gelap."""
-    font = cv2.FONT_HERSHEY_DUPLEX
-    scale = 0.5
-    thickness = 1
+    """Gambar label teks dengan background gelap — mudah dibaca."""
+    font      = cv2.FONT_HERSHEY_SIMPLEX   # lebih tebal dari DUPLEX
+    scale     = 0.55
+    thickness = 2
     (tw, th), baseline = cv2.getTextSize(text, font, scale, thickness)
-    # Background kotak
-    cv2.rectangle(frame, (x - 2, y - th - 4), (x + tw + 2, y + baseline), (0, 0, 0), -1)
-    cv2.putText(frame, text, (x, y), font, scale, color, thickness, cv2.LINE_AA)
+    pad = 5
+    # Background kotak dengan padding lebih besar
+    cv2.rectangle(
+        frame,
+        (x - pad, y - th - pad),
+        (x + tw + pad, y + baseline + pad),
+        (0, 0, 0), -1
+    )
+    # Opsional: border tipis berwarna agar lebih menonjol
+    cv2.rectangle(
+        frame,
+        (x - pad, y - th - pad),
+        (x + tw + pad, y + baseline + pad),
+        color, 1
+    )
+    cv2.putText(frame, text, (x, y), font, scale, COLOR_WHITE, thickness, cv2.LINE_AA)
 
 
 def _draw_event_banner(frame: np.ndarray, events_active: list):
@@ -124,14 +155,17 @@ def _draw_event_banner(frame: np.ndarray, events_active: list):
         y_offset += 52
 
 
-def render(video_path: str, analysis_result: dict, output_path: str):
+def render(video_path: str, analysis_result: dict, output_path: str,
+           camera_type: str = "lorong"):
     """
     Render video beranotasi dari hasil analyze().
 
     video_path: video asli
     analysis_result: dict dari analyze() — berisi frame_annotations + timeline
     output_path: path output .mp4
+    camera_type: 'rak' → gunakan skeleton top-down (tanpa kaki/lengan penuh)
     """
+    topdown = (camera_type == "rak")
     frame_annotations = analysis_result.get("frame_annotations", {})
     timeline = analysis_result.get("timeline", [])
     src_fps = analysis_result.get("src_fps", 30.0)
@@ -182,13 +216,31 @@ def render(video_path: str, analysis_result: dict, output_path: str):
                 color = _get_person_color(person_events)
 
                 # Gambar kerangka
-                _draw_skeleton(frame, kps, color)
+                _draw_skeleton(frame, kps, color,
+                               thickness=3 if person_events else 2,
+                               topdown=topdown)
 
-                # Label: ID + aksi (di atas kepala)
+                # Label: ID + status mudah dibaca (di atas kepala)
                 nose_x, nose_y, nose_c = kps[0]
+                # Fallback: gunakan bahu jika hidung tidak terdeteksi
+                if nose_c <= CONF_THRESHOLD:
+                    sh_x = (kps[5][0] + kps[6][0]) / 2
+                    sh_y = (kps[5][1] + kps[6][1]) / 2
+                    nose_x, nose_y = sh_x, sh_y
+                    nose_c = min(kps[5][2], kps[6][2])
+
                 if nose_c > CONF_THRESHOLD:
-                    label = f"ID:{track_id} | {action}"
-                    _draw_label(frame, label, int(nose_x), max(int(nose_y) - 15, 20), color)
+                    # Teks status yang mudah dimengerti
+                    if any(e["tipe"] == "jatuh" for e in person_events):
+                        status_txt = "JATUH!"
+                    elif any(e["tipe"] == "butuh_bantuan" for e in person_events):
+                        status_txt = "BUTUH BANTUAN"
+                    else:
+                        status_txt = "Normal"
+                    label = f"ID:{track_id}  {status_txt}"
+                    lx = max(int(nose_x) - 40, 4)
+                    ly = max(int(nose_y) - 18, 20)
+                    _draw_label(frame, label, lx, ly, color)
 
         # Banner kejadian
         if events_active:

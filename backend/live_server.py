@@ -123,30 +123,36 @@ async def process_track_window(
     Ini sync (torch inference) tapi dipanggil dari thread executor agar tidak block WS loop.
     """
     from pipeline.normalize import build_windows_for_heads
-    from pipeline.geometry import torso_angle as raw_torso_angle, is_dwell
+    from pipeline.geometry import window_torso_angle, is_dwell
+    from pipeline.models import predict_proba
+    import torch
 
     try:
         # Normalisasi + bangun tensor input per kepala
-        fall_windows, interaction_windows = build_windows_for_heads(
+        # window [45,17,3] sudah di-resample ke FPS_LIVE saat dikumpulkan
+        head_inputs = build_windows_for_heads(
             window,
-            window_size=WINDOW_SIZE,
+            src_fps=FPS_LIVE,
+            window=WINDOW_SIZE,
             stride=WINDOW_SIZE,   # single jendela
+            dst_fps=15.0,
         )
+        fall_input   = head_inputs["fall_input"]        # [W, 45, 24]
+        inter_input  = head_inputs["interaction_input"] # [W, 45, 51]
+        raw_windows  = head_inputs["raw_windows"]       # [W, 45, 17, 3]
+
+        if len(fall_input) == 0:
+            return
 
         # ── Kepala Jatuh ────────────────────────────────────────────
-        if camera_type != "rak" and fall_head is not None and len(fall_windows) > 0:
-            from pipeline.models import predict_proba
-            import torch
-            fall_tensor = torch.tensor(fall_windows, dtype=torch.float32)
-            proba = predict_proba(fall_head, fall_tensor)  # [N, 3]
+        if camera_type != "rak" and fall_head is not None:
+            fall_tensor = torch.tensor(fall_input, dtype=torch.float32)
+            proba = predict_proba(fall_head, fall_tensor)  # [W, 3]
             fall_score = float(proba[0, 2])  # kelas 2 = jatuh
 
-            # Verifikasi geometri: sudut torso
-            torso_deg = raw_torso_angle(window[-1])  # frame terakhir
-            if torso_deg is not None:
-                torso_ok = abs(torso_deg) > TORSO_THRESH
-            else:
-                torso_ok = True  # tidak bisa verifikasi → lewatkan saja
+            # Konfirmasi geometri: sudut torso dari raw window
+            torso_deg = window_torso_angle(raw_windows[0])  # rata-rata 5 frame terakhir
+            torso_ok  = torso_deg >= TORSO_THRESH
 
             if fall_score >= FALL_THRESH and torso_ok:
                 await ws.send_json({
@@ -156,30 +162,30 @@ async def process_track_window(
                     "t0":       round(t_now - WINDOW_SIZE / FPS_LIVE, 2),
                     "t1":       round(t_now, 2),
                     "skor":     round(fall_score, 3),
+                    "sudut_torso": round(torso_deg, 1),
                 })
-                logger.info(f"[live] Jatuh track={track_id} skor={fall_score:.2f} torso={torso_deg}°")
+                logger.info(f"[live] Jatuh track={track_id} skor={fall_score:.2f} torso={torso_deg:.1f}deg")
 
         # ── Kepala Interaksi ─────────────────────────────────────────
-        if camera_type != "lorong" and interaction_head is not None and len(interaction_windows) > 0:
-            from pipeline.models import predict_proba
-            import torch
-            inter_tensor = torch.tensor(interaction_windows, dtype=torch.float32)
-            proba = predict_proba(interaction_head, inter_tensor)  # [N, 6]
-            # Kelas 3..5 = hand_in_shelf, inspect_product, inspect_shelf → aktivitas di rak
-            rak_score = float(proba[0, 3:].max())
+        if camera_type != "lorong" and interaction_head is not None:
+            inter_tensor = torch.tensor(inter_input, dtype=torch.float32)
+            proba = predict_proba(interaction_head, inter_tensor)  # [W, 6]
+            # Kelas 3,4,5 = hand_in_shelf, inspect_product, inspect_shelf
+            inspect_score = float(proba[0, 3:6].sum())
 
-            # Verifikasi dwell (diam lama)
-            dwell_ok = is_dwell(window[:, 11:13, :2], fps=FPS_LIVE, seconds=DWELL_SECONDS)
+            # Verifikasi dwell (orang diam di depan rak)
+            dwell_ok = is_dwell(raw_windows[0], dwell_ratio=DWELL_THRESH)
 
-            if rak_score >= DWELL_THRESH and dwell_ok:
+            if inspect_score >= 0.5 and dwell_ok:
                 await ws.send_json({
                     "type":       "event",
                     "tipe":       "butuh_bantuan",
                     "track_id":   track_id,
                     "t0":         round(t_now - WINDOW_SIZE / FPS_LIVE, 2),
                     "t1":         round(t_now, 2),
+                    "skor":       round(inspect_score, 3),
                 })
-                logger.info(f"[live] Butuh bantuan track={track_id} rak_skor={rak_score:.2f}")
+                logger.info(f"[live] Butuh bantuan track={track_id} inspect={inspect_score:.2f}")
 
     except Exception as e:
         logger.warning(f"[live] process_track_window error track={track_id}: {e}")
@@ -194,15 +200,34 @@ async def ws_live(websocket: WebSocket):
     await websocket.accept()
     logger.info("[live] Klien terhubung.")
 
-    # Muat model (singleton — tidak dimuat ulang kalau sudah ada)
+    # Muat model dari app.state (sudah di-load saat startup app.py)
+    # Fallback: load langsung dari disk jika dipanggil standalone
     try:
-        from pipeline.models import load_head, predict_proba  # noqa
-        fall_head        = load_head("fall")
-        interaction_head = load_head("interaction")
-    except Exception as e:
-        logger.warning(f"[live] Gagal muat BiLSTM heads: {e}. Mode stub (pose only).")
-        fall_head        = None
-        interaction_head = None
+        from app import _state as app_state
+        fall_head        = app_state.get("fall_model")
+        interaction_head = app_state.get("inter_model")
+        if fall_head is None and interaction_head is None:
+            raise RuntimeError("app_state kosong")
+        logger.info("[live] Menggunakan model dari app_state.")
+    except Exception:
+        # Fallback: load langsung
+        try:
+            from pipeline.models import load_head
+            import os
+            BASE = os.path.dirname(__file__)
+            fall_head        = load_head(
+                os.path.join(BASE, "models", "fall_head.pt"),
+                os.path.join(BASE, "models", "fall_head.json"),
+            )[0]
+            interaction_head = load_head(
+                os.path.join(BASE, "models", "interaction_head.pt"),
+                os.path.join(BASE, "models", "interaction_head.json"),
+            )[0]
+            logger.info("[live] Model dimuat langsung dari disk.")
+        except Exception as e2:
+            logger.warning(f"[live] Gagal muat BiLSTM heads: {e2}. Mode stub (pose only).")
+            fall_head        = None
+            interaction_head = None
 
     from pipeline.extract import extract_keypoints_per_frame
 

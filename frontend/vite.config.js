@@ -7,9 +7,17 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // Teruskan /api/* ke backend FastAPI (dev mode)
+      //
+      // ws:true WAJIB ada di sini. Browser menyambung ke /api/ws/live dan
+      // /api/ws/produksi/alert, yang cocok dengan aturan '/api' ini lebih dulu
+      // (bukan aturan '/ws' di bawah). Tanpa ws:true, Vite tidak memasang
+      // handler upgrade untuk aturan ini sehingga seluruh WebSocket gagal di
+      // mode dev — padahal jalan normal di Docker karena nginx menanganinya
+      // lewat blok `location /api/ws/` terpisah.
       '/api': {
         target: 'http://localhost:8000',
         changeOrigin: true,
+        ws: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
       // Teruskan WebSocket /ws/* ke backend (mode live)

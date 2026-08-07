@@ -108,10 +108,11 @@ cp backend/data/cameras.example.json backend/data/cameras.json
 SAPA_PRODUKSI=1 uvicorn app:app --port 8000
 ```
 
-Lalu:
+Lalu buka **http://localhost:5173/dashboard** untuk dashboard operator, atau
+periksa langsung lewat API:
 ```bash
-curl localhost:8000/api/produksi/kesehatan     # status tiap kamera
-curl localhost:8000/api/produksi/kejadian      # log kejadian
+curl localhost:8000/produksi/kesehatan     # status tiap kamera
+curl localhost:8000/produksi/kejadian      # log kejadian
 ```
 
 **Inti AI-nya tidak dibangun ulang.** Lapisan ini memakai `pipeline/` yang sama
@@ -121,7 +122,7 @@ ditambahkan murni infrastruktur.
 📄 Panduan lengkap (pemasangan kamera, kalibrasi, privasi, kebutuhan hardware):
 **[docs/PRODUKSI.md](docs/PRODUKSI.md)**
 
-> ⚠️ Endpoint `/api/produksi/*` **tidak punya autentikasi**. Untuk pemasangan
+> ⚠️ Endpoint `/produksi/*` **tidak punya autentikasi**. Untuk pemasangan
 > nyata, taruh di balik reverse proxy ber-auth di jaringan toko — jangan pernah
 > diekspos langsung ke internet.
 

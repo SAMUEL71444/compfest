@@ -48,14 +48,14 @@ klien = TestClient(app)
 
 print("\n[A] Route terdaftar")
 jalur = set(klien.get("/openapi.json").json()["paths"])
-for p in ["/api/produksi/kamera", "/api/produksi/kejadian", "/api/produksi/kesehatan",
-          "/api/produksi/kamera/{camera_id}/pratinjau",
-          "/api/produksi/kejadian/{kejadian_id}/tanggapi"]:
+for p in ["/produksi/kamera", "/produksi/kejadian", "/produksi/kesehatan",
+          "/produksi/kamera/{camera_id}/pratinjau",
+          "/produksi/kejadian/{kejadian_id}/tanggapi"]:
     cek(f"ada {p}", p in jalur, sorted(jalur))
 # /ws/produksi/alert tidak muncul di OpenAPI (WebSocket) — dibuktikan di blok [F].
 
 print("\n[B] Gerbang: mode produksi belum aktif → 503, bukan crash")
-r = klien.get("/api/produksi/kamera")
+r = klien.get("/produksi/kamera")
 cek("503 saat manager belum dipasang", r.status_code == 503, f"dapat {r.status_code}")
 cek("pesan menuntun ke SAPA_PRODUKSI", "SAPA_PRODUKSI" in r.json().get("detail", ""))
 
@@ -65,11 +65,11 @@ m = CameraManager(path_profil=os.path.join(d, "cam.json"),
                   path_log_kejadian=os.path.join(d, "kejadian.jsonl"))
 pasang_manager(m)
 
-r = klien.get("/api/produksi/kamera")
+r = klien.get("/produksi/kamera")
 cek("daftar kosong di awal", r.status_code == 200 and r.json()["jumlah"] == 0)
 
 # aktif=false supaya tidak benar-benar menyalakan pekerja kamera
-r = klien.post("/api/produksi/kamera", json={
+r = klien.post("/produksi/kamera", json={
     "id": "lorong-1", "nama": "Lorong 1",
     "sumber": "rtsp://admin:rahasia@10.0.0.9:554/s1",
     "jenis": "lorong", "aktif": False})
@@ -79,18 +79,18 @@ if r.status_code == 201:
     cek("lorong → run_fall true", b["run_fall"] is True)
     cek("lorong → run_interaction false", b["run_interaction"] is False)
 
-r = klien.get("/api/produksi/kamera")
+r = klien.get("/produksi/kamera")
 cek("password RTSP tidak bocor di daftar", "rahasia" not in r.text, r.text[:160])
 
-r = klien.post("/api/produksi/kamera", json={
+r = klien.post("/produksi/kamera", json={
     "id": "x", "nama": "X", "sumber": "0", "jenis": "atap", "aktif": False})
 cek("jenis ngawur → 400", r.status_code == 400, f"dapat {r.status_code}")
 
-r = klien.post("/api/produksi/kamera", json={
+r = klien.post("/produksi/kamera", json={
     "id": "lorong-1", "nama": "Dobel", "sumber": "0", "aktif": False})
 cek("id duplikat → 400", r.status_code == 400, f"dapat {r.status_code}")
 
-r = klien.patch("/api/produksi/kamera/lorong-1", json={"jenis": "rak"})
+r = klien.patch("/produksi/kamera/lorong-1", json={"jenis": "rak"})
 cek("ubah jenis → 200", r.status_code == 200, f"{r.status_code} {r.text[:120]}")
 if r.status_code == 200:
     b = r.json()
@@ -98,24 +98,24 @@ if r.status_code == 200:
         b["run_fall"] is False and b["run_interaction"] is True)
     cek("skip_dwell ikut default rak", b["skip_dwell"] is True)
 
-r = klien.get("/api/produksi/kamera/tidak-ada")
+r = klien.get("/produksi/kamera/tidak-ada")
 cek("kamera tak dikenal → 404", r.status_code == 404, f"dapat {r.status_code}")
 
-r = klien.post("/api/produksi/kamera/lorong-1/berhenti")
+r = klien.post("/produksi/kamera/lorong-1/berhenti")
 cek("berhenti pada kamera mati tetap 200", r.status_code == 200, f"dapat {r.status_code}")
 
 print("\n[D] Kejadian & kesehatan")
-r = klien.get("/api/produksi/kejadian")
+r = klien.get("/produksi/kejadian")
 cek("log kejadian 200", r.status_code == 200)
 cek("ada ringkasan retensi", "retensi_jam" in r.json()["ringkasan"])
 
-r = klien.post("/api/produksi/kejadian/tidakada/tanggapi", json={"status": "diabaikan"})
+r = klien.post("/produksi/kejadian/tidakada/tanggapi", json={"status": "diabaikan"})
 cek("tanggapi kejadian hantu → 404", r.status_code == 404, f"dapat {r.status_code}")
 
-r = klien.post("/api/produksi/kejadian/apa/tanggapi", json={"status": "ngawur"})
+r = klien.post("/produksi/kejadian/apa/tanggapi", json={"status": "ngawur"})
 cek("status tanggapan ngawur → 400", r.status_code == 400, f"dapat {r.status_code}")
 
-r = klien.get("/api/produksi/kesehatan")
+r = klien.get("/produksi/kesehatan")
 cek("kesehatan 200", r.status_code == 200, r.text[:120])
 if r.status_code == 200:
     h = r.json()
@@ -123,7 +123,7 @@ if r.status_code == 200:
     cek("melaporkan status model", "model" in h)
 
 print("\n[E] Pratinjau saat kamera tidak berjalan")
-r = klien.get("/api/produksi/kamera/lorong-1/pratinjau")
+r = klien.get("/produksi/kamera/lorong-1/pratinjau")
 cek("pratinjau kamera mati → 409", r.status_code == 409, f"dapat {r.status_code}")
 
 print("\n[F] WebSocket alert mengirim snapshot awal")
@@ -134,6 +134,29 @@ try:
         cek("membawa daftar kejadian", "kejadian" in pesan)
 except Exception as e:
     cek("websocket tersambung", False, repr(e))
+
+print("\n[G] CameraWorker tidak menimpa internal threading.Thread")
+# threading.Thread memakai beberapa atribut privat secara internal — yang paling
+# berbahaya _stop(), dipanggil join() lewat _wait_for_tstate_lock(). Menimpanya
+# dengan Event membuat SETIAP join() melempar TypeError saat thread selesai,
+# dan itu hanya terlihat saat runtime, bukan saat impor.
+import threading
+from production.worker import CameraWorker
+from production.profiles import CameraProfile
+from production.alerts import AlertEngine, EventLog
+
+w = CameraWorker(
+    profil=CameraProfile.from_dict({"id": "uji", "nama": "Uji", "sumber": "0"}),
+    mesin_alert=AlertEngine(EventLog(retensi_jam=1.0)),
+)
+bentrok = [n for n in vars(w) if callable(getattr(threading.Thread, n, None))]
+cek("tidak ada atribut yang menimpa method Thread", bentrok == [], f"bentrok={bentrok}")
+cek("punya penanda henti sendiri", isinstance(getattr(w, "_henti", None), threading.Event))
+try:
+    w.stop()          # tidak pernah start — tetap harus aman
+    cek("stop() pada worker yang belum jalan aman", True)
+except Exception as e:
+    cek("stop() pada worker yang belum jalan aman", False, repr(e))
 
 m.berhenti()
 print(f"\n{'='*52}\nLULUS {lulus} / {lulus+gagal}" + (f"  — GAGAL {gagal}" if gagal else "  — semua lulus"))

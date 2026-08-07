@@ -3,7 +3,20 @@ production/api.py — SAPA Produksi
 
 REST + WebSocket untuk dashboard operator (KONTEKS §6).
 
-Peta endpoint (semua berprefiks /api/produksi kecuali WebSocket):
+DUA BENTUK URL — JANGAN TERTUKAR
+--------------------------------
+Backend menyajikan route ini di bawah prefiks `/produksi`, mengikuti konvensi
+endpoint lain (`/analyze`, `/health`) yang juga tanpa `/api`. Prefiks `/api`
+adalah konvensi SISI FRONTEND: baik nginx (`location /api/`) maupun proxy dev
+Vite membuangnya sebelum meneruskan ke backend.
+
+    Langsung ke backend  :  http://localhost:8000/produksi/kamera
+    Lewat dashboard      :  http://localhost:5173/api/produksi/kamera
+
+Hal yang sama berlaku untuk WebSocket: backend melayani `/ws/produksi/alert`,
+sedangkan browser menyambung ke `/api/ws/produksi/alert`.
+
+Peta endpoint (relatif terhadap prefiks /produksi):
     GET    /kamera                    daftar kamera + status
     POST   /kamera                    tambah kamera
     GET    /kamera/{id}               detail satu kamera
@@ -37,7 +50,7 @@ from .manager import CameraManager
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/produksi", tags=["produksi"])
+router = APIRouter(prefix="/produksi", tags=["produksi"])
 ws_router = APIRouter(tags=["produksi"])
 
 # Diisi app.py saat startup.

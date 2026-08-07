@@ -105,7 +105,11 @@ class CameraWorker(threading.Thread):
         # throughput, tapi menghilangkan seluruh kelas bug konkurensi torch.
         self._kunci_inferensi = kunci_inferensi or threading.Lock()
 
-        self._stop = threading.Event()
+        # JANGAN dinamai self._stop: threading.Thread sudah punya method internal
+        # _stop() yang dipanggil join() lewat _wait_for_tstate_lock(). Menimpanya
+        # dengan Event membuat setiap join() melempar
+        # "TypeError: 'Event' object is not callable" saat thread selesai.
+        self._henti = threading.Event()
         self._yolo = None
 
         self._grabber = FrameGrabber(
@@ -142,7 +146,7 @@ class CameraWorker(threading.Thread):
 
     # ── Siklus hidup ──────────────────────────────────────────────────────────
     def stop(self, timeout: float = 10.0) -> None:
-        self._stop.set()
+        self._henti.set()
         self._grabber.stop()
         if self.is_alive():
             self.join(timeout=timeout)
@@ -168,11 +172,11 @@ class CameraWorker(threading.Thread):
         seq_terakhir = -1
         t_rawat_terakhir = time.monotonic()
 
-        while not self._stop.is_set():
+        while not self._henti.is_set():
             hasil = self._grabber.read_baru(seq_terakhir)
             if hasil is None:
                 # Belum ada frame baru — tidur singkat agar tidak spin.
-                if self._stop.wait(0.02):
+                if self._henti.wait(0.02):
                     break
                 continue
 
@@ -450,7 +454,7 @@ class CameraWorker(threading.Thread):
             "kamera_id": self.profil.id,
             "nama": self.profil.nama,
             "jenis": self.profil.jenis,
-            "berjalan": self.is_alive() and not self._stop.is_set(),
+            "berjalan": self.is_alive() and not self._henti.is_set(),
             "sumber": self.profil.sumber_aman(),
             "fall_aktif": self._fall_aktif(),
             "interaksi_aktif": self._inter_aktif(),

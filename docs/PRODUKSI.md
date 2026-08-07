@@ -43,8 +43,26 @@ SAPA_PRODUKSI=1 uvicorn app:app --port 8000
 
 Cek berhasil atau tidak:
 ```bash
-curl localhost:8000/api/produksi/kesehatan | python3 -m json.tool
+curl localhost:8000/produksi/kesehatan | python3 -m json.tool
 ```
+
+### ⚠️ Dua bentuk URL — jangan tertukar
+
+Backend menyajikan endpoint di bawah `/produksi`, mengikuti konvensi endpoint
+lain (`/analyze`, `/health`) yang juga tanpa `/api`. Prefiks `/api` adalah
+konvensi sisi frontend — nginx dan proxy dev Vite membuangnya sebelum
+meneruskan ke backend.
+
+| Dari mana | URL |
+|---|---|
+| `curl` langsung ke backend | `http://localhost:8000/produksi/kamera` |
+| Browser / dashboard | `http://localhost:5173/api/produksi/kamera` |
+| WebSocket dari browser | `ws://localhost:5173/api/ws/produksi/alert` |
+
+### Dashboard operator
+
+Buka **http://localhost:5173/dashboard** setelah frontend berjalan
+(`cd frontend && npm run dev`).
 
 ---
 
@@ -113,11 +131,11 @@ default jenis baru, kecuali disebut eksplisit di permintaan yang sama.
 
 1. Pasang kamera, masukkan profilnya, jalankan.
 2. Set `"preview": "video"` sementara, buka
-   `http://localhost:8000/api/produksi/kamera/<id>/pratinjau` di browser.
+   `http://localhost:8000/produksi/kamera/<id>/pratinjau` di browser.
 3. Pastikan kerangka menempel benar pada orang dan tidak ada deteksi "hantu"
    di sudut frame. Kalau ada, naikkan `det_conf` atau `min_bbox_ratio`.
 4. Peragakan kejadian (jatuh terkendali / berdiri lama di depan rak) dan pantau
-   `GET /api/produksi/kejadian`.
+   `GET /produksi/kejadian`.
 5. Terlalu banyak false positive → naikkan `fall_thr` / `inspect_thr` atau
    `confirm_windows`. Terlalu banyak yang terlewat → turunkan.
 6. **Kembalikan `"preview"` ke `"kerangka"` atau `"mati"` setelah selesai.**
@@ -149,7 +167,7 @@ Setiap alert lahir berstatus `baru` dan **tidak memicu tindakan otomatis apa pun
 Staf menanggapi lewat:
 
 ```bash
-curl -X POST localhost:8000/api/produksi/kejadian/<id>/tanggapi \
+curl -X POST localhost:8000/produksi/kejadian/<id>/tanggapi \
      -H 'Content-Type: application/json' \
      -d '{"status": "dikonfirmasi", "oleh": "budi"}'
 ```
@@ -177,7 +195,7 @@ Ini bukan tempelan — melekat pada desain:
   `.gitignore`.
 
 Yang **masih harus disediakan tim** sebelum pemasangan nyata:
-- Autentikasi & kontrol akses di depan `/api/produksi/*` (belum ada di kode ini).
+- Autentikasi & kontrol akses di depan `/produksi/*` (belum ada di kode ini).
 - Papan pemberitahuan di lokasi: "area ini memakai analitik pose, bukan pengenalan wajah".
 - Kajian kepatuhan UU PDP: dasar pemrosesan, hak subjek data, penanggung jawab.
 
@@ -204,7 +222,7 @@ detik + waktu inferensi).
 
 ## 9. Operasional
 
-- `GET /api/produksi/kesehatan` — status tiap kamera: terhubung/tidak, fps
+- `GET /produksi/kesehatan` — status tiap kamera: terhubung/tidak, fps
   terukur, umur frame terakhir, jumlah reconnect, error terakhir.
 - **Reconnect otomatis** dengan backoff eksponensial (2 dtk → maks 30 dtk) saat
   kamera mati atau jaringan putus.
@@ -218,16 +236,16 @@ detik + waktu inferensi).
 
 | Metode | Jalur | Fungsi |
 |---|---|---|
-| `GET` | `/api/produksi/kamera` | daftar kamera + status |
-| `POST` | `/api/produksi/kamera` | tambah kamera |
-| `PATCH` | `/api/produksi/kamera/{id}` | ubah profil (pekerja restart otomatis) |
-| `DELETE` | `/api/produksi/kamera/{id}` | hapus kamera |
-| `POST` | `/api/produksi/kamera/{id}/mulai` | nyalakan |
-| `POST` | `/api/produksi/kamera/{id}/berhenti` | matikan |
-| `GET` | `/api/produksi/kamera/{id}/pratinjau` | aliran MJPEG |
-| `GET` | `/api/produksi/kejadian` | log kejadian |
-| `POST` | `/api/produksi/kejadian/{id}/tanggapi` | konfirmasi / abaikan |
-| `GET` | `/api/produksi/kesehatan` | kesehatan sistem |
+| `GET` | `/produksi/kamera` | daftar kamera + status |
+| `POST` | `/produksi/kamera` | tambah kamera |
+| `PATCH` | `/produksi/kamera/{id}` | ubah profil (pekerja restart otomatis) |
+| `DELETE` | `/produksi/kamera/{id}` | hapus kamera |
+| `POST` | `/produksi/kamera/{id}/mulai` | nyalakan |
+| `POST` | `/produksi/kamera/{id}/berhenti` | matikan |
+| `GET` | `/produksi/kamera/{id}/pratinjau` | aliran MJPEG |
+| `GET` | `/produksi/kejadian` | log kejadian |
+| `POST` | `/produksi/kejadian/{id}/tanggapi` | konfirmasi / abaikan |
+| `GET` | `/produksi/kesehatan` | kesehatan sistem |
 | `WS` | `/ws/produksi/alert` | alert langsung |
 
 ---

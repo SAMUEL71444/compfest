@@ -18,3 +18,14 @@ backend/outputs/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Model weights (file root diabaikan, model backend disertakan)
+*.pt
+!backend/models/*.pt
+
+# File root yang bukan bagian project
+/inference.py
+/train_fall.py
+/kepala_interaksi.py
+/test_video.mp4
+

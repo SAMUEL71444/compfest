@@ -72,7 +72,13 @@ _JENDELA_FRAME = 45
 _kunci_muat_yolo = threading.Lock()
 
 
-def _muat_yolo():
+def muat_yolo():
+    """
+    Buat instance YOLOv8-pose baru dengan state tracker sendiri.
+
+    Dipakai pekerja kamera dan juga mode live browser — keduanya butuh state
+    ByteTrack terpisah per sumber video.
+    """
     from ultralytics import YOLO
     with _kunci_muat_yolo:
         return YOLO("yolov8n-pose.pt")
@@ -151,7 +157,7 @@ class CameraWorker(threading.Thread):
         self._t_mulai = time.time()
 
         try:
-            self._yolo = _muat_yolo()
+            self._yolo = muat_yolo()
         except Exception as e:
             self._error_terakhir = f"gagal memuat YOLO: {e}"
             logger.error(f"[kamera:{self.profil.id}] {self._error_terakhir}")

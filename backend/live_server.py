@@ -14,16 +14,15 @@ Protokol (sesuai addendum B.2):
 
 Arsitektur:
 - Satu WebSocket per sesi klien (satu browser tab).
-- State tracker per-koneksi disimpan di TrackBuffer (dalam memori WS handler,
-  tidak ada shared state global → aman untuk concurrent connections).
+- Setiap sesi punya instance YOLO dan buffer sendiri → tidak ada shared state
+  global, aman untuk koneksi bersamaan.
 - Reuse pipeline yang sama dengan mode upload:
-  extract_keypoints_per_frame → normalize → models → geometry
+  pose+tracking → normalize → models → geometry
 - Threshold klasifikasi sama dengan analyze.py.
 
-run_local_capture():
-- Untuk edge deployment / demo CCTV asli.
-- source=0 (webcam) atau source="rtsp://..." (kamera IP).
-- Jalankan terpisah: python live_server.py
+CATATAN: untuk deployment CCTV sungguhan (RTSP, multi-kamera, alert, 24/7),
+pakai mode produksi di production/ — lihat docs/PRODUKSI.md. Modul ini khusus
+demo webcam lewat browser.
 """
 
 import asyncio
@@ -31,11 +30,13 @@ import base64
 import json
 import logging
 import os
-from collections import defaultdict, deque
 
 import cv2
 import numpy as np
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from production.buffer import TrackWindowBuffer
+from production.worker import muat_yolo
 
 logger = logging.getLogger(__name__)
 
@@ -43,152 +44,116 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # ── Konfigurasi (sama dengan analyze.py) ──────────────────────────────────────
-WINDOW_SIZE   = int(os.getenv("WINDOW_SIZE",   45))   # frame per jendela BiLSTM
-STRIDE        = int(os.getenv("STRIDE",        15))   # langkah geser jendela
-FALL_THRESH   = float(os.getenv("FALL_THRESH",   0.55))
-DWELL_THRESH  = float(os.getenv("DWELL_THRESH",  0.60))
-TORSO_THRESH  = float(os.getenv("TORSO_THRESH",  45.0))  # derajat
-DWELL_SECONDS = float(os.getenv("DWELL_SECONDS", 3.0))
-FPS_LIVE      = 5.0   # frame rate efektif yang diterima server (1000ms / 200ms)
+WINDOW_SIZE    = 45     # frame per jendela BiLSTM setelah resample (= 3 dtk @15fps)
+FPS_TUJUAN     = 15.0   # HARUS sama dengan saat training (fall_head.json: fps=15)
+FALL_THRESH    = float(os.getenv("FALL_THRESH",   0.55))
+DWELL_THRESH   = float(os.getenv("DWELL_THRESH",  0.60))
+TORSO_THRESH   = float(os.getenv("TORSO_THRESH",  45.0))  # derajat
+INSPECT_THRESH = float(os.getenv("INSPECT_THRESH", 0.50))
+
+# Jendela analisis dalam DETIK. Browser mengirim frame ~5fps, tapi laju itu
+# bergoyang mengikuti beban perangkat klien — menyimpan "45 frame terakhir"
+# berarti buffer memuat 9 detik kejadian yang lalu di-resample dan hanya bagian
+# AWAL-nya yang dianalisis, sehingga alert tertinggal beberapa detik. Karena itu
+# jendela diukur dengan waktu dan src_fps dihitung dari stempel waktu nyata.
+WINDOW_SECONDS = 3.0
+STRIDE_SECONDS = 1.0
 
 
-class TrackBuffer:
+def _pose_track(yolo, frame: np.ndarray) -> dict:
     """
-    Buffer keypoint per track untuk satu sesi WebSocket.
-    Menyimpan deque keypoints mentah [17,3] per track_id.
+    Ekstraksi pose + tracking untuk satu frame. Kembalikan {track_id: [17,3]}.
+
+    Memakai .track(persist=True), BUKAN .predict(). Dengan .predict() angka yang
+    dipakai sebagai "track_id" sebenarnya hanya indeks deteksi dalam frame, yang
+    berubah setiap kali urutan deteksi bergeser — akibatnya buffer per-orang
+    berisi campuran beberapa manusia dan sekuens gerak yang dianalisis tidak
+    pernah benar-benar milik satu orang.
     """
+    hasil = yolo.track(
+        frame, persist=True, tracker="bytetrack.yaml", conf=0.25, verbose=False
+    )[0]
 
-    def __init__(self, window_size: int = WINDOW_SIZE):
-        self.window_size = window_size
-        # {track_id: deque([[17,3], ...])}
-        self.buffers: dict[int, deque] = defaultdict(
-            lambda: deque(maxlen=window_size * 4)  # simpan 4× jendela untuk stride
-        )
-        # Sudah diproses pada pointer terakhir
-        self.last_processed: dict[int, int] = defaultdict(int)
+    keluaran: dict[int, np.ndarray] = {}
+    if hasil.keypoints is None or hasil.keypoints.data is None:
+        return keluaran
 
-    def push(self, track_id: int, keypoints: np.ndarray):
-        """Tambahkan satu frame keypoints [17,3] ke buffer track."""
-        self.buffers[track_id].append(keypoints.copy())
+    kps_data = hasil.keypoints.data
+    boxes = hasil.boxes
 
-    def ready_tracks(self) -> list[int]:
-        """Kembalikan track yang punya cukup frame baru untuk jendela berikutnya."""
-        ready = []
-        for tid, buf in self.buffers.items():
-            n = len(buf)
-            last = self.last_processed[tid]
-            if n >= self.window_size and n - last >= STRIDE:
-                ready.append(tid)
-        return ready
+    for i in range(len(kps_data)):
+        # Tanpa ID dari tracker, sampel tidak bisa dikaitkan ke orang tertentu.
+        if boxes is None or boxes.id is None or i >= len(boxes.id):
+            continue
+        kps = kps_data[i].cpu().numpy().astype(np.float32)
+        if kps.shape == (17, 3):
+            keluaran[int(boxes.id[i].item())] = kps
 
-    def get_window(self, track_id: int) -> np.ndarray:
-        """
-        Ambil jendela 45-frame terakhir dari buffer.
-        Returns: np.ndarray [WINDOW_SIZE, 17, 3]
-        """
-        buf = list(self.buffers[track_id])
-        # Pakai 45 frame terakhir
-        window = buf[-self.window_size:] if len(buf) >= self.window_size else buf
-        # Edge-pad jika kurang
-        while len(window) < self.window_size:
-            window.insert(0, window[0])
-        arr = np.stack(window, axis=0).astype(np.float32)  # [45, 17, 3]
-        self.last_processed[track_id] = len(self.buffers[track_id])
-        return arr
+    return keluaran
 
 
-def _load_pipeline_models():
+def _inferensi_jendela(jendela, camera_type, fall_head, interaction_head) -> list:
     """
-    Lazy-import pipeline dan muat model saat pertama dibutuhkan.
-    Model YOLO dan BiLSTM di-cache via singleton masing-masing.
-    """
-    from pipeline.models import load_head
-    from pipeline.normalize import build_windows_for_heads
-    from pipeline.geometry import torso_angle as _torso_angle, is_dwell
-    return load_head, build_windows_for_heads, _torso_angle, is_dwell
+    Inferensi satu jendela satu orang. Sepenuhnya SINKRON — dipanggil lewat
+    run_in_executor lalu hasilnya dikirim dari konteks async pemanggil.
 
-
-async def process_track_window(
-    ws: WebSocket,
-    track_id: int,
-    window: np.ndarray,   # [45, 17, 3] — koordinat MENTAH
-    camera_type: str,
-    t_now: float,
-    fall_head,
-    interaction_head,
-) -> None:
-    """
-    Jalankan inferensi BiLSTM untuk satu jendela satu track.
-    Kirim event ke browser jika threshold terlampaui.
-    Ini sync (torch inference) tapi dipanggil dari thread executor agar tidak block WS loop.
+    Versi sebelumnya membungkus asyncio.run_coroutine_threadsafe(...).result()
+    di dalam run_in_executor: thread pool diblokir menunggu event loop sementara
+    inferensi torch tetap berjalan di loop itu sendiri — tidak menghasilkan
+    konkurensi apa pun dan rawan deadlock saat beberapa jendela siap bersamaan.
     """
     from pipeline.normalize import build_windows_for_heads
     from pipeline.geometry import window_torso_angle, is_dwell
     from pipeline.models import predict_proba
     import torch
 
-    try:
-        # Normalisasi + bangun tensor input per kepala
-        # window [45,17,3] sudah di-resample ke FPS_LIVE saat dikumpulkan
-        head_inputs = build_windows_for_heads(
-            window,
-            src_fps=FPS_LIVE,
-            window=WINDOW_SIZE,
-            stride=WINDOW_SIZE,   # single jendela
-            dst_fps=15.0,
-        )
-        fall_input   = head_inputs["fall_input"]        # [W, 45, 24]
-        inter_input  = head_inputs["interaction_input"] # [W, 45, 51]
-        raw_windows  = head_inputs["raw_windows"]       # [W, 45, 17, 3]
+    kejadian: list = []
 
-        if len(fall_input) == 0:
-            return
+    masukan = build_windows_for_heads(
+        jendela.frames,
+        src_fps=jendela.src_fps,      # laju NYATA jendela ini, bukan angka tetap
+        window=WINDOW_SIZE,
+        stride=WINDOW_SIZE,
+        dst_fps=FPS_TUJUAN,
+    )
+    raw_windows = masukan["raw_windows"]
+    if raw_windows.shape[0] == 0:
+        return kejadian
 
-        # ── Kepala Jatuh ────────────────────────────────────────────
-        if camera_type != "rak" and fall_head is not None:
-            fall_tensor = torch.tensor(fall_input, dtype=torch.float32)
-            proba = predict_proba(fall_head, fall_tensor)  # [W, 3]
-            fall_score = float(proba[0, 2])  # kelas 2 = jatuh
+    raw = raw_windows[-1]
+    t0 = round(jendela.t_mulai, 2)
+    t1 = round(jendela.t_selesai, 2)
 
-            # Konfirmasi geometri: sudut torso dari raw window
-            torso_deg = window_torso_angle(raw_windows[0])  # rata-rata 5 frame terakhir
-            torso_ok  = torso_deg >= TORSO_THRESH
-
-            if fall_score >= FALL_THRESH and torso_ok:
-                await ws.send_json({
-                    "type":     "event",
-                    "tipe":     "jatuh",
-                    "track_id": track_id,
-                    "t0":       round(t_now - WINDOW_SIZE / FPS_LIVE, 2),
-                    "t1":       round(t_now, 2),
-                    "skor":     round(fall_score, 3),
-                    "sudut_torso": round(torso_deg, 1),
+    # ── Kepala Jatuh — dimatikan untuk kamera rak (top-down) ──────────────────
+    if camera_type != "rak" and fall_head is not None:
+        x = torch.from_numpy(masukan["fall_input"][-1:])
+        skor = float(predict_proba(fall_head, x)[0, 2])       # kelas 2 = jatuh
+        if skor >= FALL_THRESH:
+            sudut = window_torso_angle(raw)
+            if sudut >= TORSO_THRESH:
+                kejadian.append({
+                    "type": "event", "tipe": "jatuh",
+                    "track_id": jendela.track_id,
+                    "t0": t0, "t1": t1,
+                    "skor": round(skor, 3),
+                    "sudut_torso": round(sudut, 1),
                 })
-                logger.info(f"[live] Jatuh track={track_id} skor={fall_score:.2f} torso={torso_deg:.1f}deg")
 
-        # ── Kepala Interaksi ─────────────────────────────────────────
-        if camera_type != "lorong" and interaction_head is not None:
-            inter_tensor = torch.tensor(inter_input, dtype=torch.float32)
-            proba = predict_proba(interaction_head, inter_tensor)  # [W, 6]
-            # Kelas 3,4,5 = hand_in_shelf, inspect_product, inspect_shelf
-            inspect_score = float(proba[0, 3:6].sum())
+    # ── Kepala Interaksi — dimatikan untuk kamera lorong ──────────────────────
+    if camera_type != "lorong" and interaction_head is not None:
+        x = torch.from_numpy(masukan["interaction_input"][-1:])
+        proba = predict_proba(interaction_head, x)
+        # Kelas 3,4,5 = hand_in_shelf, inspect_product, inspect_shelf
+        skor = float(proba[0, 3:6].sum())
+        if skor >= INSPECT_THRESH and is_dwell(raw, dwell_ratio=DWELL_THRESH):
+            kejadian.append({
+                "type": "event", "tipe": "butuh_bantuan",
+                "track_id": jendela.track_id,
+                "t0": t0, "t1": t1,
+                "skor": round(skor, 3),
+            })
 
-            # Verifikasi dwell (orang diam di depan rak)
-            dwell_ok = is_dwell(raw_windows[0], dwell_ratio=DWELL_THRESH)
-
-            if inspect_score >= 0.5 and dwell_ok:
-                await ws.send_json({
-                    "type":       "event",
-                    "tipe":       "butuh_bantuan",
-                    "track_id":   track_id,
-                    "t0":         round(t_now - WINDOW_SIZE / FPS_LIVE, 2),
-                    "t1":         round(t_now, 2),
-                    "skor":       round(inspect_score, 3),
-                })
-                logger.info(f"[live] Butuh bantuan track={track_id} inspect={inspect_score:.2f}")
-
-    except Exception as e:
-        logger.warning(f"[live] process_track_window error track={track_id}: {e}")
+    return kejadian
 
 
 @router.websocket("/ws/live")
@@ -229,10 +194,24 @@ async def ws_live(websocket: WebSocket):
             fall_head        = None
             interaction_head = None
 
-    from pipeline.extract import extract_keypoints_per_frame
+    loop = asyncio.get_running_loop()
 
-    buf = TrackBuffer(window_size=WINDOW_SIZE)
-    loop = asyncio.get_event_loop()
+    # Instance YOLO sendiri per sesi: state ByteTrack tersimpan di dalam objek
+    # model, jadi membaginya antar tab browser akan menukar ID antar sesi.
+    try:
+        yolo = await loop.run_in_executor(None, muat_yolo)
+    except Exception as e:
+        logger.error(f"[live] Gagal memuat YOLO: {e}")
+        await websocket.close()
+        return
+
+    buf = TrackWindowBuffer(
+        window_seconds=WINDOW_SECONDS,
+        stride_seconds=STRIDE_SECONDS,
+        max_gap_seconds=1.5,     # browser bisa tersendat; beri toleransi
+        track_ttl_seconds=5.0,
+        min_frames=6,            # ~5fps × 3 dtk = 15 sampel ideal
+    )
 
     try:
         while True:
@@ -266,18 +245,16 @@ async def ws_live(websocket: WebSocket):
                 logger.debug(f"[live] Decode frame gagal: {e}")
                 continue
 
-            # Ekstraksi pose — di thread terpisah agar tidak block event loop
+            # Ekstraksi pose + tracking — di thread terpisah agar tidak block loop
             try:
-                track_kps = await loop.run_in_executor(
-                    None, extract_keypoints_per_frame, frame
-                )
+                track_kps = await loop.run_in_executor(None, _pose_track, yolo, frame)
             except Exception as e:
-                logger.debug(f"[live] extract_keypoints_per_frame error: {e}")
+                logger.debug(f"[live] Ekstraksi pose gagal: {e}")
                 continue
 
-            # Push ke buffer
+            # Push ke buffer dengan stempel waktu dari klien
             for tid, kps in track_kps.items():
-                buf.push(tid, kps)
+                buf.push(tid, kps, t_now)
 
             # Kirim pose ke browser untuk overlay langsung
             tracks_json = {
@@ -290,19 +267,27 @@ async def ws_live(websocket: WebSocket):
                 "tracks": tracks_json,
             })
 
-            # Jalankan inferensi untuk track yang siap (non-blocking)
-            for tid in buf.ready_tracks():
-                window = buf.get_window(tid)
-                await loop.run_in_executor(
-                    None,
-                    lambda tid=tid, w=window: asyncio.run_coroutine_threadsafe(
-                        process_track_window(
-                            websocket, tid, w, camera_type, t_now,
-                            fall_head, interaction_head,
-                        ),
-                        loop,
-                    ).result()
-                )
+            # Inferensi untuk jendela yang siap. Bagian berat dikerjakan di
+            # thread executor; pengiriman hasil tetap di event loop ini.
+            for jendela in buf.jendela_siap():
+                try:
+                    kejadian = await loop.run_in_executor(
+                        None, _inferensi_jendela,
+                        jendela, camera_type, fall_head, interaction_head,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"[live] Inferensi gagal track={jendela.track_id}: {e}"
+                    )
+                    continue
+
+                for ev in kejadian:
+                    await websocket.send_json(ev)
+                    logger.info(
+                        f"[live] {ev['tipe']} track={ev['track_id']} skor={ev['skor']}"
+                    )
+
+            buf.bersihkan(t_now)
 
     except WebSocketDisconnect:
         logger.info("[live] Klien terputus.")
@@ -317,70 +302,59 @@ async def ws_live(websocket: WebSocket):
 
 
 # ── run_local_capture() ────────────────────────────────────────────────────────
-def run_local_capture(source=0, camera_type: str = "lorong"):
+def run_local_capture(source=0):
     """
-    Mode edge deployment — jalankan analisis langsung dari webcam atau RTSP.
+    Pratinjau pose lokal — untuk mengecek kamera dan sudut pemasangan.
 
     source: 0 (webcam lokal) atau "rtsp://user:pass@ip:554/stream" (kamera IP)
-    camera_type: "lorong" | "rak"
+    Tekan 'q' untuk berhenti.  Contoh: python live_server.py 0
 
-    Tekan 'q' untuk berhenti.
-    Contoh jalankan: python live_server.py
+    Fungsi ini SENGAJA hanya menggambar pose, tidak menjalankan deteksi kejadian.
+    Untuk deployment CCTV sungguhan — RTSP tahan-putus, multi-kamera, alert,
+    debounce, log kejadian — pakai mode produksi:
+
+        SAPA_PRODUKSI=1 uvicorn app:app --port 8000
+
+    Lihat docs/PRODUKSI.md.
     """
-    from pipeline.extract import extract_keypoints_per_frame
-    from pipeline.models import load_head
+    from pipeline.render import COLOR_NORMAL, _draw_skeleton
 
     try:
-        fall_head        = load_head("fall")
-        interaction_head = load_head("interaction")
+        yolo = muat_yolo()
     except Exception as e:
-        print(f"[local] Gagal muat model: {e}. Lanjut mode pose-only.")
-        fall_head        = None
-        interaction_head = None
-
-    cap = cv2.VideoCapture(source)
-    if not cap.isOpened():
-        print(f"Tidak bisa membuka source: {source}")
+        print(f"[local] Gagal memuat YOLO: {e}")
         return
 
-    print(f"[local] Memulai capture dari: {source} | kamera_type={camera_type}")
-    print("[local] Tekan 'q' untuk berhenti.")
+    cap = cv2.VideoCapture(int(source) if str(source).isdigit() else source)
+    if not cap.isOpened():
+        print(f"[local] Tidak bisa membuka sumber: {source}")
+        return
 
-    local_buf = TrackBuffer()
+    print(f"[local] Pratinjau pose dari: {source}. Tekan 'q' untuk berhenti.")
     frame_count = 0
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frame_count += 1
 
-        frame_count += 1
+            for kps in _pose_track(yolo, frame).values():
+                _draw_skeleton(frame, kps, COLOR_NORMAL, thickness=2)
 
-        # Ekstraksi pose
-        track_kps = extract_keypoints_per_frame(frame)
+            cv2.putText(frame, f"frame={frame_count}", (10, 28),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
 
-        # Gambar overlay sederhana (untuk preview lokal)
-        for tid, kps in track_kps.items():
-            local_buf.push(tid, kps)
-            for (x, y, c) in kps:
-                if c > 0.3:
-                    cv2.circle(frame, (int(x), int(y)), 4, (47, 107, 88), -1)
-
-        # Overlay label
-        cv2.putText(frame, f"frame={frame_count} tracks={len(track_kps)}",
-                    (10, 28), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (35, 38, 31), 1)
-
-        cv2.imshow("SAPA — Local Capture", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-    print("[local] Capture selesai.")
+            cv2.imshow("SAPA — Pratinjau Pose", frame)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+    finally:
+        cap.release()
+        cv2.destroyAllWindows()
+        print("[local] Pratinjau selesai.")
 
 
 if __name__ == "__main__":
     import sys
-    source = sys.argv[1] if len(sys.argv) > 1 else 0
-    cam    = sys.argv[2] if len(sys.argv) > 2 else "lorong"
-    run_local_capture(source=source, camera_type=cam)
+    run_local_capture(source=sys.argv[1] if len(sys.argv) > 1 else 0)

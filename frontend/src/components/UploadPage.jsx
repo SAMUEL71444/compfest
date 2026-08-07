@@ -220,7 +220,7 @@ export default function UploadPage({ onAnalyze, error, onClearError }) {
         </div>
 
         <h1 style={{
-          fontFamily: "'Plus Jakarta Sans', sans-serif",
+          fontFamily: "'DM Sans', sans-serif",
           fontSize: 'clamp(26px, 4.5vw, 40px)',
           fontWeight: 800,
           marginBottom: 12,

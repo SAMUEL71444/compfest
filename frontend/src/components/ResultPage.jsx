@@ -61,37 +61,40 @@ function EventCard({ event, isActive, onClick }) {
           </div>
 
           {/* Meta: waktu + track ID + skor */}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-            {/* Waktu — IBM Plex Mono */}
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 4 }}>
+            {/* Waktu */}
             <span style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 12,
-              color: 'var(--ink-soft)',
-              letterSpacing: '0.02em',
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+              color: 'var(--ink-soft)', letterSpacing: '0.02em',
             }}>
               {formatTime(event.t0)} → {formatTime(event.t1)}
             </span>
 
             {/* Track ID */}
             <span style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: 11,
-              color: 'var(--ink-faint)',
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-faint)',
             }}>
               ID:{event.track_id}
             </span>
 
-            {/* Skor jatuh */}
-            {isFall && event.skor != null && (
-              <span className="chip chip-waspada">
+            {/* Skor keyakinan — tampilkan untuk SEMUA tipe */}
+            {event.skor != null && (
+              <span className={`chip ${isFall ? 'chip-waspada' : 'chip-bantu'}`}>
                 {(event.skor * 100).toFixed(0)}% yakin
               </span>
             )}
 
-            {/* Durasi bantu */}
+            {/* Durasi butuh bantuan */}
             {!isFall && event.durasi_window != null && (
-              <span className="chip chip-bantu">
-                ±{Math.round(event.durasi_window * 5 / 3)} dtk
+              <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: "'JetBrains Mono', monospace" }}>
+                ±{Math.round((event.t1 ?? event.t0) - event.t0)}d
+              </span>
+            )}
+
+            {/* Sudut torso jatuh */}
+            {isFall && event.sudut_torso != null && (
+              <span style={{ fontSize: 11, color: 'var(--ink-faint)', fontFamily: "'JetBrains Mono', monospace" }}>
+                torso {event.sudut_torso.toFixed(0)}°
               </span>
             )}
           </div>
@@ -149,12 +152,15 @@ export default function ResultPage({ result, onReset }) {
   const [activeIdx, setActiveIdx] = useState(null)
   const [videoError, setVideoError] = useState(false)
 
-  const { timeline = [], summary = {}, annotated_video_url, video, fps } = result
+  const { timeline = [], summary = {}, annotated_video_url, video, fps, model_mode = {} } = result
 
   // Dalam Docker, frontend nginx mem-proxy /api/ ke backend
+  // Tambah cache-buster (timestamp) agar browser tidak load video lama yang di-cache
+  const _ts = result._ts ?? Date.now()
   const videoSrc = annotated_video_url?.startsWith('/')
-    ? `/api${annotated_video_url}`
+    ? `/api${annotated_video_url}?t=${_ts}`
     : annotated_video_url
+
 
   function seekTo(t0, idx) {
     setActiveIdx(idx)
@@ -165,6 +171,29 @@ export default function ResultPage({ result, onReset }) {
   }
 
   const hasEvents = timeline.length > 0
+
+  /* Chip model status — ditampilkan di header hasil */
+  function ModelChip({ active, label }) {
+    return (
+      <span style={{
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        fontSize: 11, fontWeight: 600, fontFamily: "'JetBrains Mono', monospace",
+        padding: '3px 10px', borderRadius: 20,
+        background: active ? 'rgba(44,93,75,0.10)' : 'rgba(26,28,24,0.04)',
+        color: active ? 'var(--sigap)' : 'var(--ink-faint)',
+        border: `1px solid ${active ? 'rgba(44,93,75,0.25)' : 'var(--garis)'}`,
+      }}>
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%',
+          background: active ? 'var(--sigap)' : 'var(--ink-faint)',
+          display: 'inline-block',
+        }} />
+        {label}
+      </span>
+    )
+  }
+
+
 
   return (
     <main
@@ -187,10 +216,16 @@ export default function ResultPage({ result, onReset }) {
           <div style={{
             fontSize: 13,
             color: 'var(--ink-faint)',
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'JetBrains Mono', monospace",
             letterSpacing: '0.02em',
+            marginBottom: 10,
           }}>
             {video} · {fps?.toFixed(1) || '?'} fps
+          </div>
+          {/* Model mode chips */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <ModelChip active={model_mode.fall}        label="Deteksi Jatuh" />
+            <ModelChip active={model_mode.interaction} label="Deteksi Interaksi" />
           </div>
         </div>
         <button
@@ -203,6 +238,7 @@ export default function ResultPage({ result, onReset }) {
           ← Analisis Video Baru
         </button>
       </div>
+
 
       {/* ── Ringkasan statistik ────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 36, flexWrap: 'wrap' }}>
@@ -321,6 +357,23 @@ export default function ResultPage({ result, onReset }) {
             )}
           </div>
 
+          {/* Legenda warna kerangka */}
+          <div style={{
+            display: 'flex', gap: 16, flexWrap: 'wrap', margin: '10px 0 6px',
+            fontSize: 12, color: 'var(--ink-soft)',
+          }}>
+            {[
+              { bg: 'rgba(80,180,80,0.9)',   label: 'Hijau — gerakan normal' },
+              { bg: 'rgba(240,140,30,0.95)', label: 'Oranye — tampak butuh bantuan' },
+              { bg: 'rgba(210,40,40,0.95)',  label: 'Merah — jatuh terdeteksi' },
+            ].map(({ bg, label }) => (
+              <span key={label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                <span style={{ width: 18, height: 3, borderRadius: 99, background: bg, display: 'inline-block', flexShrink: 0 }} />
+                {label}
+              </span>
+            ))}
+          </div>
+
           {/* Privacy note */}
           <div className="privacy-note">
             <svg width="13" height="13" viewBox="0 0 13 13" fill="none" aria-hidden="true">
@@ -334,6 +387,7 @@ export default function ResultPage({ result, onReset }) {
             — wajah dan identitas tidak dikenali (privacy-by-design)
           </div>
         </div>
+
 
         {/* ── Timeline ─────────────────────────────────────────────────── */}
         {hasEvents && (
@@ -355,7 +409,7 @@ export default function ResultPage({ result, onReset }) {
                 Timeline Kejadian
               </div>
               <span style={{
-                fontFamily: "'IBM Plex Mono', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 fontSize: 11,
                 color: 'var(--ink-faint)',
               }}>

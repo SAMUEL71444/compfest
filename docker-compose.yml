@@ -11,8 +11,15 @@ services:
       - ./backend/models:/app/models
       # Persist video beranotasi hasil analisis
       - ./backend/outputs:/app/outputs
+      # Profil kamera + log kejadian mode produksi (lihat docs/PRODUKSI.md).
+      # Di-mount agar cameras.json dan kejadian.jsonl selamat dari rebuild image.
+      - ./backend/data:/app/data
     environment:
       - PYTHONUNBUFFERED=1
+      # Mode produksi CCTV — nonaktif secara default agar perilaku MVP tidak berubah.
+      # Nyalakan dengan:  SAPA_PRODUKSI=1 docker compose up
+      - SAPA_PRODUKSI=${SAPA_PRODUKSI:-0}
+      - SAPA_RETENSI_JAM=${SAPA_RETENSI_JAM:-72}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]

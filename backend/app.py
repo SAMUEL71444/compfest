@@ -6,9 +6,20 @@ Endpoint:
   GET  /outputs/{fn} → sajikan video beranotasi
   WS   /ws/live      → mode live: terima frame webcam, kirim pose + event real-time
 
+  Mode produksi CCTV (opsional, lihat production/):
+  /api/produksi/*    → manajemen multi-kamera, log kejadian, kesehatan sistem
+  WS /ws/produksi/alert → alert langsung ke dashboard operator
+
 Model dimuat SEKALI saat startup (bukan per request).
+
+MODE PRODUKSI DIMATIKAN SECARA DEFAULT.
+Aktifkan dengan SAPA_PRODUKSI=1. Alasannya: yang dinilai lomba adalah MVP offline
+(unggah klip), dan menyalakan pekerja kamera 24/7 di lingkungan penilaian hanya
+akan memakan CPU tanpa gunanya. Dengan gerbang ini, perilaku default backend
+sama persis seperti sebelum lapisan produksi ditambahkan.
 """
 
+import asyncio
 import os
 import uuid
 import shutil
@@ -25,6 +36,9 @@ from pipeline.models import load_head
 from pipeline.analyze import analyze
 from pipeline.render import render
 from live_server import router as live_router
+from production.api import router as produksi_router, ws_router as produksi_ws_router
+from production.api import pasang_manager
+from production.manager import CameraManager
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(
@@ -38,9 +52,16 @@ BASE_DIR = Path(__file__).parent
 MODELS_DIR = BASE_DIR / "models"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 UPLOADS_DIR = BASE_DIR / "uploads"
+DATA_DIR = BASE_DIR / "data"
 
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+# ── Mode produksi CCTV (opsional) ─────────────────────────────────────────────
+PRODUKSI_AKTIF = os.getenv("SAPA_PRODUKSI", "0").lower() in ("1", "true", "yes", "on")
+PROFIL_KAMERA = Path(os.getenv("SAPA_PROFIL_KAMERA", DATA_DIR / "cameras.json"))
+LOG_KEJADIAN = Path(os.getenv("SAPA_LOG_KEJADIAN", DATA_DIR / "kejadian.jsonl"))
+RETENSI_JAM = float(os.getenv("SAPA_RETENSI_JAM", "72"))
 
 # ── State global (model dimuat sekali) ────────────────────────────────────────
 _state: dict = {
@@ -48,6 +69,7 @@ _state: dict = {
     "inter_model": None,
     "fall_cfg": {},
     "inter_cfg": {},
+    "manager": None,
 }
 
 
@@ -77,7 +99,41 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("⚠️  interaction_head.pt atau interaction_head.json tidak ditemukan — deteksi pelayanan dinonaktifkan.")
 
+    # ── Mode produksi CCTV ────────────────────────────────────────────────────
+    if PRODUKSI_AKTIF:
+        try:
+            manager = CameraManager(
+                path_profil=PROFIL_KAMERA,
+                path_log_kejadian=LOG_KEJADIAN,
+                retensi_jam=RETENSI_JAM,
+            )
+            manager.pasang_model(
+                fall_model=_state["fall_model"],
+                inter_model=_state["inter_model"],
+            )
+            # Pekerja kamera berjalan di thread; mesin alert butuh referensi ke
+            # event loop ini untuk menyiarkan alert ke WebSocket dengan aman.
+            manager.alert.pasang_loop(asyncio.get_running_loop())
+            manager.mulai()
+
+            _state["manager"] = manager
+            pasang_manager(manager)
+            logger.info(
+                f"🎥 Mode produksi AKTIF — profil: {PROFIL_KAMERA}, retensi: {RETENSI_JAM} jam."
+            )
+        except Exception as e:
+            logger.exception(f"❌ Gagal menyalakan mode produksi: {e}")
+    else:
+        logger.info("Mode produksi nonaktif (set SAPA_PRODUKSI=1 untuk mengaktifkan).")
+
     yield  # aplikasi berjalan
+
+    manager = _state.get("manager")
+    if manager is not None:
+        try:
+            manager.berhenti()
+        except Exception as e:
+            logger.warning(f"Gagal menghentikan mode produksi dengan rapi: {e}")
 
     logger.info("SAPA backend shutdown.")
 
@@ -100,6 +156,11 @@ app.add_middleware(
 # Mode Live — WebSocket /ws/live
 app.include_router(live_router)
 
+# Mode Produksi CCTV — endpoint selalu terdaftar agar terdokumentasi di /docs,
+# tapi mengembalikan 503 bila SAPA_PRODUKSI belum diaktifkan.
+app.include_router(produksi_router)
+app.include_router(produksi_ws_router)
+
 # Sajikan folder outputs sebagai file statis
 app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 
@@ -109,10 +170,15 @@ app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 @app.get("/health")
 def health():
     """Cek status server dan model."""
+    manager = _state.get("manager")
     return {
         "status": "ok",
         "fall_model_loaded": _state["fall_model"] is not None,
         "inter_model_loaded": _state["inter_model"] is not None,
+        "produksi_aktif": manager is not None,
+        "kamera_berjalan": (
+            manager.kesehatan()["kamera_berjalan"] if manager is not None else 0
+        ),
     }
 
 

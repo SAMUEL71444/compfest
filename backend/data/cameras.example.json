@@ -1,0 +1,56 @@
+{
+  "_catatan": [
+    "Contoh profil kamera untuk mode produksi SAPA.",
+    "Salin berkas ini menjadi cameras.json lalu sesuaikan dengan pemasangan nyata.",
+    "",
+    "PALING PENTING — field 'jenis' (lihat KONTEKS §5):",
+    "  'lorong' = kamera samping/miring  → Kepala Jatuh AKTIF, Interaksi mati.",
+    "  'rak'    = kamera top-down di rak → Kepala Interaksi AKTIF, Jatuh mati.",
+    "Deteksi jatuh dari sudut tepat-atas selalu gagal (berdiri vs berbaring tidak",
+    "terbedakan, sudut torso terbaca ~90 derajat permanen), jadi salah memilih",
+    "jenis berarti fitur tersebut tidak akan pernah bekerja dengan benar.",
+    "",
+    "'sumber' menerima URL RTSP, indeks webcam ('0'), atau path berkas video",
+    "(berkas berguna untuk demo/uji lapangan tanpa kamera fisik — diputar ulang",
+    "otomatis dengan kecepatan aslinya).",
+    "",
+    "'preview': 'kerangka' hanya mengirim kerangka sendi di atas kanvas hitam",
+    "(default, paling privat), 'video' untuk kalibrasi pemasangan, 'mati' untuk",
+    "menonaktifkan pratinjau sepenuhnya."
+  ],
+  "kamera": [
+    {
+      "id": "lorong-1",
+      "nama": "Lorong 1 — Minuman",
+      "lokasi": "Sisi timur, menghadap kasir",
+      "sumber": "rtsp://admin:ganti_password@192.168.1.11:554/Streaming/Channels/101",
+      "jenis": "lorong",
+      "aktif": true,
+      "process_fps": 8.0,
+      "fall_thr": 0.8,
+      "fall_angle": 35.0,
+      "preview": "kerangka"
+    },
+    {
+      "id": "rak-1",
+      "nama": "Rak 1 — Perawatan Tubuh",
+      "lokasi": "Kamera atas, tegak lurus rak",
+      "sumber": "rtsp://admin:ganti_password@192.168.1.12:554/Streaming/Channels/101",
+      "jenis": "rak",
+      "aktif": true,
+      "process_fps": 6.0,
+      "inspect_thr": 0.4,
+      "preview": "kerangka"
+    },
+    {
+      "id": "demo-berkas",
+      "nama": "Demo — berkas video",
+      "lokasi": "Tanpa kamera fisik, untuk uji coba",
+      "sumber": "/data/contoh_lorong.mp4",
+      "jenis": "lorong",
+      "aktif": false,
+      "process_fps": 8.0,
+      "preview": "video"
+    }
+  ]
+}

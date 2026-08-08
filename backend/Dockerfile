@@ -21,8 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Salin kode aplikasi
 COPY . .
 
-# Buat direktori output & upload
-RUN mkdir -p outputs uploads
+# Buat direktori output, upload, dan data (profil kamera + log kejadian produksi)
+RUN mkdir -p outputs uploads data
 
 EXPOSE 8000
 

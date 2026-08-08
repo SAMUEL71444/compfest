@@ -79,12 +79,52 @@ Buka browser: **http://localhost:5173**
 
 ## Batasan MVP
 
+Yang dinilai lomba adalah alur **unggah klip** di atas. Batasannya:
+
 - ❌ Tidak ada login / akun pengguna
 - ❌ Tidak ada riwayat analisis
-- ❌ Tidak ada streaming real-time CCTV
 - ❌ Tidak ada background job / queue
 - ✅ Proses sinkron — satu video pada satu waktu
 - ✅ Disarankan klip ≤ 2 menit untuk respons yang nyaman
+
+Streaming CCTV real-time **sudah ada** sebagai mode terpisah dan dimatikan secara
+default — lihat bagian berikut.
+
+---
+
+## Mode Produksi CCTV (opsional)
+
+Selain MVP unggah-klip, repo ini berisi lapisan deployment untuk menjalankan SAPA
+sebagai perangkat lunak CCTV 24/7: ingest RTSP multi-kamera, alert langsung ke staf,
+dan log kejadian dengan retensi otomatis.
+
+**Mode ini nonaktif secara default** agar perilaku submission lomba tidak berubah.
+Aktifkan dengan satu env var:
+
+```bash
+cp backend/data/cameras.example.json backend/data/cameras.json
+# edit cameras.json → isi URL RTSP dan jenis tiap kamera
+
+SAPA_PRODUKSI=1 uvicorn app:app --port 8000
+```
+
+Lalu buka **http://localhost:5173/dashboard** untuk dashboard operator, atau
+periksa langsung lewat API:
+```bash
+curl localhost:8000/produksi/kesehatan     # status tiap kamera
+curl localhost:8000/produksi/kejadian      # log kejadian
+```
+
+**Inti AI-nya tidak dibangun ulang.** Lapisan ini memakai `pipeline/` yang sama
+persis dengan mode unggah — bobot, normalisasi, dan ambang yang identik. Yang
+ditambahkan murni infrastruktur.
+
+📄 Panduan lengkap (pemasangan kamera, kalibrasi, privasi, kebutuhan hardware):
+**[docs/PRODUKSI.md](docs/PRODUKSI.md)**
+
+> ⚠️ Endpoint `/produksi/*` **tidak punya autentikasi**. Untuk pemasangan
+> nyata, taruh di balik reverse proxy ber-auth di jaringan toko — jangan pernah
+> diekspos langsung ke internet.
 
 ---
 
@@ -126,6 +166,16 @@ sapa/
 │   │   ├── extract.py           # YOLOv8 tracking → sekuens per orang
 │   │   ├── analyze.py           # analyze() → timeline + frame_annotations
 │   │   └── render.py            # render() → video beranotasi (OpenCV + ffmpeg)
+│   ├── production/              # mode CCTV 24/7 (opsional, SAPA_PRODUKSI=1)
+│   │   ├── profiles.py          # profil kamera: jenis → fitur mana yang aktif
+│   │   ├── stream.py            # ingest RTSP, reconnect otomatis, drop frame
+│   │   ├── buffer.py            # jendela geser per-orang berbasis waktu
+│   │   ├── worker.py            # 1 thread/kamera: pose+track → inferensi → alert
+│   │   ├── alerts.py            # debounce + log kejadian + retensi
+│   │   ├── manager.py           # multi-kamera + pengawas & auto-restart
+│   │   └── api.py               # REST /api/produksi/* + WS /ws/produksi/alert
+│   ├── tests/                   # uji logika produksi (tanpa kamera/GPU)
+│   ├── data/                    # cameras.json + kejadian.jsonl (tidak di-commit)
 │   ├── models/                  # .pt + .json (taruh di sini)
 │   └── outputs/                 # video beranotasi hasil (auto-dibuat)
 ├── frontend/

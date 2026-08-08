@@ -201,43 +201,15 @@ def extract_poses(video_path: str, cfg: dict, camera_type: str = "lorong") -> di
 
 
 
-def extract_keypoints_per_frame(frame: np.ndarray) -> dict:
-    """
-    Ekstraksi keypoint dari satu frame BGR (OpenCV) — dipakai oleh live_server.py.
-
-    Signature:
-        frame: np.ndarray shape [H, W, 3] BGR (hasil cv2.imdecode atau VideoCapture.read)
-
-    Returns:
-        dict { track_id (int): np.ndarray shape [17, 3] }
-        Keypoints dalam koordinat piksel mentah: (x, y, confidence)
-
-    Catatan:
-    - Menggunakan model singleton yang sama dengan extract_poses() — tidak dimuat ulang.
-    - mode predict (bukan track) karena satu frame tidak punya konteks temporal.
-      Track ID di sini adalah indeks deteksi (0-based). State tracker per-WS-session
-      dikelola di TrackBuffer live_server.py.
-    - Frame dengan confidence < 0.25 diabaikan.
-    """
-    model  = _get_yolo()
-    result = model.predict(frame, verbose=False, conf=0.25)[0]
-
-    out: dict[int, np.ndarray] = {}
-
-    if result.keypoints is None or result.keypoints.data is None:
-        return out
-
-    kps_data = result.keypoints.data  # tensor [N, 17, 3]
-    boxes    = result.boxes
-
-    for i in range(len(kps_data)):
-        # Untuk mode live, pakai box ID kalau ada (dari tracker terus-menerus),
-        # fallback ke indeks deteksi
-        track_id = i
-        if boxes is not None and boxes.id is not None and i < len(boxes.id):
-            track_id = int(boxes.id[i].item())
-
-        kps = kps_data[i].cpu().numpy().astype(np.float32)  # [17, 3]
-        out[track_id] = kps
-
-    return out
+# CATATAN: extract_keypoints_per_frame() dihapus.
+#
+# Fungsi itu memakai model.predict() sehingga "track_id" yang dikembalikannya
+# sebenarnya hanya INDEKS DETEKSI dalam frame — angka yang berubah setiap kali
+# urutan deteksi bergeser, bukan identitas yang melekat pada orang. Semua
+# pemakainya membangun sekuens gerak per-orang di atas angka itu, sehingga satu
+# buffer bisa berisi campuran beberapa manusia.
+#
+# Penggantinya menjalankan model.track(persist=True) dengan state tracker
+# terpisah per sumber video:
+#   - production/worker.py  CameraWorker._pose_dan_track()   (kamera CCTV)
+#   - live_server.py        _pose_track()                    (webcam browser)

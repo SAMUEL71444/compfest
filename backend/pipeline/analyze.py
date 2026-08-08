@@ -209,13 +209,25 @@ def analyze(
                 inspect_prob = float(sum(inter_probs[w, i] for i in inspect_idx))
                 stationary   = skip_dwell or is_dwell(raw_windows[w], dwell_ratio)
 
-                # Aktif jika inspect_prob cukup tinggi
-                # skip_dwell=True (kamera rak): cukup inspect_prob > 0.3
-                # skip_dwell=False (kamera lorong): butuh dwell ATAU inspect_prob sangat tinggi
+                # Kelas prediksi harus BENAR-BENAR salah satu kelas inspect,
+                # sesuai Kepala Interaksi.ipynb:
+                #     browsing = np.isin(act_pred, INSPECT_IDX) & (dwell < ...)
+                #
+                # Versi sebelumnya memakai jumlah probabilitas dengan ambang
+                # 0,30 untuk kamera rak. Aturan itu jauh lebih longgar: pada
+                # klip CCTV top-down 129 detik, ia menandai 62% dari seluruh
+                # jendela sebagai "butuh bantuan", sementara aturan argmax
+                # menandai 38%. Ambang jumlah juga memperkenalkan angka sihir
+                # yang tidak pernah divalidasi tim, sedangkan argmax langsung
+                # memakai keputusan model.
+                inspect_aktif = int(np.argmax(inter_probs[w])) in inspect_idx
+
                 if skip_dwell:
-                    active = inspect_prob > 0.30
+                    # Kamera rak (top-down): is_dwell tidak dapat diandalkan
+                    # karena torso terkompresi perspektif, jadi dilewati.
+                    active = inspect_aktif
                 else:
-                    active = (inspect_prob > 0.40) and (stationary or inspect_prob > 0.60)
+                    active = inspect_aktif and stationary
 
                 if active:
                     if run_count == 0:

@@ -202,7 +202,13 @@ async def analyze_video(
         "inspect_idx": _state["inter_cfg"].get("inspect_idx", [4, 5]),
         # Untuk kamera rak: 1 window cukup (is_dwell di-skip, false positive rendah)
         # Untuk kamera lorong: butuh 2 window berturut (tanpa dwell skip)
-        "help_min_win": 1 if camera_type == "rak" else 2,
+        # Minimal jendela berturut sebelum dianggap kejadian. Satu jendela
+        # cukup untuk kedipan model; "butuh bantuan" secara konsep berarti
+        # seseorang menimbang produk BEBERAPA SAAT, bukan sekilas menoleh.
+        # Kepala Interaksi.ipynb memakai 3; di sini 2 sebagai kompromi, karena
+        # jendela di web bergeser 1 detik (stride 15 @ 15fps) sehingga 2 jendela
+        # sudah berarti aktivitas bertahan sekitar 2 detik.
+        "help_min_win": 2,
         # Geometri diam/dwell — top-down: skip sepenuhnya (lihat analyze.py skip_dwell)
         "dwell_ratio": 3.0 if camera_type == "rak" else 0.4,
         # Pipeline normalisasi

@@ -29,3 +29,13 @@ Thumbs.db
 /kepala_interaksi.py
 /test_video.mp4
 
+
+# Mode produksi — JANGAN di-commit.
+# cameras.json memuat URL RTSP lengkap dengan user & password kamera.
+# kejadian.jsonl memuat log kejadian nyata dan tunduk pada kebijakan retensi.
+# videos/ berisi rekaman uji yang bisa memuat orang nyata.
+backend/data/cameras.json
+backend/data/kejadian.jsonl
+backend/data/videos/
+backend/data/*.tmp
+!backend/data/cameras.example.json

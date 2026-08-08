@@ -100,9 +100,10 @@ def extract_poses(video_path: str, cfg: dict, camera_type: str = "lorong") -> di
         vid_stride=frame_skip,
     )
 
-    skipped_conf = 0
-    skipped_bbox = 0
-    skipped_kp   = 0
+    skipped_conf  = 0
+    skipped_bbox  = 0
+    skipped_kp    = 0
+    skipped_no_id = 0
 
     for frame_idx, result in enumerate(results_gen):
         if result.keypoints is None:
@@ -135,12 +136,20 @@ def extract_poses(video_path: str, cfg: dict, camera_type: str = "lorong") -> di
                     )
                     continue
 
-            # Dapatkan track ID
-            track_id = None
-            if boxes is not None and boxes.id is not None and i < len(boxes.id):
-                track_id = int(boxes.id[i].item())
-            else:
-                track_id = -(i + 1)
+            # ── Filter 3: harus punya track ID dari ByteTrack ──────────────
+            # Deteksi tanpa ID tidak bisa dikaitkan ke orang yang sama antar
+            # frame — biasanya terjadi di frame-frame awal sebelum tracker
+            # terkunci. Sebelumnya deteksi seperti ini diberi ID buatan
+            # -(i+1), yaitu INDEKS DETEKSI dalam frame, yang berubah setiap
+            # kali urutan deteksi bergeser. Akibatnya "track" -1 berisi
+            # potongan gerak dari beberapa orang berbeda yang disambung jadi
+            # satu sekuens, dan itu cukup untuk memicu kejadian palsu
+            # berskor tinggi. Lebih baik membuang beberapa frame pertama
+            # daripada mengarang satu orang yang tidak pernah ada.
+            if boxes is None or boxes.id is None or i >= len(boxes.id):
+                skipped_no_id += 1
+                continue
+            track_id = int(boxes.id[i].item())
 
             kps = kps_data[i].cpu().numpy().astype(np.float32)  # [17, 3]
 
@@ -173,7 +182,8 @@ def extract_poses(video_path: str, cfg: dict, camera_type: str = "lorong") -> di
     logger.info(
         f"Filter: {skipped_conf} dibuang (conf), "
         f"{skipped_bbox} dibuang (bbox kecil), "
-        f"{skipped_kp} dibuang (kp rendah)"
+        f"{skipped_kp} dibuang (kp rendah), "
+        f"{skipped_no_id} dibuang (belum punya track ID)"
     )
 
     # Filter track terlalu pendek (< min_track_frames frame)

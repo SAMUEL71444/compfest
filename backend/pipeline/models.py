@@ -10,6 +10,11 @@ PENTING:
 - Head classifier pakai LayerNorm (BUKAN BatchNorm). File .pt tidak menyimpan
   running_mean/running_var, jadi kalau dipaksa pakai BatchNorm1d, load_state_dict
   akan gagal ("Missing key(s): head.0.running_mean, head.0.running_var").
+- Agregasi temporal = MEAN-POOLING (lihat BiLSTMHead.forward). load_state_dict
+  yang berhasil TIDAK membuktikan forward-pass sudah benar: mean-pooling dan
+  hidden-state-terakhir memakai parameter yang identik, jadi keduanya lolos
+  strict=True sekalipun hasilnya berbeda jauh. Rujukan kebenaran adalah kode
+  training (Train_fall.ipynb / Kepala Interaksi.ipynb), bukan keberhasilan load.
 - Fall head: input_dim=24 (12 sendi x 2 channel [x,y]), output 3 kelas
   (index 0=normal, 1=oleng, 2=jatuh).
 - Interaction head: input_dim=51 (17 sendi x 3 channel [x,y,conf]), output 6 kelas
@@ -53,12 +58,23 @@ class BiLSTMHead(nn.Module):
         """
         x: [B, T, in_dim]  (T = jumlah frame per jendela, default 45)
         return: logits [B, n_classes]  (belum softmax — pakai torch.softmax saat inferensi)
+
+        AGREGASI HARUS MEAN-POOLING SELURUH LANGKAH WAKTU.
+        Ini bukan pilihan gaya — harus sama persis dengan saat training:
+
+            Train_fall.ipynb      → out, _ = self.lstm(x); self.head(out.mean(dim=1))
+            Kepala Interaksi.ipynb → out, _ = self.lstm(x); self.head(out.mean(dim=1))
+
+        Versi sebelumnya memakai hidden state terakhir, cat(h_n[-2], h_n[-1]).
+        Keduanya menghasilkan tensor [B, hidden*2] dari PARAMETER YANG SAMA
+        PERSIS, sehingga load_state_dict(strict=True) tetap lolos dan tidak ada
+        error apa pun yang muncul — tapi fitur yang dihitung berbeda, dan
+        prediksinya ikut berbeda. Pada bobot fall_head, kedua varian hanya
+        sepakat 46% dari waktu. Ini persis mode kegagalan senyap yang
+        diperingatkan README: tidak error, tapi prediksi ngawur.
         """
-        _, (h_n, _) = self.lstm(x)
-        # h_n shape: [num_layers * num_directions, B, hidden]
-        # dua slice terakhir = forward & backward dari layer paling atas
-        feat = torch.cat([h_n[-2], h_n[-1]], dim=1)  # [B, hidden*2]
-        return self.head(feat)
+        out, _ = self.lstm(x)          # [B, T, hidden*2]
+        return self.head(out.mean(dim=1))
 
 
 def load_head(weight_path: str, config_path: str, device: str = "cpu") -> tuple:

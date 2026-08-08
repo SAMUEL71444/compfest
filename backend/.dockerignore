@@ -1,0 +1,44 @@
+# Konteks build backend — SAPA
+#
+# Dockerfile memakai `COPY . .`, jadi TANPA berkas ini seluruh isi backend/ ikut
+# tersalin ke image: virtualenv ratusan MB, video hasil analisis, log kejadian,
+# bahkan cameras.json yang memuat user & password kamera RTSP. Selain membuat
+# image membengkak dan build lambat, itu kebocoran data ke artefak yang
+# didistribusikan.
+
+# ── Virtualenv ────────────────────────────────────────────────────────────────
+# Dibuat di mesin pengembang (macOS). Di dalam image Linux ia bukan cuma
+# tidak berguna, tapi berbahaya: bisa membayangi paket yang diinstal pip.
+.venv/
+venv/
+env/
+
+# ── Cache Python ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# ── Data runtime (JANGAN masuk image) ─────────────────────────────────────────
+# cameras.json  : URL RTSP lengkap dengan kredensial kamera
+# kejadian.jsonl: log kejadian nyata, tunduk pada kebijakan retensi
+# videos/       : rekaman uji yang bisa memuat orang sungguhan
+data/cameras.json
+data/kejadian.jsonl
+data/videos/
+data/*.tmp
+
+# ── Keluaran runtime ──────────────────────────────────────────────────────────
+# Dibuat ulang saat aplikasi berjalan; Dockerfile sudah mkdir keduanya.
+outputs/
+uploads/
+
+# ── Bobot YOLO ────────────────────────────────────────────────────────────────
+# Diunduh otomatis ultralytics saat pertama dipakai. Menyalin versi dari mesin
+# pengembang membuat image lebih besar tanpa alasan.
+yolov8n-pose.pt
+
+# ── Perkakas pengembangan ─────────────────────────────────────────────────────
+tests/
+.DS_Store
+*.log

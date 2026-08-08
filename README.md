@@ -166,14 +166,36 @@ npm run dev        # buka http://localhost:5173
 
 ---
 
-## ⚠️ Catatan Normalisasi (untuk tim training)
+## ⚠️ Kesesuaian dengan Kode Training
 
-File `pipeline/normalize.py` ditulis berdasarkan deskripsi spesifikasi, **belum diverifikasi** terhadap kode training asli. **Sebelum submission final**, lakukan diff antara:
-- `normalize_pose()` di web ↔ versi di script training
-- `resample_fps()` di web ↔ versi di script training
-- `make_windows()` di web ↔ versi di script training
+Sudah diverifikasi terhadap `Train_fall.ipynb` dan `Kepala Interaksi.ipynb`:
 
-Jika berbeda, model akan memberikan hasil yang tidak bermakna (silent failure — tidak error, tapi prediksi ngawur).
+| Hal | Status |
+|---|---|
+| Agregasi temporal (`out.mean(dim=1)`) | ✅ identik — dikunci `tests/uji_arsitektur.py` |
+| 12 sendi (5–16) × x,y untuk Kepala Jatuh | ✅ identik |
+| 17 sendi × x,y,conf untuk Kepala Interaksi | ✅ identik |
+| `inspect_idx = [4, 5]` | ✅ diambil dari config model |
+| `normalize_pose` / `resample_fps` / `make_windows` | ✅ sesuai `Inference.ipynb` |
+
+**Pernah salah, sudah diperbaiki:** `BiLSTMHead.forward()` memakai hidden state
+terakhir padahal training memakai mean-pooling. Keduanya memakai parameter yang
+sama persis sehingga `load_state_dict(strict=True)` tetap lolos tanpa error —
+tapi pada bobot `fall_head` kedua varian hanya sepakat **46%** dari waktu.
+Pelajarannya: **model berhasil dimuat bukan bukti forward-pass sudah benar.**
+
+Verifikasi ulang kapan saja:
+```bash
+cd backend && python tests/uji_arsitektur.py
+```
+
+### 🔧 Ambang perlu disetel ulang
+
+Ambang `fall_thr = 0.80` dan `fall_angle` di `app.py` disetel **terhadap
+forward-pass yang salah**. Setelah perbaikan, sebaran probabilitas bergeser
+turun — pada uji sintetis, jendela yang melewati `fall_thr = 0.80` berkurang
+dari 143 menjadi 17 per 2000. Jalankan ulang klip uji dan setel ulang ambangnya
+sebelum submission final.
 
 ---
 

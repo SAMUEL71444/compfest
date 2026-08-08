@@ -193,7 +193,13 @@ async def analyze_video(
         "fall_confirm": True,
         "fall_joints": fall_joints,
         # MERL classes: 0=background,1=reach,2=retract,3=hand_in_shelf,4=inspect_product,5=inspect_shelf
-        "inspect_idx": [1, 3, 4, 5],
+        # Ambil dari config model, JANGAN di-hardcode. Kepala Interaksi.ipynb
+        # menetapkan INSPECT_IDX = [4, 5] ("aksi yang penting utk butuh bantuan")
+        # dan menyimpannya ke interaction_head.json. Nilai [1, 3, 4, 5] yang
+        # dipakai sebelumnya ikut memasukkan kelas 1 = "reach" — mengambil barang
+        # dari rak adalah belanja normal, bukan tanda seseorang butuh bantuan,
+        # sehingga deteksi jadi jauh lebih berisik daripada yang dimaksud tim.
+        "inspect_idx": _state["inter_cfg"].get("inspect_idx", [4, 5]),
         # Untuk kamera rak: 1 window cukup (is_dwell di-skip, false positive rendah)
         # Untuk kamera lorong: butuh 2 window berturut (tanpa dwell skip)
         "help_min_win": 1 if camera_type == "rak" else 2,

@@ -99,8 +99,9 @@ def analyze(
     fall_confirm= bool(cfg.get("fall_confirm", True))
     # MERL label (dari geometry.py INTERACTION_CLASS_NAMES):
     # 0=background, 1=reach, 2=retract, 3=hand_in_shelf, 4=inspect_product, 5=inspect_shelf
-    # Kelas 3,4,5 = aktivitas interaktif di rak (BUKAN 2 = retract)
-    inspect_idx = list(cfg.get("inspect_idx", [3, 4, 5]))
+    # Default [4, 5] mengikuti INSPECT_IDX di Kepala Interaksi.ipynb — hanya
+    # "menimbang produk" dan "memandangi rak" yang menandakan butuh bantuan.
+    inspect_idx = list(cfg.get("inspect_idx", [4, 5]))
     help_min_win= int(cfg.get("help_min_win", 2))
     # dwell_ratio berbeda untuk top-down vs samping:
     # top-down: torso_length sangat kecil karena kompresi perspektif → pakai nilai besar

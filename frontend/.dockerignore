@@ -1,0 +1,15 @@
+# Konteks build frontend — SAPA
+#
+# Dockerfile menjalankan `npm install` sendiri lalu `COPY . .`. Tanpa berkas ini,
+# node_modules dari mesin pengembang (~50 MB, dan bisa memuat binary khusus
+# platform) ikut tersalin dan menimpa hasil install di dalam image — sumber
+# kegagalan build yang membingungkan karena binary macOS tidak jalan di Alpine.
+
+node_modules/
+dist/
+
+.DS_Store
+*.log
+npm-debug.log*
+.env
+.env.*

@@ -27,7 +27,7 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi import FastAPI, File, Form, HTTPException, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -166,6 +166,35 @@ app.mount("/outputs", StaticFiles(directory=str(OUTPUTS_DIR)), name="outputs")
 
 
 # ── Endpoint ──────────────────────────────────────────────────────────────────
+
+@app.get("/")
+def akar():
+    """
+    Penunjuk arah, bukan halaman aplikasi.
+
+    Membuka http://localhost:8000 di browser sebelumnya menghasilkan 404 karena
+    backend memang tidak menyajikan halaman — antarmuka ada di frontend (port
+    5173 saat dev, 80 di dalam Docker). 404 itu benar secara teknis tapi
+    menyesatkan: ia tampak seperti aplikasi rusak, dan ikut terekam sebagai
+    baris merah di log saat demonstrasi.
+    """
+    return {
+        "layanan": "SAPA API",
+        "status": "ok",
+        "catatan": "Ini API, bukan antarmuka. Buka aplikasinya di http://localhost:5173",
+        "dokumentasi": "/docs",
+        "endpoint_utama": {
+            "analisis_klip": "POST /analyze",
+            "kesehatan": "GET /health",
+        },
+    }
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    """Browser selalu meminta ini; balas 204 agar log tidak penuh 404 palsu."""
+    return Response(status_code=204)
+
 
 @app.get("/health")
 def health():

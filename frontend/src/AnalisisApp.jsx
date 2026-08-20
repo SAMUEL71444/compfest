@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import UploadPage from './components/UploadPage.jsx'
 import ProcessingPage from './components/ProcessingPage.jsx'
 import ResultPage from './components/ResultPage.jsx'
+import JamLangsung from './components/JamLangsung.jsx'
 
 /* ─────────────────────────────────────────────────────────────────────────────
    AnalisisApp — state machine: upload → processing → result
@@ -125,6 +126,8 @@ export default function AnalisisApp() {
           </button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Timestamp wajib untuk video proof of work — lihat JamLangsung.jsx */}
+          <JamLangsung />
           <button
             onClick={() => navigate('/live')}
             style={{

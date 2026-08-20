@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import JamLangsung from '../components/JamLangsung.jsx'
 
 /* ─────────────────────────────────────────────────────────────────────────────
    LivePage — Mode Live Demo (WebSocket webcam)
@@ -285,6 +286,8 @@ export default function LivePage() {
           </div>
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Timestamp wajib untuk video proof of work — lihat JamLangsung.jsx */}
+          <JamLangsung ringkas />
           <span style={{
             width: 8, height: 8, borderRadius: '50%',
             background: isRunning ? '#ef4444' : 'var(--ink-faint)',

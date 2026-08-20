@@ -198,21 +198,80 @@ sapa/
 
 ## Development Lokal (tanpa Docker)
 
-**Backend:**
+Butuh **dua terminal** yang dibiarkan terbuka. Menutupnya = server mati.
+
+### Persiapan (sekali saja)
+
+```bash
+# Backend — WAJIB pakai virtualenv, jangan install ke Python sistem
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+
+# Frontend
+cd ../frontend
+npm install
+```
+
+### Terminal 1 — Backend
+
 ```bash
 cd backend
-pip install -r requirements.txt
-uvicorn app:app --reload --port 8000
+.venv/bin/uvicorn app:app --port 8000
 ```
 
-**Frontend:**
+Jalankan **tanpa `&`** agar log tampil langsung di layar. Yang ditunggu:
+
+```
+2026-08-20 21:46:08,095 [INFO] sapa.app: ✅ Fall model berhasil dimuat.
+2026-08-20 21:46:08,098 [INFO] sapa.app: ✅ Interaction model berhasil dimuat.
+INFO:     Application startup complete.
+```
+
+Setiap analisis menambah baris baru lengkap dengan tanggal dan jam. Terminal
+inilah yang direkam untuk video proof of work.
+
+> Tulis `.venv/bin/uvicorn`, bukan `uvicorn` saja — dependensi berat (torch,
+> ultralytics, opencv) hanya ada di dalam virtualenv. Alternatifnya aktifkan
+> dulu dengan `source .venv/bin/activate`, setelah itu `uvicorn` polos bisa dipakai.
+
+### Terminal 2 — Frontend
+
 ```bash
 cd frontend
-npm install
-npm run dev        # buka http://localhost:5173
+npm run dev
 ```
 
-> Pastikan backend berjalan di port 8000 saat development — Vite otomatis proxy `/api/*` ke `http://localhost:8000`.
+### Buka di browser
+
+| URL | Isi |
+|---|---|
+| **http://localhost:5173/analisis** | ✅ **aplikasinya — buka ini** |
+| http://localhost:5173 | Halaman utama |
+| http://localhost:8000/docs | Dokumentasi API interaktif |
+
+> **http://localhost:8000 bukan aplikasinya.** Port itu hanya melayani API —
+> membukanya di browser menampilkan keterangan singkat yang menunjuk balik ke
+> port 5173, bukan antarmuka. Frontend otomatis mem-proxy `/api/*` ke backend,
+> jadi cukup buka port 5173 saja.
+
+### Menghentikan
+
+`Ctrl+C` di masing-masing terminal. Kalau port terlanjur tersangkut:
+
+```bash
+pkill -f "uvicorn app:app"    # backend
+pkill -f vite                 # frontend
+```
+
+### Masalah umum
+
+| Pesan | Artinya |
+|---|---|
+| `address already in use` | Server lama masih hidup → jalankan `pkill` di atas |
+| `ModuleNotFoundError: torch` | Memakai Python sistem, bukan `.venv/bin/...` |
+| `No module named 'lap'` | Dependensi belum lengkap → ulangi `.venv/bin/pip install -r requirements.txt` |
+| Halaman kosong / gagal analisis | Terminal 1 mati atau model belum selesai dimuat |
 
 ---
 

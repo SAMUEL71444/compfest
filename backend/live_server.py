@@ -38,7 +38,19 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from production.buffer import TrackWindowBuffer
 from production.worker import muat_yolo
 
+import notifier
+import statistik
+from pipeline.render import buat_frame_notif
+
 logger = logging.getLogger(__name__)
+
+# Mode blur kepala untuk foto notifikasi: "blur" (default) atau "solid".
+BLUR_MODE = os.getenv("SAPA_NOTIF_BLUR", "blur").strip().lower()
+
+# Saat staf menekan "Ditangani" di Telegram → catat ke statistik (permanen).
+notifier.set_pencatat_ditangani(
+    lambda kunci, nama: statistik.catat_ditangani(kunci, oleh=nama, sumber="telegram")
+)
 
 # ── Router FastAPI ─────────────────────────────────────────────────────────────
 router = APIRouter()
@@ -164,6 +176,8 @@ async def ws_live(websocket: WebSocket):
     """
     await websocket.accept()
     logger.info("[live] Klien terhubung.")
+    if notifier.aktif():
+        logger.info("[live] Notifikasi Telegram AKTIF.")
 
     # Muat model dari app.state (sudah di-load saat startup app.py)
     # Fallback: load langsung dari disk jika dipanggil standalone
@@ -226,6 +240,31 @@ async def ws_live(websocket: WebSocket):
             except json.JSONDecodeError:
                 continue
 
+            # Pengawas menandai alarm palsu di UI → hapus notifikasi Telegram
+            # yang sudah terkirim untuk kejadian itu (human-in-the-loop).
+            if msg.get("type") == "batalkan":
+                ev_batal = {
+                    "track_id": msg.get("track_id"),
+                    "tipe": msg.get("tipe"),
+                    "t0": msg.get("t0"),
+                }
+                # Catat alarm palsu ke statistik permanen (dari dashboard/UI).
+                try:
+                    statistik.catat_alarm_palsu(notifier.kunci_kejadian(ev_batal), sumber="dashboard")
+                except Exception as e:
+                    logger.debug(f"[live] Gagal catat alarm palsu: {e}")
+                # Hapus notifikasi Telegram terkait bila ada.
+                if notifier.aktif():
+                    try:
+                        notifier.batalkan_kejadian(ev_batal)
+                        logger.info(
+                            f"[live] Alarm palsu — notif dibatalkan "
+                            f"track={msg.get('track_id')} tipe={msg.get('tipe')}"
+                        )
+                    except Exception as e:
+                        logger.debug(f"[live] Gagal batalkan notif: {e}")
+                continue
+
             if msg.get("type") != "frame":
                 continue
 
@@ -286,6 +325,39 @@ async def ws_live(websocket: WebSocket):
                     logger.info(
                         f"[live] {ev['tipe']} track={ev['track_id']} skor={ev['skor']}"
                     )
+
+                    # Catat kejadian ke statistik permanen + jadwalkan timer
+                    # "terlewat" (backend yang urus, bukan browser). Independen
+                    # dari Telegram — statistik tetap jalan walau notif nonaktif.
+                    try:
+                        statistik.catat_muncul({
+                            "id": notifier.kunci_kejadian(ev),
+                            "tipe": ev.get("tipe"),
+                            "track_id": ev.get("track_id"),
+                            "skor": ev.get("skor"),
+                            "t0": ev.get("t0"),
+                        })
+                    except Exception as e:
+                        logger.debug(f"[live] Gagal catat kejadian: {e}")
+
+                    # Notifikasi Telegram (opt-in). Rakit foto beranotasi dari
+                    # frame + pose TERKINI, dengan wajah diblur, di executor agar
+                    # tidak memblokir loop WebSocket. kirim_kejadian sendiri sudah
+                    # non-blocking (thread daemon) + cooldown per (track_id, tipe).
+                    if notifier.aktif():
+                        try:
+                            annotations = [
+                                {"track_id": tid, "keypoints": kps}
+                                for tid, kps in track_kps.items()
+                            ]
+                            foto = await loop.run_in_executor(
+                                None, buat_frame_notif,
+                                frame, annotations, ev, BLUR_MODE,
+                                camera_type == "rak",
+                            )
+                            notifier.kirim_kejadian(ev, foto=foto)
+                        except Exception as e:
+                            logger.debug(f"[live] Gagal siapkan notifikasi: {e}")
 
             buf.bersihkan(t_now)
 

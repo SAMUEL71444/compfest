@@ -1,6 +1,8 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import JamLangsung from '../components/JamLangsung.jsx'
+import KartuKejadian from '../components/KartuKejadian.jsx'
+import { dedupeEvents, eventId } from '../utils/dedupeEvents.js'
 
 /* ─────────────────────────────────────────────────────────────────────────────
    LivePage — Mode Live Demo (WebSocket webcam)
@@ -89,11 +91,149 @@ export default function LivePage() {
   const startTimeRef = useRef(null)
   const poseRef      = useRef({})    // mutable ref — tidak trigger re-render
   const eventsRef    = useRef([])
+  const isRunningRef  = useRef(false) // dibaca timer 'terlewat' tanpa jadi dependency
 
   const [cameraType, setCameraType] = useState('lorong')
   const [wsState, setWsState]       = useState('idle')
   const [events,  setEvents]        = useState([])
   const [errorMsg, setErrorMsg]     = useState('')
+  // Status penanganan per eventId. Nilai:
+  //   { status: 'ditangani'|'palsu'|'terlewat', tRespons?: detik }
+  // tRespons = selisih waktu dari kejadian muncul sampai pengawas menekan tombol.
+  const [statusMap, setStatusMap]   = useState({})
+  // Waktu (ms epoch) saat tiap eventId pertama muncul — untuk hitung waktu respons.
+  const munculRef = useRef({})        // eventId → ms epoch
+  const [, paksaRender] = useState(0) // untuk memicu re-render saat timeout jalan
+
+  // Batas waktu respons: bila lewat ini tanpa aksi, kejadian ditandai "terlewat".
+  const BATAS_RESPONS_MS = 60_000     // 1 menit
+
+  // Dedup event Live (spam per ~1 dtk → satu kartu), lalu balik agar terbaru di atas.
+  const kejadianTampil = useMemo(() => {
+    const merged = dedupeEvents(events)   // urut menaik by t0
+    return merged.reverse()               // terbaru di atas
+  }, [events])
+
+  // Catat kemunculan pertama tiap kejadian (untuk waktu respons + timeout).
+  useEffect(() => {
+    const now = Date.now()
+    for (const ev of kejadianTampil) {
+      const id = eventId(ev)
+      if (!(id in munculRef.current)) munculRef.current[id] = now
+    }
+  }, [kejadianTampil])
+
+  // Timer: tandai kejadian yang belum direspons > 1 menit sebagai "terlewat".
+  useEffect(() => {
+    if (!isRunningRef.current) return
+    const timer = setInterval(() => {
+      const now = Date.now()
+      let berubah = false
+      setStatusMap(m => {
+        const next = { ...m }
+        for (const [id, tMuncul] of Object.entries(munculRef.current)) {
+          if (!next[id] && now - tMuncul > BATAS_RESPONS_MS) {
+            next[id] = { status: 'terlewat' }
+            berubah = true
+          }
+        }
+        return berubah ? next : m
+      })
+      paksaRender(n => n + 1)  // perbarui label "x dtk lalu" bila ada
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Polling statistik backend: tarik status "ditangani" dari Telegram (staf
+  // lapangan) supaya panel Live ikut menampilkannya. Satu arah & ringan —
+  // tidak menyentuh WebSocket. Status lokal (mis. "palsu" dari pengawas) tidak
+  // ditimpa; hanya kejadian yang belum final di UI yang diperbarui.
+  useEffect(() => {
+    let batal = false
+    async function tarik() {
+      if (!isRunningRef.current) return
+      try {
+        const res = await fetch('/api/statistik')
+        if (!res.ok || batal) return
+        const data = await res.json()
+        const dariBackend = {}
+        for (const r of data.riwayat || []) {
+          if (r.status === 'ditangani') {
+            dariBackend[r.id] = { status: 'ditangani', tRespons: r.respons_detik, oleh: r.oleh, sumber: 'telegram' }
+          }
+        }
+        if (Object.keys(dariBackend).length === 0) return
+        setStatusMap(m => {
+          let berubah = false
+          const next = { ...m }
+          for (const [id, st] of Object.entries(dariBackend)) {
+            // Jangan timpa status final yang sudah ada di UI (mis. alarm palsu).
+            const skrg = next[id]?.status
+            if (skrg === 'ditangani' || skrg === 'palsu') continue
+            next[id] = st
+            berubah = true
+          }
+          return berubah ? next : m
+        })
+      } catch { /* diabaikan — polling berikutnya coba lagi */ }
+    }
+    const id = setInterval(tarik, 5000)
+    return () => { batal = true; clearInterval(id) }
+  }, [])
+
+  // Ringkasan + statistik sesi real-time (metrik TIM, bukan individu).
+  const statistik = useMemo(() => {
+    let jatuh = 0, bantu = 0, ditangani = 0, palsu = 0, terlewat = 0
+    let totalRespons = 0, nRespons = 0
+    for (const ev of kejadianTampil) {
+      const st = statusMap[eventId(ev)]
+      const s = st?.status
+      if (s === 'palsu') { palsu++; continue }
+      if (s === 'terlewat') { terlewat++; continue }
+      if (s === 'ditangani') {
+        ditangani++
+        if (st.tRespons != null) { totalRespons += st.tRespons; nRespons++ }
+        continue
+      }
+      // belum direspons → hitung sebagai "sedang berlangsung"
+      if (ev.tipe === 'jatuh') jatuh++
+      else bantu++
+    }
+    const avgRespons = nRespons > 0 ? totalRespons / nRespons : null
+    return {
+      total: kejadianTampil.length,
+      jatuh, bantu, ditangani, palsu, terlewat, avgRespons,
+    }
+  }, [kejadianTampil, statusMap])
+
+  // Kirim sinyal batalkan ke backend (hapus notif Telegram) — dipakai saat palsu.
+  const kirimBatalkan = useCallback((ev) => {
+    const ws = wsRef.current
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({
+        type: 'batalkan',
+        track_id: ev.track_id,
+        tipe: ev.tipe,
+        t0: ev.t0,
+      }))
+    }
+  }, [])
+
+  const tandaiStatus = useCallback((id, status, ev) => {
+    const tMuncul = munculRef.current[id]
+    const tRespons = tMuncul ? (Date.now() - tMuncul) / 1000 : null
+    setStatusMap(m => ({ ...m, [id]: { status, tRespons } }))
+    // Alarm palsu → minta backend hapus notifikasi Telegram terkait.
+    if (status === 'palsu' && ev) kirimBatalkan(ev)
+  }, [kirimBatalkan])
+
+  const batalkanStatus = useCallback((id) => {
+    setStatusMap(m => {
+      const next = { ...m }
+      delete next[id]
+      return next
+    })
+  }, [])
 
   const getT = () => startTimeRef.current ? (Date.now() - startTimeRef.current) / 1000 : 0
 
@@ -147,6 +287,8 @@ export default function LivePage() {
     setErrorMsg('')
     setWsState('connecting')
     setEvents([])
+    setStatusMap({})
+    munculRef.current = {}
     poseRef.current  = {}
     eventsRef.current = []
 
@@ -252,6 +394,7 @@ export default function LivePage() {
   useEffect(() => () => stopLive(), [])
 
   const isRunning = wsState === 'connected'
+  useEffect(() => { isRunningRef.current = isRunning }, [isRunning])
   const isLoading = wsState === 'connecting'
 
   function formatTime(sec) {
@@ -264,20 +407,45 @@ export default function LivePage() {
     <div className="page-container" style={{ background: 'var(--paper)' }}>
       {/* ── Navbar ─────────────────────────────────────────────────── */}
       <nav className="navbar">
-        <button
-          className="navbar-brand"
-          onClick={() => { stopLive(); navigate('/') }}
-          style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
-          aria-label="Kembali ke halaman utama"
-        >
-          <div className="navbar-logo">
-            <img src="/sapa.png" alt="SAPA Logo" />
-          </div>
-          <div>
-            <div className="navbar-title">SAPA</div>
-            <div className="navbar-subtitle">Melihat Kebutuhan, Bukan Wajah</div>
-          </div>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Tombol kembali eksplisit — hentikan live dulu agar kamera & WS bersih */}
+          <button
+            onClick={() => { stopLive(); navigate('/') }}
+            aria-label="Kembali ke halaman utama"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.14)',
+              border: '1.5px solid rgba(255,255,255,0.28)',
+              borderRadius: 50, color: 'white',
+              fontSize: 13, fontWeight: 600,
+              padding: '6px 14px 6px 10px',
+              cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background 150ms',
+            }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.24)'}
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M9 2L4 7l5 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Home
+          </button>
+
+          <button
+            className="navbar-brand"
+            onClick={() => { stopLive(); navigate('/') }}
+            style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+            aria-label="Kembali ke halaman utama"
+          >
+            <div className="navbar-logo">
+              <img src="/sapa.png" alt="SAPA Logo" />
+            </div>
+            <div>
+              <div className="navbar-title">SAPA</div>
+              <div className="navbar-subtitle">Melihat Kebutuhan, Bukan Wajah</div>
+            </div>
+          </button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           {/* Timestamp wajib untuk video proof of work — lihat JamLangsung.jsx */}
           <JamLangsung ringkas />
@@ -384,7 +552,7 @@ export default function LivePage() {
             {/* Kontrol */}
             <div style={{ marginTop: 14, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <div style={{ display: 'flex', gap: 6 }}>
-                {[{ id:'lorong', label:'Lorong (Samping)' }, { id:'rak', label:'Rak (Atas)' }].map(opt => (
+                {[{ id:'lorong', label:'Lorong (Samping)' }, { id:'rak', label:'Rak (Atas)' }, { id:'both', label:'Semua Fitur' }].map(opt => (
                   <button
                     key={opt.id} type="button"
                     onClick={() => setCameraType(opt.id)}
@@ -442,52 +610,106 @@ export default function LivePage() {
           {/* ── Log kejadian live ────────────────────────────────────── */}
           <div>
             <div style={{
-              fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)',
-              letterSpacing: '0.07em', textTransform: 'uppercase', marginBottom: 10,
+              display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+              marginBottom: 10,
             }}>
-              Kejadian Live
+              <div style={{
+                fontSize: 12, fontWeight: 700, color: 'var(--ink-soft)',
+                letterSpacing: '0.07em', textTransform: 'uppercase',
+              }}>
+                Kejadian Live
+              </div>
+              {kejadianTampil.length > 0 && (
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-faint)' }}>
+                  {kejadianTampil.length} kejadian
+                </span>
+              )}
             </div>
 
+            {/* Statistik sesi real-time (metrik TIM, bukan individu) */}
+            {kejadianTampil.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{
+                  padding: '10px 14px',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--paper-2)', border: '1px solid var(--garis)',
+                  fontSize: 12, color: 'var(--ink-soft)', lineHeight: 1.5, marginBottom: 8,
+                }}>
+                  Sedang berlangsung:{' '}
+                  <strong style={{ color: 'var(--waspada)' }}>{statistik.jatuh} jatuh</strong>,{' '}
+                  <strong style={{ color: 'var(--bantu)' }}>{statistik.bantu} butuh bantuan</strong>
+                </div>
+
+                {/* Grid metrik ringkas */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                  {[
+                    { label: 'Ditangani', nilai: statistik.ditangani, warna: 'var(--sigap)' },
+                    { label: 'Alarm palsu', nilai: statistik.palsu, warna: 'var(--ink-faint)' },
+                    { label: 'Terlewat', nilai: statistik.terlewat, warna: 'var(--waspada)' },
+                  ].map(s => (
+                    <div key={s.label} style={{
+                      padding: '8px 10px', borderRadius: 'var(--radius-sm)',
+                      background: 'var(--surface)', border: '1px solid var(--garis)',
+                      textAlign: 'center',
+                    }}>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: s.warna, lineHeight: 1 }}>
+                        {s.nilai}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--ink-faint)', marginTop: 3, letterSpacing: '0.03em' }}>
+                        {s.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Waktu respons rata-rata */}
+                <div style={{
+                  marginTop: 6, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                  background: 'var(--sigap-soft)', border: '1px solid rgba(47,107,88,0.18)',
+                  fontSize: 12, color: 'var(--ink-soft)', display: 'flex', justifyContent: 'space-between',
+                }}>
+                  <span>Rata-rata waktu respons</span>
+                  <strong style={{ color: 'var(--sigap-dark)', fontFamily: "'JetBrains Mono', monospace" }}>
+                    {statistik.avgRespons != null ? `${statistik.avgRespons.toFixed(1)} dtk` : '—'}
+                  </strong>
+                </div>
+
+                <div style={{ fontSize: 10.5, color: 'var(--ink-faint)', marginTop: 6, lineHeight: 1.5 }}>
+                  Metrik mengukur respons <strong>tim</strong> toko, bukan individu —
+                  sejalan dengan prinsip privacy-by-design.
+                </div>
+              </div>
+            )}
+
             <div style={{
-              background: 'var(--surface)', border: '1px solid var(--garis)',
-              borderRadius: 'var(--radius-lg)', padding: '4px 0',
-              maxHeight: 440, overflowY: 'auto',
+              display: 'flex', flexDirection: 'column', gap: 8,
+              maxHeight: 440, overflowY: 'auto', paddingRight: 2,
             }}>
-              {events.length === 0 ? (
-                <div style={{ padding: '36px 24px', textAlign: 'center', color: 'var(--ink-faint)', fontSize: 13 }}>
+              {kejadianTampil.length === 0 ? (
+                <div style={{
+                  background: 'var(--surface)', border: '1px solid var(--garis)',
+                  borderRadius: 'var(--radius-lg)',
+                  padding: '36px 24px', textAlign: 'center', color: 'var(--ink-faint)', fontSize: 13,
+                }}>
                   {isRunning ? (
-                    <span>🔍 Memantau...<br/><span style={{ fontSize: 11, marginTop: 4, display: 'block' }}>skeleton akan muncul di kamera saat terdeteksi</span></span>
+                    <span>🔍 Memantau...<br/><span style={{ fontSize: 11, marginTop: 4, display: 'block' }}>kerangka akan muncul di kamera saat terdeteksi</span></span>
                   ) : 'Belum ada kejadian'}
                 </div>
-              ) : events.map((ev, i) => {
-                const isFall  = ev.tipe === 'jatuh'
-                const color   = isFall ? 'var(--waspada)'      : 'var(--bantu)'
-                const bgColor = isFall ? 'var(--waspada-soft)' : 'var(--bantu-soft)'
-                const label   = isFall ? '⚠ Jatuh Terdeteksi'  : '🙋 Tampak Butuh Bantuan'
+              ) : kejadianTampil.map((ev) => {
+                const id = eventId(ev)
                 return (
-                  <div key={i} style={{
-                    padding: '10px 14px',
-                    borderBottom: i < events.length - 1 ? '1px solid var(--garis-soft)' : 'none',
-                    background: i === 0 ? bgColor : 'transparent',
-                    transition: 'background 0.3s',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 2 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color }}>{label}</span>
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'var(--ink-faint)' }}>
-                        {formatTime(ev.t0)}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                      <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-faint)' }}>
-                        ID:{ev.track_id}
-                      </span>
-                      {ev.skor != null && (
-                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--ink-faint)' }}>
-                          {Math.round(ev.skor * 100)}% yakin
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                  <KartuKejadian
+                    key={id}
+                    event={ev}
+                    mode="live"
+                    status={statusMap[id]?.status}
+                    tRespons={statusMap[id]?.tRespons}
+                    oleh={statusMap[id]?.oleh}
+                    sumber={statusMap[id]?.sumber}
+                    onAck={(x) => tandaiStatus(x, 'ditangani', ev)}
+                    onPalsu={(x) => tandaiStatus(x, 'palsu', ev)}
+                    onUndo={batalkanStatus}
+                  />
                 )
               })}
             </div>

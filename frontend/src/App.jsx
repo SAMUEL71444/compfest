@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import LandingPage from './pages/LandingPage.jsx'
 import LivePage from './pages/LivePage.jsx'
 import DashboardPage from './pages/DashboardPage.jsx'
+import StatistikPage from './pages/StatistikPage.jsx'
 import AnalisisApp from './AnalisisApp.jsx'
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/analisis" element={<AnalisisApp />} />
         <Route path="/live"     element={<LivePage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/statistik" element={<StatistikPage />} />
         {/* Fallback — redirect ke landing */}
         <Route path="*"         element={<Navigate to="/" replace />} />
       </Routes>

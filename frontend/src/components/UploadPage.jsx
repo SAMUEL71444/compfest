@@ -166,18 +166,25 @@ export default function UploadPage({ onAnalyze, error, onClearError }) {
   const [file, setFile] = useState(null)
   const [cameraType, setCameraType] = useState('both')
   const [isDragging, setIsDragging] = useState(false)
+  // Error validasi format file — ditampilkan sebagai banner dalam UI, BUKAN window.alert.
+  const [fileError, setFileError] = useState(null)
   const inputRef = useRef(null)
   const navigate = useNavigate()
 
   const handleFile = useCallback((f) => {
     if (!f) return
     if (!f.name.match(/\.(mp4|avi|mov|mkv)$/i)) {
-      alert('Format tidak didukung. Gunakan .mp4, .avi, .mov, atau .mkv')
+      setFileError('Format file tidak didukung. Gunakan file video .mp4, .avi, .mov, atau .mkv, lalu coba unggah lagi.')
       return
     }
+    setFileError(null)
     setFile(f)
     if (error) onClearError()
   }, [error, onClearError])
+
+  // Gabungan error dari parent (gagal analisis) + error validasi lokal.
+  const errorAktif = error || fileError
+  const clearError = () => { setFileError(null); if (error) onClearError() }
 
   const onDrop = useCallback((e) => {
     e.preventDefault()
@@ -227,13 +234,64 @@ export default function UploadPage({ onAnalyze, error, onClearError }) {
           color: 'var(--ink)',
           letterSpacing: '-0.03em',
         }}>
-          Analisis Klip Video CCTV
+          Unggah rekaman CCTV toko Anda
         </h1>
-        <p style={{ color: 'var(--ink-soft)', fontSize: 16, maxWidth: 520, margin: '0 auto', lineHeight: 1.6 }}>
-          Mendeteksi pelanggan tampak butuh bantuan & kejadian jatuh — hanya dari{' '}
-          <span style={{ color: 'var(--sigap)', fontWeight: 600 }}>pose/kerangka tubuh</span>,
-          tanpa mengenali wajah atau identitas.
+        <p style={{ color: 'var(--ink-soft)', fontSize: 16, maxWidth: 540, margin: '0 auto', lineHeight: 1.6 }}>
+          SAPA akan menandai pelanggan yang butuh bantuan & kejadian jatuh —{' '}
+          <span style={{ color: 'var(--sigap)', fontWeight: 600 }}>tanpa mengenali wajah</span>.
         </p>
+
+        {/* Langkah mini 1-2-3 */}
+        <div style={{
+          display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
+          marginTop: 24,
+        }}>
+          {[
+            {
+              n: '1', teks: 'Unggah video',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <line x1="9" y1="3" x2="9" y2="12" stroke="var(--sigap)" strokeWidth="1.7" strokeLinecap="round" />
+                  <polyline points="5.5,6.5 9,3 12.5,6.5" stroke="var(--sigap)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  <line x1="4" y1="14" x2="14" y2="14" stroke="var(--sigap)" strokeWidth="1.7" strokeLinecap="round" />
+                </svg>
+              ),
+            },
+            {
+              n: '2', teks: 'SAPA menganalisis',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <circle cx="8" cy="8" r="5" stroke="var(--sigap)" strokeWidth="1.7" />
+                  <line x1="11.5" y1="11.5" x2="15" y2="15" stroke="var(--sigap)" strokeWidth="1.7" strokeLinecap="round" />
+                </svg>
+              ),
+            },
+            {
+              n: '3', teks: 'Tinjau kejadian',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                  <rect x="3" y="3" width="12" height="12" rx="2" stroke="var(--sigap)" strokeWidth="1.7" />
+                  <polyline points="6,9 8,11 12,6.5" stroke="var(--sigap)" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                </svg>
+              ),
+            },
+          ].map((s, i, arr) => (
+            <span key={s.n} style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                padding: '8px 14px', borderRadius: 999,
+                background: 'var(--surface)', border: '1px solid var(--garis)',
+                fontSize: 13, color: 'var(--ink-soft)', fontWeight: 600,
+              }}>
+                {s.icon}
+                <span><span style={{ color: 'var(--sigap)', fontWeight: 700 }}>{s.n}.</span> {s.teks}</span>
+              </span>
+              {i < arr.length - 1 && (
+                <span aria-hidden="true" style={{ color: 'var(--ink-faint)', fontSize: 14 }}>→</span>
+              )}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* ── Mode Selector (Tab) ─────────────────────────────────────── */}
@@ -302,12 +360,12 @@ export default function UploadPage({ onAnalyze, error, onClearError }) {
         </div>
       </div>
 
-      {/* ── Error banner ──────────────────────────────────────────────── */}
-      {error && (
-        <div className="error-banner" style={{ marginBottom: 20 }}>
-          <span>⚠ {error}</span>
+      {/* ── Error banner (validasi format & gagal analisis) ───────────── */}
+      {errorAktif && (
+        <div className="error-banner" style={{ marginBottom: 20 }} role="alert">
+          <span>⚠ {errorAktif}</span>
           <button
-            onClick={onClearError}
+            onClick={clearError}
             style={{
               background: 'none', border: 'none',
               color: 'var(--waspada-dark)',

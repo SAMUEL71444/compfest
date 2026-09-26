@@ -18,6 +18,7 @@ PENTING: Geometri (torso_angle, is_dwell) SELALU menggunakan raw_windows,
          bukan yang sudah dinormalisasi.
 """
 
+import cv2
 import numpy as np
 import torch
 import logging
@@ -27,11 +28,64 @@ from .extract import extract_poses
 from .normalize import build_windows_for_heads
 from .geometry import is_dwell, window_torso_angle, INTERACTION_CLASS_NAMES
 from .models import predict_proba, BiLSTMHead
+from .gestures import deteksi_angkat_tangan, DURASI_MIN_DEFAULT, TOLERANSI_JEDA_DETIK
+from . import uniform as _uniform
 
 logger = logging.getLogger(__name__)
 
 # Indeks kelas jatuh di output Kepala Jatuh (0=normal, 1=oleng, 2=jatuh)
 _FALL_CLASS_IDX = 2
+
+# Berapa frame awal tiap track yang dicoba untuk cek seragam — cukup
+# beberapa saja (bukan seluruh track) karena pakaian tidak berubah
+# sepanjang track hidup, dan membuka lebih banyak frame cuma menambah
+# biaya seek video tanpa menambah keyakinan.
+_MAX_FRAME_CEK_SERAGAM = 5
+
+
+def _deteksi_pegawai_per_track(video_path: str, tracks: dict, path_seragam) -> dict:
+    """
+    Cek status pegawai untuk tiap track, dari beberapa frame awal saja.
+    Status bertahan sepanjang track_id hidup — sama seperti pola Mode Live
+    (lihat MASTER_PROMPT §5): sidik diambil di beberapa frame awal, lalu
+    dipakai terus tanpa mengecek ulang tiap frame.
+
+    Returns: {track_id: bool} — True bila cocok salah satu seragam terdaftar.
+             Track yang tidak bisa dinilai sama sekali (torso selalu < ambang
+             ukuran) TIDAK masuk dict ini (diperlakukan sebagai bukan pegawai
+             oleh pemanggil, arah aman: tetap dicek butuh-bantuan).
+    """
+    daftar_pegawai = _uniform.muat_daftar_signature(path_seragam)
+    if not daftar_pegawai:
+        return {}
+    signatures = _uniform.daftar_signature_objects(daftar_pegawai)
+    if not signatures:
+        return {}
+
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        logger.warning("Tidak bisa membuka video untuk cek seragam — dilewati.")
+        return {}
+
+    status: dict = {}
+    try:
+        for track_id, tdata in tracks.items():
+            frames = tdata["frames"][:_MAX_FRAME_CEK_SERAGAM]
+            for fidx, kps in frames:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, fidx)
+                ok, frame = cap.read()
+                if not ok:
+                    continue
+                patch = _uniform.crop_torso(frame, kps)
+                hasil = _uniform.cocokkan_seragam_terdaftar(patch, signatures)
+                if hasil is True:
+                    status[track_id] = True
+                    break   # cukup satu kecocokan, tidak perlu cek frame lain
+                # hasil False atau None (torso kecil) — coba frame berikutnya
+    finally:
+        cap.release()
+
+    return status
 
 
 def _compute_window_times(frame_indices: np.ndarray, src_fps: float,
@@ -81,6 +135,18 @@ def analyze(
     src_fps = first["fps"]
     total_frames = first["total_frames"]
 
+    # Status pegawai per track (opsional — hanya aktif bila cfg menyediakan
+    # path_seragam dan ada pegawai terdaftar). CAKUPAN PENTING: status ini
+    # HANYA dipakai untuk exclude dari butuh_bantuan/angkat_tangan di bawah,
+    # TIDAK PERNAH dipakai untuk menyaring deteksi jatuh (pegawai yang jatuh
+    # tetap darurat) — lihat pipeline/uniform.py.
+    path_seragam = cfg.get("path_seragam")
+    status_pegawai: dict = {}
+    if path_seragam:
+        status_pegawai = _deteksi_pegawai_per_track(video_path, tracks, path_seragam)
+        if status_pegawai:
+            logger.info(f"Pegawai terdeteksi pada track: {sorted(status_pegawai.keys())}")
+
     # Parameter dari cfg
     dst_fps     = float(cfg.get("target_fps", 15))
     window_size = int(cfg.get("window", 45))
@@ -114,6 +180,11 @@ def analyze(
     # → skip dwell check sepenuhnya untuk kamera rak
     skip_dwell = (camera_type == "rak")
 
+    # Gestur angkat tangan (aturan geometri, lihat pipeline/gestures.py)
+    run_gestures         = bool(cfg.get("run_gestures", True))
+    gesture_durasi_min   = float(cfg.get("gesture_durasi_min", DURASI_MIN_DEFAULT))
+    gesture_toleransi_jeda = float(cfg.get("gesture_toleransi_jeda", TOLERANSI_JEDA_DETIK))
+
     timeline: list = []
     frame_annotations: dict = {}
 
@@ -121,6 +192,11 @@ def analyze(
         frames = tdata["frames"]   # [(frame_idx, kps[17,3])]
         if len(frames) < 2:
             continue
+
+        # Pegawai terdaftar: kecualikan dari butuh_bantuan/angkat_tangan di
+        # bawah (lihat status_pegawai di atas) — TIDAK mempengaruhi deteksi
+        # jatuh, yang tetap berjalan penuh untuk track ini seperti biasa.
+        is_pegawai = bool(status_pegawai.get(track_id, False))
 
         frame_indices = np.array([f[0] for f in frames])
         raw_seq = np.array([f[1] for f in frames], dtype=np.float32)  # [T,17,3]
@@ -165,10 +241,12 @@ def analyze(
                                                  int((float(frame_indices[-1]) / src_fps - t_start) * dst_fps) + 1)):
                     window_action_for_resamp[ri] = label
 
+        action_per_fidx: dict = {}   # {frame_idx: label} — untuk syarat 3 gestur angkat tangan
         for orig_i, (fidx, kps) in enumerate(frames):
             t_rel = (float(fidx) / src_fps) - t_start
             ri = min(int(round(t_rel * dst_fps)), max(window_action_for_resamp.keys(), default=0))
             action = window_action_for_resamp.get(ri, "background")
+            action_per_fidx[fidx] = action
 
             frame_annotations.setdefault(fidx, []).append({
                 "track_id": int(track_id),
@@ -192,8 +270,30 @@ def analyze(
                             "track_id": int(track_id),
                         })
 
+        # 5c. Deteksi kejadian ANGKAT TANGAN (aturan geometri, bukan model)
+        # Aktif untuk camera_type "lorong"/"both" — kamera top-down (rak)
+        # tidak relevan karena bahu/pinggul terkompresi perspektif.
+        # Dilewati untuk pegawai terdaftar (sinyal minta-bantuan, bukan darurat).
+        if run_gestures and camera_type != "rak" and not is_pegawai:
+            angkat_events = deteksi_angkat_tangan(
+                frames, src_fps,
+                action_labels=action_per_fidx,
+                durasi_min=gesture_durasi_min,
+                toleransi_jeda=gesture_toleransi_jeda,
+            )
+            for ev in angkat_events:
+                timeline.append({
+                    "tipe": "angkat_tangan",
+                    "t0": ev["t0"],
+                    "t1": ev["t1"],
+                    "durasi": ev["durasi"],
+                    "track_id": int(track_id),
+                })
+
         # 5b. Deteksi kejadian BUTUH BANTUAN
-        if inter_probs is not None:
+        # Dilewati untuk pegawai terdaftar (mereka bertugas menimbang/mengamati
+        # rak, itu bukan indikasi butuh bantuan) — lihat pipeline/uniform.py.
+        if inter_probs is not None and not is_pegawai:
             run_count, run_t0, run_t1 = 0, None, None
             best_prob = 0.0
 
@@ -258,11 +358,14 @@ def analyze(
 
     n_jatuh  = sum(1 for e in timeline if e["tipe"] == "jatuh")
     n_bantu  = sum(1 for e in timeline if e["tipe"] == "butuh_bantuan")
-    logger.info(f"Analisis selesai: {n_jatuh} jatuh, {n_bantu} butuh_bantuan dari {len(tracks)} track.")
+    n_angkat = sum(1 for e in timeline if e["tipe"] == "angkat_tangan")
+    logger.info(f"Analisis selesai: {n_jatuh} jatuh, {n_bantu} butuh_bantuan, "
+                f"{n_angkat} angkat_tangan dari {len(tracks)} track.")
 
     return {
         "timeline": timeline,
         "frame_annotations": frame_annotations,
         "src_fps": src_fps,
         "total_frames": total_frames,
+        "status_pegawai": status_pegawai,   # {track_id: True} — untuk render() (label abu-abu)
     }

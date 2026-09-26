@@ -49,18 +49,29 @@ _UPPER_JOINTS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 _LOWER_JOINTS = {11, 12, 13, 14, 15, 16}
 
 # ── Palet warna BGR ───────────────────────────────────────────────────────────
-COLOR_NORMAL = (80, 180, 80)      # Hijau  — gerakan normal biasa
-COLOR_FALL   = (40,  40, 210)     # Merah  — deteksi jatuh
-COLOR_HELP   = (30, 140, 240)     # Oranye — tampak butuh bantuan
-COLOR_WHITE  = (255, 255, 255)
-COLOR_BLACK  = (0,   0,   0)
+COLOR_NORMAL  = (80, 180, 80)      # Hijau  — gerakan normal biasa
+COLOR_FALL    = (40,  40, 210)     # Merah  — deteksi jatuh
+COLOR_HELP    = (30, 140, 240)     # Oranye — tampak butuh bantuan (sinyal pasif)
+COLOR_ANGKAT  = (200, 60, 160)     # Ungu   — angkat tangan minta bantuan (sinyal aktif)
+COLOR_PEGAWAI = (150, 150, 150)    # Abu    — pegawai terdaftar (dikecualikan dari bantuan)
+COLOR_WHITE   = (255, 255, 255)
+COLOR_BLACK   = (0,   0,   0)
 CONF_THRESHOLD = 0.3              # minimum confidence untuk menggambar sendi
 
 
-def _get_person_color(events_active: list) -> tuple:
-    """Pilih warna kerangka berdasarkan kejadian aktif."""
+def _get_person_color(events_active: list, is_pegawai: bool = False) -> tuple:
+    """Pilih warna kerangka berdasarkan kejadian aktif.
+
+    Jatuh SELALU diprioritaskan di atas status pegawai — pegawai yang jatuh
+    tetap darurat (lihat pipeline/uniform.py, "CAKUPAN"). Status pegawai
+    hanya membuat warna default (tanpa kejadian) jadi abu, bukan hijau.
+    """
     if any(e["tipe"] == "jatuh" for e in events_active):
         return COLOR_FALL
+    if is_pegawai:
+        return COLOR_PEGAWAI
+    if any(e["tipe"] == "angkat_tangan" for e in events_active):
+        return COLOR_ANGKAT
     if any(e["tipe"] == "butuh_bantuan" for e in events_active):
         return COLOR_HELP
     return COLOR_NORMAL
@@ -137,6 +148,10 @@ def _draw_event_banner(frame: np.ndarray, events_active: list):
             icon = "!!! JATUH TERDETEKSI"
             skor = event.get("skor", 0.0)
             text = f"{icon}  (skor: {skor:.2f})"
+        elif event["tipe"] == "angkat_tangan":
+            banner_color = (160, 50, 130)
+            icon = "ANGKAT TANGAN — MINTA BANTUAN"
+            text = f"{icon}  (ID: {event['track_id']})"
         else:
             banner_color = (20, 120, 240)
             icon = "BUTUH BANTUAN"
@@ -169,6 +184,7 @@ def render(video_path: str, analysis_result: dict, output_path: str,
     frame_annotations = analysis_result.get("frame_annotations", {})
     timeline = analysis_result.get("timeline", [])
     src_fps = analysis_result.get("src_fps", 30.0)
+    status_pegawai = analysis_result.get("status_pegawai", {})
 
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
@@ -246,7 +262,8 @@ def render(video_path: str, analysis_result: dict, output_path: str,
         for track_id, (kps, action, _) in terakhir_kps.items():
             # Cek apakah track ini sedang dalam kejadian
             person_events = [e for e in events_active if e["track_id"] == track_id]
-            color = _get_person_color(person_events)
+            is_pegawai = bool(status_pegawai.get(track_id, False))
+            color = _get_person_color(person_events, is_pegawai)
 
             # Gambar kerangka
             _draw_skeleton(frame, kps, color,
@@ -263,9 +280,14 @@ def render(video_path: str, analysis_result: dict, output_path: str,
                 nose_c = min(kps[5][2], kps[6][2])
 
             if nose_c > CONF_THRESHOLD:
-                # Teks status yang mudah dimengerti
+                # Teks status yang mudah dimengerti. Jatuh tetap diprioritaskan
+                # di atas status pegawai — lihat _get_person_color().
                 if any(e["tipe"] == "jatuh" for e in person_events):
                     status_txt = "JATUH!"
+                elif is_pegawai:
+                    status_txt = "Pegawai"
+                elif any(e["tipe"] == "angkat_tangan" for e in person_events):
+                    status_txt = "ANGKAT TANGAN"
                 elif any(e["tipe"] == "butuh_bantuan" for e in person_events):
                     status_txt = "BUTUH BANTUAN"
                 else:

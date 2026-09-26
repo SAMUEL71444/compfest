@@ -53,3 +53,7 @@ backend/data/*.tmp
 # Video mentah eval — berat (ratusan MB) dan bisa memuat orang nyata.
 # Label (eval/label.csv) dan hasil (eval/hasil/) tetap di-commit.
 eval/video/
+
+# Sidik seragam pegawai (histogram + fitur pola, BUKAN foto — foto dihapus
+# setelah registrasi) — tetap spesifik per toko, jangan ikut riwayat git.
+backend/data/seragam.json

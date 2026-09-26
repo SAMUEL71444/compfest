@@ -36,6 +36,7 @@ from pipeline.models import load_head
 from pipeline.analyze import analyze
 from pipeline.render import render
 from pipeline.thresholds import ambil_preset, cfg_dari_preset
+from pipeline import uniform as _uniform
 from live_server import router as live_router
 from production.api import router as produksi_router, ws_router as produksi_ws_router
 from production.api import pasang_manager
@@ -257,6 +258,124 @@ def hapus_statistik():
     return {"dihapus": jumlah}
 
 
+SERAGAM_PATH = DATA_DIR / "seragam.json"
+
+
+def _decode_gambar_upload(data: bytes):
+    """Decode bytes upload jadi array BGR OpenCV. None bila gagal."""
+    import cv2
+    import numpy as np
+    arr = np.frombuffer(data, dtype=np.uint8)
+    img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
+    return img
+
+
+async def _registrasi_seragam(
+    nama: str,
+    files: list,
+    sudah_dicrop: bool,
+):
+    """Logika bersama untuk registrasi seragam — dipanggil dari kedua path
+    (/seragam/frame dan /api/seragam/frame, lihat §3 KONTEKS soal proxy)."""
+    if not files:
+        raise HTTPException(status_code=400, detail="Minimal 1 foto/crop diperlukan.")
+    if len(files) > 3:
+        raise HTTPException(status_code=400, detail="Maksimal 3 foto per registrasi.")
+
+    patches = []
+    for f in files:
+        data = await f.read()
+        img = _decode_gambar_upload(data)
+        if img is None:
+            continue
+        if sudah_dicrop:
+            # Frontend sudah memotong area torso di browser — pakai langsung.
+            patches.append(img)
+        else:
+            # Foto penuh: perlu deteksi pose dulu untuk menemukan torso.
+            # Diminta eksplisit sudah_dicrop=True dari alur crop-di-browser
+            # supaya backend tidak memotong ulang secara keliru; untuk foto
+            # penuh tanpa crop, ekstraksi pose satu-frame belum diimplementasi
+            # di endpoint ini — minta pemanggil crop dulu.
+            raise HTTPException(
+                status_code=400,
+                detail="Kirim area yang sudah dipotong (torso) dengan sudah_dicrop=true. "
+                       "Registrasi dari foto penuh belum didukung endpoint ini.",
+            )
+
+    sig = _uniform.buat_signature(patches)
+    if sig is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Semua patch terlalu kecil (< {_uniform.MIN_TORSO_AREA_PX}px area) "
+                   "untuk histogram yang stabil. Perbesar area crop atau dekatkan kamera.",
+        )
+
+    daftar = _uniform.muat_daftar_signature(SERAGAM_PATH)
+    entry_id = str(uuid.uuid4())[:8]
+    daftar.append({"id": entry_id, "nama": nama, "signature": sig.to_dict()})
+    _uniform.simpan_daftar_signature(SERAGAM_PATH, daftar)
+
+    # Privacy-by-design: foto/patch sumber TIDAK disimpan ke disk, hanya
+    # signature (histogram + fitur pola) yang persisten. `patches` cuma
+    # ada di memori proses ini dan dibuang begitu request selesai.
+    return {"id": entry_id, "nama": nama, "n_sampel": sig.n_sampel, "total_terdaftar": len(daftar)}
+
+
+@app.post("/seragam/frame")
+async def daftar_seragam(
+    nama: str = Form(...),
+    files: list[UploadFile] = File(...),
+    sudah_dicrop: bool = Form(True),
+):
+    """Registrasi seragam pegawai dari 1-3 crop torso. Lihat pipeline/uniform.py
+    untuk detail cara kerja pencocokan."""
+    return await _registrasi_seragam(nama, files, sudah_dicrop)
+
+
+@app.post("/api/seragam/frame")
+async def api_daftar_seragam(
+    nama: str = Form(...),
+    files: list[UploadFile] = File(...),
+    sudah_dicrop: bool = Form(True),
+):
+    """Sama seperti /seragam/frame — didaftarkan dua path karena nginx dan
+    Vite membuang prefiks /api sebelum permintaan sampai ke backend."""
+    return await _registrasi_seragam(nama, files, sudah_dicrop)
+
+
+def _daftar_pegawai_ringkas():
+    daftar = _uniform.muat_daftar_signature(SERAGAM_PATH)
+    return {"pegawai": [{"id": p["id"], "nama": p["nama"], "n_sampel": p["signature"].get("n_sampel", 1)} for p in daftar]}
+
+
+@app.get("/seragam")
+def daftar_seragam_terdaftar():
+    """Daftar pegawai terdaftar (tanpa signature mentah, cuma ringkasan)."""
+    return _daftar_pegawai_ringkas()
+
+
+@app.get("/api/seragam")
+def api_daftar_seragam_terdaftar():
+    return _daftar_pegawai_ringkas()
+
+
+@app.delete("/seragam/{pegawai_id}")
+def hapus_seragam(pegawai_id: str):
+    """Hapus satu pegawai terdaftar dari data/seragam.json."""
+    daftar = _uniform.muat_daftar_signature(SERAGAM_PATH)
+    sisa = [p for p in daftar if p["id"] != pegawai_id]
+    if len(sisa) == len(daftar):
+        raise HTTPException(status_code=404, detail="ID pegawai tidak ditemukan.")
+    _uniform.simpan_daftar_signature(SERAGAM_PATH, sisa)
+    return {"dihapus": pegawai_id, "sisa": len(sisa)}
+
+
+@app.delete("/api/seragam/{pegawai_id}")
+def api_hapus_seragam(pegawai_id: str):
+    return hapus_seragam(pegawai_id)
+
+
 @app.get("/api/status")
 def api_status():
     """
@@ -359,6 +478,10 @@ async def analyze_video(
         "min_bbox_ratio": 0.005 if camera_type == "rak" else 0.01,
         "min_kp_conf": 0.25,
         "min_visible_kp": 6,    # minimal 6 joint visible untuk bukan ghost
+        # Exclude pegawai terdaftar dari butuh_bantuan/angkat_tangan — lihat
+        # pipeline/uniform.py. Path selalu dikirim; analyze() sendiri yang
+        # memutuskan tidak ada apa-apa untuk dicek bila file belum ada/kosong.
+        "path_seragam": SERAGAM_PATH,
     }
 
 

@@ -457,10 +457,10 @@ async def analyze_video(
         # Model 2-kelas (other=0, inspecting=1) — lihat interaction_head.json.
         # Ambil dari config model, JANGAN di-hardcode.
         "inspect_idx": _state["inter_cfg"].get("inspect_idx", [1]),
-        # Untuk kamera rak: 1 window cukup (is_dwell di-skip, false positive rendah)
-        # Untuk kamera lorong: butuh 2 window berturut (tanpa dwell skip)
-        # Minimal jendela berturut sebelum dianggap kejadian. Satu jendela
-        # cukup untuk kedipan model; "butuh bantuan" secara konsep berarti
+        # Semua mode kamera membutuhkan 2 window inspecting berturut-turut.
+        # Pada kamera rak pemeriksaan dwell dilewati, tetapi syarat dua window
+        # tetap berlaku. Satu window saja dapat merupakan kedipan model;
+        # "butuh bantuan" secara konsep berarti
         # seseorang menimbang produk BEBERAPA SAAT, bukan sekilas menoleh.
         # Kepala Interaksi.ipynb memakai 3; di sini 2 sebagai kompromi, karena
         # jendela di web bergeser 1 detik (stride 15 @ 15fps) sehingga 2 jendela

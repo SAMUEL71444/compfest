@@ -1,0 +1,280 @@
+INFO:pipeline.extract:Mengekstrak pose dari Jason (ambil langsung 2).mp4 (1463 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 42 dibuang (kp rendah), 11 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 7 track valid (dari 9 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.83 0.17], inspect_sum=0.173, is_dwell=False
+INFO:pipeline.analyze:Track 4 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.21 0.79], inspect_sum=0.791, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.93 0.07], inspect_sum=0.067, is_dwell=False
+INFO:pipeline.analyze:Track 6 — 5 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.09 0.91], inspect_sum=0.912, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.37 0.63], inspect_sum=0.628, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.51 0.49], inspect_sum=0.495, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.63 0.37], inspect_sum=0.368, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.42 0.58], inspect_sum=0.577, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.07 0.93], inspect_sum=0.930, is_dwell=False
+INFO:pipeline.analyze:Track 11 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.06 0.94], inspect_sum=0.939, is_dwell=False
+INFO:pipeline.analyze:Track 12 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.98 0.02], inspect_sum=0.015, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 7 track.
+INFO:root:Jason (ambil langsung 2).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Jason (ambil langsung).mp4 (1076 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 11 dibuang (kp rendah), 12 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 6 track valid (dari 12 total).
+INFO:pipeline.analyze:Track 2 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.10 0.90], inspect_sum=0.904, is_dwell=False
+INFO:pipeline.analyze:Track 4 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.93 0.07], inspect_sum=0.067, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 2 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.36 0.64], inspect_sum=0.639, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.55 0.45], inspect_sum=0.451, is_dwell=False
+INFO:pipeline.analyze:Track 15 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.06 0.94], inspect_sum=0.936, is_dwell=False
+INFO:pipeline.analyze:Track 20 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.89 0.11], inspect_sum=0.108, is_dwell=False
+INFO:pipeline.analyze:Track 21 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.97 0.03], inspect_sum=0.035, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 6 track.
+INFO:root:Jason (ambil langsung).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Jason (angkat tangan).mp4 (1486 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 15 dibuang (kp rendah), 14 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 8 track valid (dari 12 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[1.00 0.00], inspect_sum=0.002, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.64 0.36], inspect_sum=0.361, is_dwell=False
+INFO:pipeline.analyze:Track 7 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.65 0.35], inspect_sum=0.348, is_dwell=False
+INFO:pipeline.analyze:Track 9 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.18 0.82], inspect_sum=0.816, is_dwell=False
+INFO:pipeline.analyze:Track 11 — 8 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.65 0.35], inspect_sum=0.350, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.99 0.01], inspect_sum=0.010, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.99 0.01], inspect_sum=0.013, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.98 0.02], inspect_sum=0.021, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.92 0.08], inspect_sum=0.077, is_dwell=False
+INFO:pipeline.analyze:Track 16 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.07 0.93], inspect_sum=0.926, is_dwell=False
+INFO:pipeline.analyze:Track 18 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.06 0.94], inspect_sum=0.937, is_dwell=False
+INFO:pipeline.analyze:Track 19 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.97 0.03], inspect_sum=0.026, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 1 angkat_tangan dari 8 track.
+INFO:root:Jason (angkat tangan).mp4 expected=angkat_tangan inspecting=False angkat=True
+INFO:pipeline.extract:Mengekstrak pose dari Jason (bingung).mp4 (2736 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 23 dibuang (kp rendah), 12 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 8 track valid (dari 9 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.07 0.93], inspect_sum=0.925, is_dwell=False
+INFO:pipeline.analyze:Track 3 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.25 0.75], inspect_sum=0.752, is_dwell=False
+INFO:pipeline.analyze:Track 4 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.45 0.55], inspect_sum=0.552, is_dwell=False
+INFO:pipeline.analyze:Track 6 — 16 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.38 0.62], inspect_sum=0.624, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.60 0.40], inspect_sum=0.405, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.57 0.43], inspect_sum=0.434, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.55 0.45], inspect_sum=0.452, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.57 0.43], inspect_sum=0.429, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.71 0.29], inspect_sum=0.290, is_dwell=False
+INFO:pipeline.analyze:Track 10 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.07 0.93], inspect_sum=0.930, is_dwell=False
+INFO:pipeline.analyze:Track 12 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.05 0.95], inspect_sum=0.946, is_dwell=False
+INFO:pipeline.analyze:Track 14 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.64 0.36], inspect_sum=0.359, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 8 track.
+INFO:root:Jason (bingung).mp4 expected=inspecting inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Jason (streching 1).mp4 (1766 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 95 dibuang (kp rendah), 20 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 8 track valid (dari 13 total).
+INFO:pipeline.analyze:Track 2 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.02 0.98], inspect_sum=0.982, is_dwell=False
+INFO:pipeline.analyze:Track 4 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.10 0.90], inspect_sum=0.902, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.16 0.84], inspect_sum=0.841, is_dwell=False
+INFO:pipeline.analyze:Track 12 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.40 0.60], inspect_sum=0.605, is_dwell=False
+INFO:pipeline.analyze:Track 16 — 7 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.18 0.82], inspect_sum=0.825, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.47 0.53], inspect_sum=0.533, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.62 0.38], inspect_sum=0.379, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.48 0.52], inspect_sum=0.524, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.61 0.39], inspect_sum=0.394, is_dwell=True
+INFO:pipeline.analyze:Track 19 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.07 0.93], inspect_sum=0.926, is_dwell=False
+INFO:pipeline.analyze:Track 23 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.06 0.94], inspect_sum=0.939, is_dwell=False
+INFO:pipeline.analyze:Track 27 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.02 0.98], inspect_sum=0.983, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 8 track.
+INFO:root:Jason (streching 1).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Jason (streching 2).mp4 (1629 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 9 dibuang (kp rendah), 10 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 7 track valid (dari 7 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.15 0.85], inspect_sum=0.848, is_dwell=False
+INFO:pipeline.analyze:Track 3 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.75 0.25], inspect_sum=0.251, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.88 0.12], inspect_sum=0.123, is_dwell=False
+INFO:pipeline.analyze:Track 6 — 11 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.07 0.93], inspect_sum=0.928, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.13 0.87], inspect_sum=0.865, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.65 0.35], inspect_sum=0.348, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.58 0.42], inspect_sum=0.422, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.47 0.53], inspect_sum=0.530, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.06 0.94], inspect_sum=0.944, is_dwell=False
+INFO:pipeline.analyze:Track 10 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.06 0.94], inspect_sum=0.937, is_dwell=False
+INFO:pipeline.analyze:Track 12 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.77 0.23], inspect_sum=0.226, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 7 track.
+INFO:root:Jason (streching 2).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Mama (angkat tangan).mp4 (752 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 32 dibuang (kp rendah), 7 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 5 track valid (dari 7 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[1.00 0.00], inspect_sum=0.003, is_dwell=False
+INFO:pipeline.analyze:Track 2 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.05 0.95], inspect_sum=0.947, is_dwell=True
+INFO:pipeline.analyze:Track 3 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.46 0.54], inspect_sum=0.541, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.63 0.37], inspect_sum=0.369, is_dwell=False
+INFO:pipeline.analyze:Track 11 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.02 0.98], inspect_sum=0.980, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 5 track.
+INFO:root:Mama (angkat tangan).mp4 expected=angkat_tangan inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Mama (bingung).mp4 (1035 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 101 dibuang (kp rendah), 10 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 6 track valid (dari 9 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.30 0.70], inspect_sum=0.702, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.46 0.54], inspect_sum=0.537, is_dwell=False
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.24 0.76], inspect_sum=0.759, is_dwell=False
+INFO:pipeline.analyze:Track 10 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.39 0.61], inspect_sum=0.612, is_dwell=False
+INFO:pipeline.analyze:Track 16 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.30 0.70], inspect_sum=0.699, is_dwell=False
+INFO:pipeline.analyze:Track 18 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.02 0.98], inspect_sum=0.983, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 6 track.
+INFO:root:Mama (bingung).mp4 expected=inspecting inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari Mama (langsung ambil).mp4 (887 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 23 dibuang (kp rendah), 7 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 4 track valid (dari 7 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[1.00 0.00], inspect_sum=0.002, is_dwell=False
+INFO:pipeline.analyze:Track 7 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.42 0.58], inspect_sum=0.583, is_dwell=False
+INFO:pipeline.analyze:Track 9 — 2 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.41 0.59], inspect_sum=0.590, is_dwell=True
+INFO:pipeline.analyze:  w=1: probs=[0.46 0.54], inspect_sum=0.535, is_dwell=False
+INFO:pipeline.analyze:Track 13 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.98 0.02], inspect_sum=0.021, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 1 angkat_tangan dari 4 track.
+INFO:root:Mama (langsung ambil).mp4 expected=negative inspecting=False angkat=True
+INFO:pipeline.extract:Mengekstrak pose dari Mama (streching).mp4 (801 frame, 30.0 fps, 848×478) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 15 dibuang (kp rendah), 9 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 5 track valid (dari 8 total).
+INFO:pipeline.analyze:Track 1 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.97 0.03], inspect_sum=0.029, is_dwell=False
+INFO:pipeline.analyze:Track 2 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.54 0.46], inspect_sum=0.461, is_dwell=True
+INFO:pipeline.analyze:Track 8 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.13 0.87], inspect_sum=0.872, is_dwell=False
+INFO:pipeline.analyze:Track 10 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.67 0.33], inspect_sum=0.329, is_dwell=False
+INFO:pipeline.analyze:Track 16 — 1 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.02 0.98], inspect_sum=0.982, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 5 track.
+INFO:root:Mama (streching).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari put(normal).mp4 (32 frame, 6.0 fps, 600×600) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 1 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 2 track valid (dari 2 total).
+INFO:pipeline.analyze:Track 1 — 2 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.02 0.98], inspect_sum=0.978, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.02 0.98], inspect_sum=0.982, is_dwell=False
+INFO:pipeline.analyze:Track 2 — 2 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.03 0.97], inspect_sum=0.967, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.04 0.96], inspect_sum=0.964, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 0 angkat_tangan dari 2 track.
+INFO:root:put(normal).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari take(normal).mp4 (32 frame, 6.0 fps, 600×600) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 6 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 0 track valid (dari 0 total).
+WARNING:pipeline.analyze:Tidak ada track valid ditemukan di video.
+INFO:root:take(normal).mp4 expected=negative inspecting=False angkat=False
+INFO:pipeline.extract:Mengekstrak pose dari vidio1.mp4 (3796 frame, 30.0 fps, 920×680) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 4 dibuang (kp rendah), 4 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 2 track valid (dari 4 total).
+INFO:pipeline.analyze:Track 1 — 26 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.70 0.30], inspect_sum=0.295, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.35 0.65], inspect_sum=0.653, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.04 0.96], inspect_sum=0.963, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.01 0.99], inspect_sum=0.989, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.02 0.98], inspect_sum=0.984, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 22 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.96 0.04], inspect_sum=0.045, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.37 0.63], inspect_sum=0.633, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.64 0.36], inspect_sum=0.359, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.71 0.29], inspect_sum=0.288, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.55 0.45], inspect_sum=0.449, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 2 angkat_tangan dari 2 track.
+INFO:root:vidio1.mp4 expected=butuh_bantuan inspecting=False angkat=True
+INFO:pipeline.extract:Mengekstrak pose dari vidio2.mp4 (3796 frame, 30.0 fps, 920×680) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 4 dibuang (kp rendah), 4 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 2 track valid (dari 4 total).
+INFO:pipeline.analyze:Track 1 — 26 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.70 0.30], inspect_sum=0.295, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.35 0.65], inspect_sum=0.653, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.04 0.96], inspect_sum=0.963, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.01 0.99], inspect_sum=0.989, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.02 0.98], inspect_sum=0.984, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 22 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.96 0.04], inspect_sum=0.045, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.37 0.63], inspect_sum=0.633, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.64 0.36], inspect_sum=0.359, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.71 0.29], inspect_sum=0.288, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.55 0.45], inspect_sum=0.449, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 2 angkat_tangan dari 2 track.
+INFO:root:vidio2.mp4 expected=butuh_bantuan inspecting=False angkat=True
+INFO:pipeline.extract:Mengekstrak pose dari vidio3.mp4 (3796 frame, 30.0 fps, 920×680) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 15.0fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 4 dibuang (kp rendah), 4 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 2 track valid (dari 4 total).
+INFO:pipeline.analyze:Track 1 — 26 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.70 0.30], inspect_sum=0.295, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.35 0.65], inspect_sum=0.653, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.04 0.96], inspect_sum=0.963, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.01 0.99], inspect_sum=0.989, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.02 0.98], inspect_sum=0.984, is_dwell=False
+INFO:pipeline.analyze:Track 5 — 22 jendela, inspect_idx=[1], dwell_ratio=0.4
+INFO:pipeline.analyze:  w=0: probs=[0.96 0.04], inspect_sum=0.045, is_dwell=False
+INFO:pipeline.analyze:  w=1: probs=[0.37 0.63], inspect_sum=0.633, is_dwell=False
+INFO:pipeline.analyze:  w=2: probs=[0.64 0.36], inspect_sum=0.359, is_dwell=False
+INFO:pipeline.analyze:  w=3: probs=[0.71 0.29], inspect_sum=0.288, is_dwell=False
+INFO:pipeline.analyze:  w=4: probs=[0.55 0.45], inspect_sum=0.449, is_dwell=False
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan, 2 angkat_tangan dari 2 track.
+INFO:root:vidio3.mp4 expected=butuh_bantuan inspecting=False angkat=True

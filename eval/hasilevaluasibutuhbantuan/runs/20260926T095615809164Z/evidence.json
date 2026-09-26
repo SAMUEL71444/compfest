@@ -1,0 +1,329 @@
+{
+  "created_at": "2026-09-26T10:06:52.029244+00:00",
+  "decision": {
+    "interaction_model": "argmax kelas 1 (inspecting), sesuai notebook; event aggregation memakai pipeline backend yang ada",
+    "angkat_tangan": "aturan geometri backend/pipeline/gestures.py dengan konstanta default kode teman",
+    "combined": "positif bila inspecting atau angkat_tangan terdeteksi"
+  },
+  "config": {
+    "run_fall": false,
+    "run_interaction": true,
+    "run_gestures": true,
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "inspect_idx": [
+      1
+    ]
+  },
+  "sha256": {
+    "models/interaction2_head.pt": "600a4ce58e663bcf61a81a2b921c3bd22e02061636f59a4a355a2bfdea7b49b6",
+    "source/BILSTMandOther_2Class.ipynb": "19e8721e45c63340bd99f114dbe3a29de8b94dfc03ca5c15625626fd5fa362ef",
+    "source/Preprocess_new_class.ipynb": "f8fc75eed030e6b79a3e586a1bd4147c68e9250ac7bb830b64548e41b78574b5",
+    "backend/models/interaction_head.pt": "600a4ce58e663bcf61a81a2b921c3bd22e02061636f59a4a355a2bfdea7b49b6",
+    "backend/pipeline/analyze.py": "c86bb888c7c7b742f8720340456566dc4220230b24d5c1ba4c7230f12f3142a7",
+    "backend/pipeline/gestures.py": "c7be3b7d03433606befe4fdfdbfe60d639f61c09bebb496a1d23bda2b1b0bfe3"
+  },
+  "metrics": {
+    "inspecting": {
+      "tp": 0,
+      "fp": 0,
+      "fn": 2,
+      "tn": 8,
+      "support": 2,
+      "precision": null,
+      "recall": 0.0,
+      "f1": 0.0,
+      "confusion_matrix_labels": [
+        "negative",
+        "positive"
+      ],
+      "confusion_matrix": [
+        [
+          8,
+          0
+        ],
+        [
+          2,
+          0
+        ]
+      ]
+    },
+    "angkat_tangan": {
+      "tp": 1,
+      "fp": 1,
+      "fn": 1,
+      "tn": 7,
+      "support": 2,
+      "precision": 0.5,
+      "recall": 0.5,
+      "f1": 0.5,
+      "confusion_matrix_labels": [
+        "negative",
+        "positive"
+      ],
+      "confusion_matrix": [
+        [
+          7,
+          1
+        ],
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    "combined": {
+      "tp": 4,
+      "fp": 1,
+      "fn": 3,
+      "tn": 7,
+      "support": 7,
+      "precision": 0.8,
+      "recall": 0.5714285714285714,
+      "f1": 0.6666666666666666,
+      "confusion_matrix_labels": [
+        "negative",
+        "positive"
+      ],
+      "confusion_matrix": [
+        [
+          7,
+          1
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    }
+  },
+  "cases": [
+    {
+      "video": "Jason (ambil langsung 2).mp4",
+      "video_sha256": "2b0aafcab07bb1ce8524559ff8621f2a4a9d3879a1d1d92b2a6f49a4ab120c79",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 34.7088194169919,
+      "error": null
+    },
+    {
+      "video": "Jason (ambil langsung).mp4",
+      "video_sha256": "433f43bcb177ad30b9df23a5ceb102ae8eab42eb0d990b030b2d7613d2c68862",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 24.6403841249994,
+      "error": null
+    },
+    {
+      "video": "Jason (angkat tangan).mp4",
+      "video_sha256": "599b49b22645bac5985d0c30f241e80817a629c6aa457490fe5aa00317880f28",
+      "expected": "angkat_tangan",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": true,
+      "predicted_combined": true,
+      "events": [
+        {
+          "tipe": "angkat_tangan",
+          "t0": 27.038804635860625,
+          "t1": 30.43530472558696,
+          "durasi": 3.3965000897263344,
+          "track_id": 11
+        }
+      ],
+      "seconds": 33.774318250012584,
+      "error": null
+    },
+    {
+      "video": "Jason (bingung).mp4",
+      "video_sha256": "09a1bcadfccf1eaad0b0b230aaa8e664a2abda5d27ae3bed272f676b3acc6dab",
+      "expected": "inspecting",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 63.74277637497289,
+      "error": null
+    },
+    {
+      "video": "Jason (streching 1).mp4",
+      "video_sha256": "5973a32a17624cb816cbf8257c0b3d66f36b085bdaf95abbcd1632c06bc239e2",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 40.37526154200896,
+      "error": null
+    },
+    {
+      "video": "Jason (streching 2).mp4",
+      "video_sha256": "2373ffbe2ccaedc39cdb69627611dcc7eaa088cda04aba6413a05b52d5551021",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 36.909108040999854,
+      "error": null
+    },
+    {
+      "video": "Mama (angkat tangan).mp4",
+      "video_sha256": "87f61f25f3839a1f052b5c0c062889660ba934bce9dc6cc8fa6db3f44c8fabff",
+      "expected": "angkat_tangan",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 16.910264750011265,
+      "error": null
+    },
+    {
+      "video": "Mama (bingung).mp4",
+      "video_sha256": "31ecceac8288edf2a6e364400d640397c81d0c99229d70348ec6737c61aa96ee",
+      "expected": "inspecting",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 23.147083332994953,
+      "error": null
+    },
+    {
+      "video": "Mama (langsung ambil).mp4",
+      "video_sha256": "b4664a15462e5cdfe72d56a50a7a5b6ec4065082a75a82a0749ab73a0516cb1c",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": true,
+      "predicted_combined": true,
+      "events": [
+        {
+          "tipe": "angkat_tangan",
+          "t0": 15.45342613052737,
+          "t1": 19.25017306776901,
+          "durasi": 3.796746937241638,
+          "track_id": 9
+        }
+      ],
+      "seconds": 19.617220959014958,
+      "error": null
+    },
+    {
+      "video": "Mama (streching).mp4",
+      "video_sha256": "2409ebade18a36e1053b6d80b09c5e5cbdb40b9f1d3b4bb0f115aedf008a5d24",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 17.83969349999097,
+      "error": null
+    },
+    {
+      "video": "put(normal).mp4",
+      "video_sha256": "84728349e00af945a5b8b60ed10381a9a9227d34e21f372887e46ca3dbf8ce75",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 2.445133999979589,
+      "error": null
+    },
+    {
+      "video": "take(normal).mp4",
+      "video_sha256": "26d4d41cb6c6fb44ee9eb4ead2e92bc0267afeb8212e87ad80833ce8e906f68a",
+      "expected": "negative",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": false,
+      "predicted_combined": false,
+      "events": [],
+      "seconds": 2.31878154198057,
+      "error": null
+    },
+    {
+      "video": "vidio1.mp4",
+      "video_sha256": "236c4d4a7d89f40a46ad31882559025e2d40d94efa387ab75ff4e2dc4c72bc38",
+      "expected": "butuh_bantuan",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": true,
+      "predicted_combined": true,
+      "events": [
+        {
+          "tipe": "angkat_tangan",
+          "t0": 5.0,
+          "t1": 52.53333333333333,
+          "durasi": 47.53333333333333,
+          "track_id": 1
+        },
+        {
+          "tipe": "angkat_tangan",
+          "t0": 70.86666666666666,
+          "t1": 120.6,
+          "durasi": 49.733333333333334,
+          "track_id": 5
+        }
+      ],
+      "seconds": 104.98532175002038,
+      "error": null
+    },
+    {
+      "video": "vidio2.mp4",
+      "video_sha256": "236c4d4a7d89f40a46ad31882559025e2d40d94efa387ab75ff4e2dc4c72bc38",
+      "expected": "butuh_bantuan",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": true,
+      "predicted_combined": true,
+      "events": [
+        {
+          "tipe": "angkat_tangan",
+          "t0": 5.0,
+          "t1": 52.53333333333333,
+          "durasi": 47.53333333333333,
+          "track_id": 1
+        },
+        {
+          "tipe": "angkat_tangan",
+          "t0": 70.86666666666666,
+          "t1": 120.6,
+          "durasi": 49.733333333333334,
+          "track_id": 5
+        }
+      ],
+      "seconds": 107.81293650000589,
+      "error": null
+    },
+    {
+      "video": "vidio3.mp4",
+      "video_sha256": "236c4d4a7d89f40a46ad31882559025e2d40d94efa387ab75ff4e2dc4c72bc38",
+      "expected": "butuh_bantuan",
+      "predicted_inspecting": false,
+      "predicted_angkat_tangan": true,
+      "predicted_combined": true,
+      "events": [
+        {
+          "tipe": "angkat_tangan",
+          "t0": 5.0,
+          "t1": 52.53333333333333,
+          "durasi": 47.53333333333333,
+          "track_id": 1
+        },
+        {
+          "tipe": "angkat_tangan",
+          "t0": 70.86666666666666,
+          "t1": 120.6,
+          "durasi": 49.733333333333334,
+          "track_id": 5
+        }
+      ],
+      "seconds": 104.39565833300003,
+      "error": null
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari fall.mp4 (296 frame, 29.7 fps, 1920×1080) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.9fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 2 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case vidio_asli-01: ok (10.487s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari fall1.mp4 (395 frame, 29.1 fps, 1920×1080) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 29fps → efektif 14.5fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 2 track valid (dari 3 total).
+INFO:pipeline.analyze:Analisis selesai: 5 jatuh, 0 butuh_bantuan dari 2 track.
+INFO:root:Case vidio_asli-02: ok (10.196s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari fall2.mp4 (304 frame, 28.5 fps, 1920×1080) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 29fps → efektif 14.3fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case vidio_asli-03: ok (7.539s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari fall3.mp4 (283 frame, 29.9 fps, 1920×1080) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.9fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case vidio_asli-04: ok (7.056s)

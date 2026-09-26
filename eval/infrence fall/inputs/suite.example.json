@@ -1,0 +1,8 @@
+{
+  "config": {"target_fps": 15, "window": 45, "stride": 15, "fall_thr": 0.8},
+  "cases": [
+    {"id": "jatuh-lorong", "video": "videos/jatuh.mp4", "camera": "lorong", "expected": ["jatuh"]},
+    {"id": "inspeksi-rak", "video": "videos/bantuan.mp4", "camera": "rak", "expected": ["butuh_bantuan"]},
+    {"id": "normal", "video": "videos/normal.mp4", "camera": "both", "expected": []}
+  ]
+}

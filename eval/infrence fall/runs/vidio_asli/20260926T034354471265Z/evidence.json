@@ -1,0 +1,174 @@
+{
+  "created_at": "2026-09-26T03:44:29.771137+00:00",
+  "command": [
+    "evaluate.py",
+    "--manifest",
+    "evaluation/inference fall/manifests/vidio_asli.json",
+    "--output",
+    "evaluation/inference fall/runs/vidio_asli"
+  ],
+  "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]",
+  "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.13.0",
+    "numpy": "2.5.2",
+    "ultralytics": "8.4.124",
+    "opencv-python-headless": "5.0.0.93"
+  },
+  "seed": 42,
+  "device": "cpu",
+  "config": {
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "fall_thr": 0.8,
+    "fall_angle": 35.0,
+    "fall_confirm": true,
+    "run_fall": true,
+    "run_interaction": false
+  },
+  "sha256": {
+    "manifest": "f1ed60b129a6a0375ba2a74909f9cbfcc933a963c794af78f767df8054ef9e10",
+    "fall_head.json": "60f33945f356071c2eee5e20713c763894d60c243e9a68fd7c4cea7f42dd3526",
+    "fall_head.pt": "411eebcbfbcaa59cde5941462d7e5190571168553f392c2d4a665f0b9169eebe",
+    "interaction_head.json": "781dd34ddac91e1b19c8b67a02b9a529709793fa313f84fde9bb1ca243f31665",
+    "interaction_head.pt": "5c6b0fb48d299bbfd96c96ffa70842c6e4ee8f14d1b45d7ad1696a0bab425cdc",
+    "pipeline/__init__.py": "360d75dd19e082ed6490f410c54d22dd5bd79a78e7df8f7434b82e5505994a59",
+    "pipeline/analyze.py": "f3e19050022f66af4cec382a0537430405fc0e37baa759f55cdb78d7e4c74e29",
+    "pipeline/extract.py": "38d91d187f47b878b9b63dcd4f95201b45bfb02f9f29c5aae9336dbcebbbade8",
+    "pipeline/geometry.py": "d3ea63db8e74620d0b30e31e1aa7099b9eefc8701b3b1c142f97f77c80e2875b",
+    "pipeline/models.py": "7dd11cbc6127a20067c883de4626508620a331a4cffa856dfc1ab195d8254733",
+    "pipeline/normalize.py": "0c5671ba2574c9ffb90872655ec0ec6b7352a4168560bc21df0048646abaaba2",
+    "pipeline/render.py": "84293910db77ef44ac05614d4ee1b340445ea4b9be56a10e92dec394bab6d85c",
+    "/Users/lauramarcella2503/Documents/project/compfest ui/backend/yolov8n-pose.pt": "c6fa93dd1ee4a2c18c900a45c1d864a1c6f7aba75d84f91648a30b7fb641d212"
+  },
+  "fatal_error": null,
+  "cases": [
+    {
+      "id": "vidio_asli-01",
+      "video": "/Users/lauramarcella2503/Documents/project/compfest ui/backend/evaluation/VIDIO ASLI/fall.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "bf58f20de023c2100bd3b0692fc2c268c85800d73b528279b4575f659ed79fea",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.03362511261261261,
+          "t1": 3.033625112612613,
+          "skor": 0.9374613165855408,
+          "sudut_torso": 35.17709346994782,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 1.0336251126126126,
+          "t1": 4.033625112612612,
+          "skor": 0.9681704044342041,
+          "sudut_torso": 67.91248963393657,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 10.486751124990406
+    },
+    {
+      "id": "vidio_asli-02",
+      "video": "/Users/lauramarcella2503/Documents/project/compfest ui/backend/evaluation/VIDIO ASLI/fall1.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "c99edf99eb9bd05a56d1eb884acc1a4fa482415531dbfe23a27829312b9a7433",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 3.0343933333333335,
+          "t1": 6.034393333333333,
+          "skor": 0.9571247696876526,
+          "sudut_torso": 98.62624990377606,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 4.034393333333333,
+          "t1": 7.034393333333333,
+          "skor": 0.9772763848304749,
+          "sudut_torso": 99.31930055656747,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 5.034393333333333,
+          "t1": 8.034393333333334,
+          "skor": 0.9757794141769409,
+          "sudut_torso": 100.34120763186544,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 6.034393333333333,
+          "t1": 9.034393333333334,
+          "skor": 0.9734823107719421,
+          "sudut_torso": 98.91134415657842,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 7.034393333333333,
+          "t1": 10.034393333333334,
+          "skor": 0.9708365201950073,
+          "sudut_torso": 82.95227392860807,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 10.19616066699382
+    },
+    {
+      "id": "vidio_asli-03",
+      "video": "/Users/lauramarcella2503/Documents/project/compfest ui/backend/evaluation/VIDIO ASLI/fall2.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "cab49ad5a43b6eb0f39985d062a8b27fd3e55cc9d4f3c9e784bd1e28cfb3c896",
+      "timeline": [],
+      "predicted": [],
+      "false_positive": [],
+      "false_negative": [
+        "jatuh"
+      ],
+      "seconds": 7.5391940830159
+    },
+    {
+      "id": "vidio_asli-04",
+      "video": "/Users/lauramarcella2503/Documents/project/compfest ui/backend/evaluation/VIDIO ASLI/fall3.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "09887a68bc760aff0a9ce85c746db189763be1217274ee3b8f75b987a8646fb0",
+      "timeline": [],
+      "predicted": [],
+      "false_positive": [],
+      "false_negative": [
+        "jatuh"
+      ],
+      "seconds": 7.05564454200794
+    }
+  ]
+}

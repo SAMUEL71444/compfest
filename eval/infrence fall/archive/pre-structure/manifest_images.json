@@ -1,0 +1,65 @@
+{
+  "dataset": "images",
+  "label_source": "Label positif jatuh mengikuti keterangan pengguna; belum anotasi waktu kejadian.",
+  "evaluation_scope": "Keberadaan minimal satu deteksi jatuh per klip.",
+  "config": {
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "fall_thr": 0.8,
+    "fall_angle": 35.0,
+    "fall_confirm": true,
+    "run_fall": true,
+    "run_interaction": false
+  },
+  "cases": [
+    {
+      "id": "images-01",
+      "video": "../images/Falling (LS) on the bed from sitting on the bed then falling (RS) to the floor.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "images-02",
+      "video": "../images/Falling (RS) on the bed from sitting on the bed.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "images-03",
+      "video": "../images/Falling from sitting on the chair to the ground. Left side Fall. Full body not visible.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "images-04",
+      "video": "../images/Standing then falling sideways.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "images-05",
+      "video": "../images/Walking then falling (LS) on the floor.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "images-06",
+      "video": "../images/Walking to falling. Right side fall.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    }
+  ]
+}

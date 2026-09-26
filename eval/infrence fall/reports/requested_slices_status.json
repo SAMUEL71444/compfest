@@ -1,0 +1,17 @@
+[
+  {
+    "slice": "yaw/pitch kamera dan kombinasi yaw x pitch",
+    "status": "unavailable",
+    "reason": "Tidak ada metadata sudut atau NPZ augmentasi; arah jatuh pada nama file bukan sudut kamera."
+  },
+  {
+    "slice": "performer",
+    "status": "unavailable",
+    "reason": "Tidak ada ID subjek yang terverifikasi; tidak menebak identitas dari wajah/pakaian."
+  },
+  {
+    "slice": "F1 interaksi per pasangan kelas",
+    "status": "unavailable",
+    "reason": "Hanya video jatuh tersedia; kepala interaksi dinonaktifkan dan tidak ada label/prediksi OOF interaksi."
+  }
+]

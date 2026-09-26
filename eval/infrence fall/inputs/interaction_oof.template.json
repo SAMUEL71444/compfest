@@ -1,0 +1,9 @@
+{
+  "task": "interaction",
+  "prediction_type": "oof",
+  "decision_rule": "argmax",
+  "training_provenance": "",
+  "dataset_npz": "interaction_metadata.npz",
+  "oof_npz": "interaction_oof.npz",
+  "class_names": ["background", "reach", "retract", "hand_in_shelf", "inspect_product", "inspect_shelf"]
+}

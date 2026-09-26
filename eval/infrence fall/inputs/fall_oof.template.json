@@ -1,0 +1,10 @@
+{
+  "task": "fall",
+  "prediction_type": "oof",
+  "decision_rule": "argmax",
+  "training_provenance": "",
+  "dataset_npz": "fall_metadata.npz",
+  "oof_npz": "fall_oof.npz",
+  "class_names": ["normal", "oleng", "jatuh"],
+  "positive_class_index": 2
+}

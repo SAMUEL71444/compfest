@@ -1,0 +1,15 @@
+
+[Kepala Jatuh]
+  ok   keluaran identik dengan kode training
+  ok   prediksi sepakat 100%
+  ok   12 sendi × 2 channel = 24 dim
+  ok   sendi jatuh = indeks 5..16
+
+[Kepala Interaksi]
+  ok   keluaran identik dengan kode training
+  ok   prediksi sepakat 100%
+  ok   17 sendi × 3 channel = 51 dim
+  ok   inspect_idx = [4, 5] sesuai notebook training
+
+====================================================
+LULUS 8 / 8  — semua lulus

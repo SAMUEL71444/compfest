@@ -1,0 +1,11 @@
+sample_id,dataset,video,yaw_deg,pitch_deg,performer,annotation_source
+gmgcsa24-01,gmgcsa24,Falling (LS) on the bed from sitting on the bed then falling (RS) to the floor.mp4,,,,
+gmgcsa24-02,gmgcsa24,Falling (RS) on the bed from sitting on the bed.mp4,,,,
+gmgcsa24-03,gmgcsa24,Falling from sitting on the chair to the ground. Left side Fall. Full body not visible.mp4,,,,
+gmgcsa24-04,gmgcsa24,Standing then falling sideways.mp4,,,,
+gmgcsa24-05,gmgcsa24,Walking then falling (LS) on the floor.mp4,,,,
+gmgcsa24-06,gmgcsa24,Walking to falling. Right side fall.mp4,,,,
+vidio_asli-01,vidio_asli,fall.mp4,,,,
+vidio_asli-02,vidio_asli,fall1.mp4,,,,
+vidio_asli-03,vidio_asli,fall2.mp4,,,,
+vidio_asli-04,vidio_asli,fall3.mp4,,,,

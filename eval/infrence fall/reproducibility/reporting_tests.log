@@ -1,0 +1,19 @@
+test_confusion_and_errors (test_evaluate.EvaluationTests.test_confusion_and_errors) ... ok
+test_no_ground_truth_has_no_score (test_evaluate.EvaluationTests.test_no_ground_truth_has_no_score) ... ok
+test_confusion_orientation (test_reporting.ReportTests.test_confusion_orientation) ... ok
+test_mixed_labels (test_reporting.ReportTests.test_mixed_labels) ... ok
+test_oof_aligns_ids_not_positions (test_reporting.ReportTests.test_oof_aligns_ids_not_positions) ... ok
+test_oof_rejects_augmented_source_crossing_folds (test_reporting.ReportTests.test_oof_rejects_augmented_source_crossing_folds) ... ok
+test_oof_rejects_missing_predictions (test_reporting.ReportTests.test_oof_rejects_missing_predictions) ... ok
+test_oof_rejects_nan_probabilities (test_reporting.ReportTests.test_oof_rejects_nan_probabilities) ... ok
+test_pair_does_not_discard_predictions_outside_pair (test_reporting.ReportTests.test_pair_does_not_discard_predictions_outside_pair) ... ok
+test_positive_only_does_not_invent_specificity (test_reporting.ReportTests.test_positive_only_does_not_invent_specificity) ... ok
+test_extraction_returns_original_indices (test_timing.TimingTests.test_extraction_returns_original_indices) ... ok
+test_missing_detection_keeps_time_gap (test_timing.TimingTests.test_missing_detection_keeps_time_gap) ... ok
+test_short_track_padding_does_not_extend_event_past_track (test_timing.TimingTests.test_short_track_padding_does_not_extend_event_past_track) ... ok
+test_stride_preserves_six_seconds_and_four_windows (test_timing.TimingTests.test_stride_preserves_six_seconds_and_four_windows) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 0.045s
+
+OK

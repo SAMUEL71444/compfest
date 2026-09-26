@@ -1,0 +1,11 @@
+test_confusion_and_errors (test_evaluate.EvaluationTests.test_confusion_and_errors) ... ok
+test_no_ground_truth_has_no_score (test_evaluate.EvaluationTests.test_no_ground_truth_has_no_score) ... ok
+test_extraction_returns_original_indices (test_timing.TimingTests.test_extraction_returns_original_indices) ... ok
+test_missing_detection_keeps_time_gap (test_timing.TimingTests.test_missing_detection_keeps_time_gap) ... ok
+test_short_track_padding_does_not_extend_event_past_track (test_timing.TimingTests.test_short_track_padding_does_not_extend_event_past_track) ... ok
+test_stride_preserves_six_seconds_and_four_windows (test_timing.TimingTests.test_stride_preserves_six_seconds_and_four_windows) ... ok
+
+----------------------------------------------------------------------
+Ran 6 tests in 0.019s
+
+OK

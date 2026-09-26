@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+# Input archives and videos can be large. Reports, PNG evidence, and CSV are tracked.
+inputs/*.npz
+*.zip
+# Rekaman sumber tetap lokal; laporan menyimpan hash dan cuplikan bukti.
+data/

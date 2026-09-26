@@ -1,0 +1,13 @@
+{
+  "verified_at": "2026-09-26T04:09:19.625591+00:00",
+  "isolated_source_snapshot_matches": true,
+  "backend_production_untouched": true,
+  "all_video_hashes_match": true,
+  "all_manifest_hashes_match": true,
+  "configs_identical": true,
+  "source_runs": {
+    "gmgcsa24": "runs/gmgcsa24/20260926T040701174916Z",
+    "vidio_asli": "runs/vidio_asli/20260926T040735336296Z"
+  },
+  "n_videos": 10
+}

@@ -1,0 +1,49 @@
+{
+  "dataset": "vidio_asli",
+  "source_folder": "vidio-asli",
+  "label_source": "Keterangan pengguna: video jatuh. Belum anotasi waktu kejadian.",
+  "config": {
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "fall_thr": 0.8,
+    "fall_angle": 35.0,
+    "fall_confirm": true,
+    "run_fall": true,
+    "run_interaction": false
+  },
+  "cases": [
+    {
+      "id": "vidio_asli-01",
+      "video": "../data/vidio-asli/fall.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "vidio_asli-02",
+      "video": "../data/vidio-asli/fall1.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "vidio_asli-03",
+      "video": "../data/vidio-asli/fall2.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "vidio_asli-04",
+      "video": "../data/vidio-asli/fall3.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    }
+  ]
+}

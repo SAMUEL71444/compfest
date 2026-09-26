@@ -1,0 +1,24 @@
+{
+  "observed": [
+    {
+      "id": "gmgcsa24-04",
+      "error": null,
+      "false_positive": [],
+      "false_negative": [
+        "jatuh"
+      ]
+    }
+  ],
+  "limitations": [
+    "Skor hanya keberadaan kejadian per klip; tidak mengukur ketepatan waktu atau track.",
+    "Error tidak diberi skor; periksa coverage agar baseline tidak menyesatkan.",
+    "Label yang tidak punya positif maupun prediksi positif memiliki F1 null.",
+    "Deteksi jatuh dinonaktifkan pada kamera rak oleh pipeline.",
+    "Butuh bantuan adalah proksi inspeksi produk/rak, perlu validasi manusia.",
+    "Waktu eksekusi termasuk load model pada klip pertama dan load YOLO tiap klip."
+  ],
+  "missing_positive_labels": [
+    "butuh_bantuan"
+  ],
+  "required_next": "Gunakan klip uji berlabel yang terpisah dari data training, termasuk contoh negatif dan berbagai sudut kamera."
+}

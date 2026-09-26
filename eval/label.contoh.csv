@@ -1,0 +1,16 @@
+# Label kebenaran (ground truth) untuk klip uji.
+# Satu baris = satu kejadian yang SEHARUSNYA terdeteksi.
+#
+# video       : nama file di eval/video/
+# tipe        : jatuh | angkat_tangan | butuh_bantuan
+# mulai,akhir : detik (boleh desimal). Deteksi dianggap benar bila
+#               bertumpang-tindih dengan rentang ini.
+# catatan     : bebas — dipakai saat membaca hasil, mis. "jatuh pelan",
+#               "orang jauh", "terhalang rak".
+#
+# Klip TANPA kejadian apa pun: cukup tulis satu baris tipe "kosong"
+# dengan mulai/akhir 0 — dipakai mengukur alarm palsu.
+video,tipe,mulai,akhir,catatan
+Tes1.mp4,jatuh,7.5,11.0,jatuh jelas di lorong
+Tes1.mp4,jatuh,18.0,22.5,jatuh kedua
+contoh_normal.mp4,kosong,0,0,tidak ada kejadian - untuk ukur alarm palsu

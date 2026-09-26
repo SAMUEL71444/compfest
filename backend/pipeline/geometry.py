@@ -18,14 +18,9 @@ _RIGHT_HIP = 12
 
 
 # Nama kelas interaksi (sesuai interaction_head.json)
-INTERACTION_CLASS_NAMES = [
-    "background",
-    "reach",
-    "retract",
-    "hand_in_shelf",
-    "inspect_product",
-    "inspect_shelf",
-]
+# Model 2-kelas (interaction2_head, dilatih via BILSTMandOther_2Class.ipynb):
+# index 0=other, 1=inspecting. Menggantikan skema 6-kelas MERL lama.
+INTERACTION_CLASS_NAMES = ["other", "inspecting"]
 
 
 def hip_center(keypoints: np.ndarray) -> np.ndarray:
@@ -53,30 +48,31 @@ def torso_length(keypoints: np.ndarray) -> float:
 
 def torso_angle(keypoints: np.ndarray) -> float:
     """
-    Hitung sudut torso terhadap sumbu vertikal (°).
+    Hitung sudut torso terhadap sumbu vertikal (°), via atan2(|dx|, |dy|).
 
     Konvensi: 0° = berdiri tegak, 90° = horizontal (rebah/jatuh).
     Dipakai di koordinat piksel (y meningkat ke bawah).
 
+    Rentang [0°, 90°] — BUKAN arccos [0°, 180°]. atan2(|dx|,|dy|) melipat
+    torso terbalik (bahu di bawah pinggul) ke rentang yang sama dengan
+    rebah biasa, karena bagi ambang deteksi jatuh keduanya sama-sama
+    "horizontal", bukan dua kondisi berbeda. Ambang fall_angle hasil sweep
+    dikalibrasi pada rumus ini — memakai arccos akan membuat sudut yang
+    sama secara visual terbaca hingga 2× lebih besar.
+
     keypoints: [17, 3]
-    Returns: float sudut dalam derajat [0°, 180°]
+    Returns: float sudut dalam derajat [0°, 90°]
     """
     shoulder_c = (keypoints[_LEFT_SHOULDER, :2] + keypoints[_RIGHT_SHOULDER, :2]) / 2.0
     hip_c = hip_center(keypoints)
 
     # Vektor dari pinggul ke bahu
-    vec = shoulder_c - hip_c  # (dx, dy), di image: y ke bawah
+    dx, dy = shoulder_c - hip_c  # (dx, dy), di image: y ke bawah
 
-    norm = float(np.linalg.norm(vec))
-    if norm < 1e-6:
+    if abs(dx) < 1e-6 and abs(dy) < 1e-6:
         return 0.0
 
-    vec_norm = vec / norm
-
-    # Vertikal "ke atas" dalam koordinat image = (0, -1)
-    vertical_up = np.array([0.0, -1.0])
-    cos_angle = float(np.clip(np.dot(vec_norm, vertical_up), -1.0, 1.0))
-    angle_deg = float(np.degrees(np.arccos(cos_angle)))
+    angle_deg = float(np.degrees(np.arctan2(abs(dx), abs(dy))))
     return angle_deg
 
 
@@ -108,13 +104,46 @@ def is_dwell(raw_window: np.ndarray, dwell_ratio: float = 0.3) -> bool:
 
 def window_torso_angle(raw_window: np.ndarray) -> float:
     """
-    Rata-rata sudut torso dari 5 frame terakhir jendela.
-    Lebih stabil untuk konfirmasi jatuh daripada hanya 1 frame.
+    Sudut torso MAKSIMUM sepanjang jendela (bukan rata-rata beberapa frame
+    terakhir). Kejatuhan adalah puncak singkat — dirata-rata bersama frame
+    tegak di sekitarnya, nilainya jatuh di bawah ambang.
 
     raw_window: [T, 17, 3]
-    Returns: float sudut dalam derajat
+    Returns: float sudut dalam derajat [0°, 90°]
     """
     T = raw_window.shape[0]
-    n_frames = min(5, T)
-    angles = [torso_angle(raw_window[t]) for t in range(T - n_frames, T)]
-    return float(np.mean(angles))
+    angles = [torso_angle(raw_window[t]) for t in range(T)]
+    return float(np.max(angles))
+
+
+def window_torso_speed(raw_window: np.ndarray, fps: float = 15.0) -> float:
+    """
+    Kecepatan perubahan vektor torso MAKSIMUM sepanjang jendela (torso
+    length/detik) — dari vektor torso (bahu-pinggul), bukan pergerakan
+    pinggul: pinggul menuju ~0 setelah normalisasi, torso tidak.
+
+    Dimatikan secara default di lapisan ambang (lihat thresholds.py):
+    kecepatan gerak jatuh vs normal nyaris sama, jadi menurunkan recall
+    bila dipaksa jadi syarat wajib. Tetap disediakan sebagai opsi.
+
+    raw_window: [T, 17, 3]
+    fps: laju jendela ini (dst_fps, biasanya 15)
+    Returns: float — piksel torso per detik (skala relatif thd panjang torso)
+    """
+    T = raw_window.shape[0]
+    if T < 2:
+        return 0.0
+
+    vectors = []
+    for t in range(T):
+        shoulder_c = (raw_window[t, _LEFT_SHOULDER, :2] + raw_window[t, _RIGHT_SHOULDER, :2]) / 2.0
+        hip_c = hip_center(raw_window[t])
+        vectors.append(shoulder_c - hip_c)
+    vectors = np.array(vectors)  # [T, 2]
+
+    diffs = np.linalg.norm(np.diff(vectors, axis=0), axis=1)  # [T-1]
+    avg_torso = float(np.mean([torso_length(raw_window[t]) for t in range(T)]))
+    avg_torso = max(avg_torso, 1.0)
+
+    max_diff = float(np.max(diffs)) if len(diffs) else 0.0
+    return (max_diff / avg_torso) * fps

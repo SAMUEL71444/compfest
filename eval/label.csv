@@ -1,0 +1,38 @@
+# Label kebenaran untuk klip uji SAPA.
+#
+# CATATAN: rentang waktu di bawah masih SELURUH DURASI KLIP, bukan detik
+# persis kejadiannya. Ini label awal — perbaiki `mulai`/`akhir` setelah
+# melihat hasil run pertama, supaya precision terukur adil.
+#
+# tipe:
+#   butuh_bantuan  = harus terdeteksi (pelanggan bingung / angkat tangan)
+#   angkat_tangan  = harus terdeteksi sebagai sinyal aktif
+#   kosong         = TIDAK boleh ada deteksi; apa pun yang muncul = alarm palsu
+video,tipe,mulai,akhir,catatan
+
+# ── HARUS TERDETEKSI — pelanggan bingung memilih produk ──────────────────
+Salinan Jason (bingung).mp4,butuh_bantuan,0,91.1,bingung pilih produk - Jason
+Salinan Mama (bingung).mp4,butuh_bantuan,0,34.5,bingung pilih produk - Mama
+
+# ── HARUS TERDETEKSI — angkat tangan minta bantuan ───────────────────────
+Salinan Jason (angkat tangan).mp4,angkat_tangan,0,49.5,angkat tangan minta bantuan - Jason
+Salinan Mama (angkat tangan).mp4,angkat_tangan,0,25.0,angkat tangan minta bantuan - Mama
+
+# ── TIDAK BOLEH TERDETEKSI — stretching (uji false positive angkat tangan) ─
+Salinan Jason (streching 1).mp4,kosong,0,0,stretching - bukan minta bantuan
+Salinan Jason (streching 2).mp4,kosong,0,0,stretching - bukan minta bantuan
+Salinan Mama (streching).mp4,kosong,0,0,stretching - bukan minta bantuan
+
+# ── TIDAK BOLEH TERDETEKSI — ambil barang langsung (tahu yang dicari) ────
+Salinan Jason (ambil langsung).mp4,kosong,0,0,ambil langsung - tidak bingung
+Salinan Jason (ambil langsung 2).mp4,kosong,0,0,ambil langsung - tidak bingung
+Salinan Mama (langsung ambil).mp4,kosong,0,0,ambil langsung - tidak bingung
+
+# ── TIDAK BOLEH TERDETEKSI — aksi rak normal (dataset MERL) ──────────────
+Salinan 0_reach(normal).mp4,kosong,0,0,reach - meraih rak normal
+Salinan 1_retract(normal).mp4,kosong,0,0,retract - menarik tangan normal
+Salinan 2_hand_in_shelf(normal).mp4,kosong,0,0,hand in shelf - normal
+Salinan 3_inspect_product(normal).mp4,kosong,0,0,inspect product - normal
+Salinan 4_inspect_shelf(normal).mp4,kosong,0,0,inspect shelf - normal
+put(normal).mp4,kosong,0,0,menaruh barang - normal
+take(normal).mp4,kosong,0,0,mengambil barang - normal

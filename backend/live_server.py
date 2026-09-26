@@ -38,7 +38,19 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from production.buffer import TrackWindowBuffer
 from production.worker import muat_yolo
 
+import notifier
+import statistik
+from pipeline.render import buat_frame_notif
+
 logger = logging.getLogger(__name__)
+
+# Mode blur kepala untuk foto notifikasi: "blur" (default) atau "solid".
+BLUR_MODE = os.getenv("SAPA_NOTIF_BLUR", "blur").strip().lower()
+
+# Saat staf menekan "Ditangani" di Telegram → catat ke statistik (permanen).
+notifier.set_pencatat_ditangani(
+    lambda kunci, nama: statistik.catat_ditangani(kunci, oleh=nama, sumber="telegram")
+)
 
 # ── Router FastAPI ─────────────────────────────────────────────────────────────
 router = APIRouter()
@@ -46,9 +58,11 @@ router = APIRouter()
 # ── Konfigurasi (sama dengan analyze.py) ──────────────────────────────────────
 WINDOW_SIZE    = 45     # frame per jendela BiLSTM setelah resample (= 3 dtk @15fps)
 FPS_TUJUAN     = 15.0   # HARUS sama dengan saat training (fall_head.json: fps=15)
-FALL_THRESH    = float(os.getenv("FALL_THRESH",   0.55))
+# Default sesuai preset "prob_sudut" di pipeline/thresholds.py — bisa dioverride
+# lewat env var untuk uji coba tanpa mengubah kode.
+FALL_THRESH    = float(os.getenv("FALL_THRESH",   0.57))
 DWELL_THRESH   = float(os.getenv("DWELL_THRESH",  0.60))
-TORSO_THRESH   = float(os.getenv("TORSO_THRESH",  45.0))  # derajat
+TORSO_THRESH   = float(os.getenv("TORSO_THRESH",  5.0))  # derajat — kalibrasi atan2, lihat geometry.py
 INSPECT_THRESH = float(os.getenv("INSPECT_THRESH", 0.50))
 
 # Jendela analisis dalam DETIK. Browser mengirim frame ~5fps, tapi laju itu
@@ -143,8 +157,8 @@ def _inferensi_jendela(jendela, camera_type, fall_head, interaction_head) -> lis
     if camera_type != "lorong" and interaction_head is not None:
         x = torch.from_numpy(masukan["interaction_input"][-1:])
         proba = predict_proba(interaction_head, x)
-        # Kelas 3,4,5 = hand_in_shelf, inspect_product, inspect_shelf
-        skor = float(proba[0, 3:6].sum())
+        # Model 2-kelas (other=0, inspecting=1) — lihat interaction_head.json.
+        skor = float(proba[0, 1])
         if skor >= INSPECT_THRESH and is_dwell(raw, dwell_ratio=DWELL_THRESH):
             kejadian.append({
                 "type": "event", "tipe": "butuh_bantuan",
@@ -164,6 +178,8 @@ async def ws_live(websocket: WebSocket):
     """
     await websocket.accept()
     logger.info("[live] Klien terhubung.")
+    if notifier.aktif():
+        logger.info("[live] Notifikasi Telegram AKTIF.")
 
     # Muat model dari app.state (sudah di-load saat startup app.py)
     # Fallback: load langsung dari disk jika dipanggil standalone
@@ -226,6 +242,31 @@ async def ws_live(websocket: WebSocket):
             except json.JSONDecodeError:
                 continue
 
+            # Pengawas menandai alarm palsu di UI → hapus notifikasi Telegram
+            # yang sudah terkirim untuk kejadian itu (human-in-the-loop).
+            if msg.get("type") == "batalkan":
+                ev_batal = {
+                    "track_id": msg.get("track_id"),
+                    "tipe": msg.get("tipe"),
+                    "t0": msg.get("t0"),
+                }
+                # Catat alarm palsu ke statistik permanen (dari dashboard/UI).
+                try:
+                    statistik.catat_alarm_palsu(notifier.kunci_kejadian(ev_batal), sumber="dashboard")
+                except Exception as e:
+                    logger.debug(f"[live] Gagal catat alarm palsu: {e}")
+                # Hapus notifikasi Telegram terkait bila ada.
+                if notifier.aktif():
+                    try:
+                        notifier.batalkan_kejadian(ev_batal)
+                        logger.info(
+                            f"[live] Alarm palsu — notif dibatalkan "
+                            f"track={msg.get('track_id')} tipe={msg.get('tipe')}"
+                        )
+                    except Exception as e:
+                        logger.debug(f"[live] Gagal batalkan notif: {e}")
+                continue
+
             if msg.get("type") != "frame":
                 continue
 
@@ -286,6 +327,39 @@ async def ws_live(websocket: WebSocket):
                     logger.info(
                         f"[live] {ev['tipe']} track={ev['track_id']} skor={ev['skor']}"
                     )
+
+                    # Catat kejadian ke statistik permanen + jadwalkan timer
+                    # "terlewat" (backend yang urus, bukan browser). Independen
+                    # dari Telegram — statistik tetap jalan walau notif nonaktif.
+                    try:
+                        statistik.catat_muncul({
+                            "id": notifier.kunci_kejadian(ev),
+                            "tipe": ev.get("tipe"),
+                            "track_id": ev.get("track_id"),
+                            "skor": ev.get("skor"),
+                            "t0": ev.get("t0"),
+                        })
+                    except Exception as e:
+                        logger.debug(f"[live] Gagal catat kejadian: {e}")
+
+                    # Notifikasi Telegram (opt-in). Rakit foto beranotasi dari
+                    # frame + pose TERKINI, dengan wajah diblur, di executor agar
+                    # tidak memblokir loop WebSocket. kirim_kejadian sendiri sudah
+                    # non-blocking (thread daemon) + cooldown per (track_id, tipe).
+                    if notifier.aktif():
+                        try:
+                            annotations = [
+                                {"track_id": tid, "keypoints": kps}
+                                for tid, kps in track_kps.items()
+                            ]
+                            foto = await loop.run_in_executor(
+                                None, buat_frame_notif,
+                                frame, annotations, ev, BLUR_MODE,
+                                camera_type == "rak",
+                            )
+                            notifier.kirim_kejadian(ev, foto=foto)
+                        except Exception as e:
+                            logger.debug(f"[live] Gagal siapkan notifikasi: {e}")
 
             buf.bersihkan(t_now)
 

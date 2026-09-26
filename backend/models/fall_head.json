@@ -10,5 +10,7 @@
   "use_channels": 2,
   "window": 45,
   "stride": 15,
-  "fps": 15
+  "fps": 15,
+  "selected_fall_threshold": 0.57,
+  "threshold_source": "5-fold OOF validation on 80% development set (test 20% by performer excluded), train_fall_new.ipynb, run_20260926T055427Z. Prob-only, tanpa syarat sudut torso."
 }

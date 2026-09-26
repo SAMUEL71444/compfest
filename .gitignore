@@ -21,6 +21,7 @@ backend/outputs/
 # jadi tidak boleh ikut tersalin ke riwayat git yang permanen.
 backend/data/cameras.json
 backend/data/kejadian.jsonl
+backend/data/penanganan.jsonl
 backend/data/*.tmp
 !backend/data/cameras.example.json
 
@@ -48,3 +49,11 @@ backend/data/kejadian.jsonl
 backend/data/videos/
 backend/data/*.tmp
 !backend/data/cameras.example.json
+
+# Video mentah eval — berat (ratusan MB) dan bisa memuat orang nyata.
+# Label (eval/label.csv) dan hasil (eval/hasil/) tetap di-commit.
+eval/video/
+
+# Sidik seragam pegawai (histogram + fitur pola, BUKAN foto — foto dihapus
+# setelah registrasi) — tetap spesifik per toko, jangan ikut riwayat git.
+backend/data/seragam.json

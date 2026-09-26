@@ -105,7 +105,16 @@ def extract_poses(video_path: str, cfg: dict, camera_type: str = "lorong") -> di
     skipped_kp    = 0
     skipped_no_id = 0
 
-    for frame_idx, result in enumerate(results_gen):
+    for result_idx, result in enumerate(results_gen):
+        # BUG FIX: vid_stride melompati frame di video sumber, tapi hasil dari
+        # results_gen tetap berurutan rapat (0,1,2,...) — itu urutan HASIL yang
+        # diproses, bukan indeks frame di video asli. Tanpa dikalikan kembali
+        # dengan frame_skip, timeline (t0/t1) dan overlay skeleton digambar di
+        # frame yang salah — makin jauh melenceng seiring durasi video (mis.
+        # video 30fps dgn frame_skip=2 bisa melenceng puluhan detik di akhir
+        # klip 2 menit). vid_stride konstan sejak awal video, jadi perkalian
+        # sederhana ini sudah tepat, tanpa perlu atribut frame dari result.
+        frame_idx = result_idx * frame_skip
         if result.keypoints is None:
             continue
 

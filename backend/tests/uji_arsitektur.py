@@ -114,14 +114,14 @@ def main():
                 len(cfg["fall_joints"]) * cfg["use_channels"] == cfg["in_dim"],
                 f"{len(cfg['fall_joints'])}×{cfg['use_channels']} != {cfg['in_dim']}")
             cek("sendi jatuh = indeks 5..16", cfg["fall_joints"] == list(range(5, 17)))
-        if cfg["arch"] == "InteractionLSTM":
+        if cfg["arch"] in ("InteractionLSTM", "InteractionLSTM2"):
             # interaction_head.json tidak memuat daftar "joints", jadi jumlah
             # sendi diturunkan dari in_dim: 17 sendi × 3 channel = 51.
             cek("17 sendi × 3 channel = 51 dim",
                 cfg["in_dim"] == 17 * cfg["use_channels"] == 51,
                 f"in_dim={cfg['in_dim']} use_channels={cfg['use_channels']}")
-            cek("inspect_idx = [4, 5] sesuai notebook training",
-                cfg.get("inspect_idx") == [4, 5], f"config={cfg.get('inspect_idx')}")
+            cek("inspect_idx = [1] sesuai BILSTMandOther_2Class.ipynb (other=0, inspecting=1)",
+                cfg.get("inspect_idx") == [1], f"config={cfg.get('inspect_idx')}")
 
     print(f"\n{'='*52}\nLULUS {lulus} / {lulus+gagal}"
           + (f"  — GAGAL {gagal}" if gagal else "  — semua lulus"))

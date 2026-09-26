@@ -1,0 +1,35 @@
+{
+  "waktu": "2026-09-25 07:04:41",
+  "ambang": {
+    "preset": "prob_sudut",
+    "fall_thr": 0.65,
+    "fall_angle": 5.0,
+    "fall_speed": 0.0
+  },
+  "ringkasan": {
+    "jatuh": {
+      "recall": 1.0,
+      "precision": 1.0,
+      "f1": 1.0,
+      "tp": 4,
+      "fn": 0,
+      "fp": 0
+    }
+  },
+  "klip": [
+    {
+      "klip": "Tes1.mp4",
+      "durasi_proses": 141.3,
+      "n_deteksi": 8,
+      "jatuh": {
+        "tp": 4,
+        "fn": 0,
+        "fp": 0,
+        "recall": 1.0,
+        "precision": 1.0,
+        "terlewat": [],
+        "palsu": []
+      }
+    }
+  ]
+}

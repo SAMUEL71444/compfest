@@ -1,0 +1,42 @@
+{
+  "waktu": "2026-09-25 22:27:01",
+  "ambang": {
+    "preset": "prob_sudut",
+    "fall_thr": 0.65,
+    "fall_angle": 5.0,
+    "fall_speed": 0.0
+  },
+  "ringkasan": {
+    "angkat_tangan": {
+      "recall": 0.0,
+      "precision": 0.0,
+      "f1": 0.0,
+      "tp": 0,
+      "fn": 1,
+      "fp": 0
+    }
+  },
+  "klip": [
+    {
+      "klip": "Salinan Mama (angkat tangan).mp4",
+      "durasi_proses": 22.0,
+      "n_deteksi": 0,
+      "angkat_tangan": {
+        "tp": 0,
+        "fn": 1,
+        "fp": 0,
+        "recall": 0.0,
+        "precision": null,
+        "terlewat": [
+          {
+            "tipe": "angkat_tangan",
+            "mulai": 0.0,
+            "akhir": 25.0,
+            "catatan": "angkat tangan minta bantuan - Mama"
+          }
+        ],
+        "palsu": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# eval/uji — jalankan test suite SAPA di dalam container backend.
+#
+# Dipakai supaya kamu tidak perlu memasang torch/ultralytics di laptop:
+# semua dependensi sudah ada di image backend. Skrip ini menyalin berkas
+# eval + klip ke container, menjalankan suite, lalu menarik hasilnya kembali.
+#
+#   ./eval/uji                          semua klip di eval/video/
+#   ./eval/uji --klip Tes1.mp4          satu klip
+#   ./eval/uji --preset prob_saja       bandingkan preset ambang
+#   ./eval/uji --fall-thr 0.80          coba ambang lain
+#   ./eval/uji --verbose                tampilkan semua deteksi
+
+set -euo pipefail
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(dirname "$DIR")"
+C=sapa-backend
+
+if ! docker ps --format '{{.Names}}' | grep -qx "$C"; then
+  echo "Container $C belum jalan. Jalankan dulu:" >&2
+  echo "    cd $ROOT && docker compose up -d" >&2
+  exit 1
+fi
+
+shopt -s nullglob
+klip=("$DIR"/video/*.mp4 "$DIR"/video/*.MP4 "$DIR"/video/*.mov "$DIR"/video/*.avi "$DIR"/video/*.mkv)
+if [ ${#klip[@]} -eq 0 ]; then
+  echo "Belum ada klip di eval/video/" >&2
+  echo "Taruh file video di situ, lalu jalankan lagi." >&2
+  exit 1
+fi
+
+docker exec "$C" mkdir -p /eval/video /eval/hasil
+docker cp "$DIR/jalankan.py" "$C:/eval/jalankan.py" >/dev/null
+[ -f "$DIR/label.csv" ] && docker cp "$DIR/label.csv" "$C:/eval/label.csv" >/dev/null
+
+# Salin hanya klip yang belum ada di container (menghemat waktu untuk klip besar)
+for f in "${klip[@]}"; do
+  n="$(basename "$f")"
+  if ! docker exec "$C" test -f "/eval/video/$n" 2>/dev/null; then
+    echo "  menyalin $n ..."
+    docker cp "$f" "$C:/eval/video/$n" >/dev/null
+  fi
+done
+
+docker exec "$C" python /eval/jalankan.py "$@"
+
+# Tarik hasil run ini saja. Menyalin seluruh direktori akan ikut membawa
+# berkas lama yang tertinggal di container, sehingga eval/banding.py
+# menampilkan run yang sudah tidak relevan.
+mkdir -p "$DIR/hasil"
+baru="$(docker exec "$C" sh -c 'ls -1t /eval/hasil/*.json /eval/hasil/*.md 2>/dev/null | head -2')"
+for f in $baru; do
+  docker cp "$C:$f" "$DIR/hasil/$(basename "$f")" >/dev/null 2>&1 || true
+done

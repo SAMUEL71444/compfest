@@ -109,7 +109,6 @@ export default function AnalisisApp() {
             </div>
             <div>
               <div className="navbar-title">SAPA</div>
-              <div className="navbar-subtitle">Melihat Kebutuhan, Bukan Wajah</div>
             </div>
           </button>
         </div>

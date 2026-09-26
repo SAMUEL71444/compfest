@@ -434,7 +434,6 @@ export default function DashboardPage() {
           </div>
           <div>
             <div className="navbar-title">SAPA</div>
-            <div className="navbar-subtitle">Dashboard Operator</div>
           </div>
         </button>
 

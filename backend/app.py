@@ -225,6 +225,37 @@ def health():
     }
 
 
+@app.get("/statistik")
+def statistik_penanganan():
+    """
+    Ringkasan statistik penanganan kejadian (permanen, lintas sesi Live).
+    Dibaca halaman /statistik untuk manajer. Aman bila belum ada data.
+
+    Diakses frontend via /api/statistik (prefiks /api dibuang nginx & proxy Vite).
+    """
+    import statistik as _statistik
+    return _statistik.ringkasan()
+
+
+@app.delete("/statistik")
+def hapus_statistik():
+    """
+    Hapus seluruh histori penanganan (DESTRUKTIF, permanen).
+    Dipanggil dari halaman /statistik lewat tombol "Hapus Histori" (berkonfirmasi).
+    """
+    import statistik as _statistik
+    import notifier as _notifier
+    jumlah = _statistik.hapus_semua()
+    # Bersihkan juga penanda kejadian yang sudah ditangani di notifier, agar
+    # deteksi ulang setelah reset bisa diproses lagi.
+    try:
+        _notifier._sudah_ditangani.clear()
+        _notifier._pesan_terkirim.clear()
+    except Exception:
+        pass
+    return {"dihapus": jumlah}
+
+
 @app.get("/api/status")
 def api_status():
     """

@@ -20,13 +20,21 @@ services:
       # Nyalakan dengan:  SAPA_PRODUKSI=1 docker compose up
       - SAPA_PRODUKSI=${SAPA_PRODUKSI:-0}
       - SAPA_RETENSI_JAM=${SAPA_RETENSI_JAM:-72}
+      # Notifikasi Telegram (mode Live) — OPT-IN. Semua default kosong → nonaktif.
+      # Isi lewat file .env (JANGAN di-commit; token rahasia).
+      - SAPA_TELEGRAM_TOKEN=${SAPA_TELEGRAM_TOKEN:-}
+      - SAPA_TELEGRAM_CHAT_ID=${SAPA_TELEGRAM_CHAT_ID:-}
+      - SAPA_TELEGRAM_TOKEN_DARURAT=${SAPA_TELEGRAM_TOKEN_DARURAT:-}
+      - SAPA_TELEGRAM_CHAT_ID_DARURAT=${SAPA_TELEGRAM_CHAT_ID_DARURAT:-}
+      - SAPA_NOTIF_COOLDOWN=${SAPA_NOTIF_COOLDOWN:-20}
+      - SAPA_NOTIF_BLUR=${SAPA_NOTIF_BLUR:-blur}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s   # beri waktu load model pertama kali
+      start_period: 60s # beri waktu load model pertama kali
 
   # ── Frontend React + nginx ───────────────────────────────────────────────
   frontend:

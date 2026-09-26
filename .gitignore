@@ -21,6 +21,7 @@ backend/outputs/
 # jadi tidak boleh ikut tersalin ke riwayat git yang permanen.
 backend/data/cameras.json
 backend/data/kejadian.jsonl
+backend/data/penanganan.jsonl
 backend/data/*.tmp
 !backend/data/cameras.example.json
 

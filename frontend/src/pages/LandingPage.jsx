@@ -247,7 +247,7 @@ function MarqueeStrip() {
 }
 
 /* ── Navbar ──────────────────────────────────────────────────────────────────── */
-function LandingNav({ onCTA, onLive, onStatistik }) {
+function LandingNav({ onCTA, onLive, onStatistik, onSeragam }) {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
@@ -329,6 +329,17 @@ function LandingNav({ onCTA, onLive, onStatistik }) {
           onMouseOver={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)' }}
           onMouseOut={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'transparent' }}>
           Statistik
+        </button>
+        <button type="button" onClick={onSeragam}
+          style={{
+            fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.8)',
+            background: 'none', border: 'none', cursor: 'pointer',
+            padding: '5px 13px', borderRadius: 20, fontFamily: 'inherit',
+            transition: 'color 120ms, background 120ms',
+          }}
+          onMouseOver={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.background = 'rgba(255,255,255,0.12)' }}
+          onMouseOut={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'transparent' }}>
+          Seragam
         </button>
       </div>
 
@@ -1089,13 +1100,14 @@ export default function LandingPage() {
   const goCTA = () => navigate('/analisis')
   const goLive = () => navigate('/live')
   const goStatistik = () => navigate('/statistik')
+  const goSeragam = () => navigate('/seragam')
   const scrollHow = () =>
     document.getElementById('cara-kerja')?.scrollIntoView({ behavior: 'smooth' })
 
   return (
     <div style={{ background: 'var(--paper)', minHeight: '100vh' }}>
       <NoiseOverlay />
-      <LandingNav onCTA={goCTA} onLive={goLive} onStatistik={goStatistik} />
+      <LandingNav onCTA={goCTA} onLive={goLive} onStatistik={goStatistik} onSeragam={goSeragam} />
       <HeroSection onCTA={goCTA} onScrollHow={scrollHow} />
       <MarqueeStrip />
       <NumbersSection />

@@ -21,15 +21,17 @@ const COCO_SKELETON = [
 const C_NORMAL = 'rgba(80,180,80,0.9)'    // hijau — gerakan normal
 const C_FALL   = 'rgba(210,40,40,0.95)'   // merah — jatuh
 const C_HELP   = 'rgba(240,140,30,0.95)'  // oranye — butuh bantuan
+const C_EMPLOYEE = 'rgba(35,125,220,0.95)' // biru — pegawai terdaftar
 
 function buildWsUrl() {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
   return `${proto}//${window.location.host}/api/ws/live`
 }
 
-function trackColor(trackId, activeEvents) {
+function trackColor(trackId, activeEvents, employeeIds) {
   const evs = activeEvents.filter(e => e.track_id === trackId)
   if (evs.some(e => e.tipe === 'jatuh'))         return C_FALL
+  if (employeeIds.has(trackId))                    return C_EMPLOYEE
   if (evs.some(e => e.tipe === 'butuh_bantuan')) return C_HELP
   return C_NORMAL
 }
@@ -90,6 +92,7 @@ export default function LivePage() {
   const rafRef       = useRef(null)
   const startTimeRef = useRef(null)
   const poseRef      = useRef({})    // mutable ref — tidak trigger re-render
+  const employeeRef  = useRef(new Set())
   const eventsRef    = useRef([])
   const isRunningRef  = useRef(false) // dibaca timer 'terlewat' tanpa jadi dependency
 
@@ -259,7 +262,7 @@ export default function LivePage() {
 
       for (const [trackId, kps] of Object.entries(poseRef.current)) {
         const tid = Number(trackId)
-        const col = trackColor(tid, active)
+        const col = trackColor(tid, active, employeeRef.current)
         drawSkeleton(ctx, kps, col)
 
         // Label di atas kepala / bahu
@@ -269,7 +272,8 @@ export default function LivePage() {
 
         const hasFall = active.some(e => e.track_id === tid && e.tipe === 'jatuh')
         const hasHelp = active.some(e => e.track_id === tid && e.tipe === 'butuh_bantuan')
-        const statusTxt = hasFall ? 'JATUH!' : hasHelp ? 'BUTUH BANTUAN' : 'Normal'
+        const isEmployee = employeeRef.current.has(tid)
+        const statusTxt = hasFall ? 'JATUH!' : isEmployee ? 'PEGAWAI' : hasHelp ? 'BUTUH BANTUAN' : 'Normal'
         drawLabel(ctx, `ID:${tid}  ${statusTxt}`, cx - 30, cy - 12, col)
       }
 
@@ -290,6 +294,7 @@ export default function LivePage() {
     setStatusMap({})
     munculRef.current = {}
     poseRef.current  = {}
+    employeeRef.current = new Set()
     eventsRef.current = []
 
     let stream
@@ -341,6 +346,7 @@ export default function LivePage() {
         const msg = JSON.parse(e.data)
         if (msg.type === 'pose') {
           poseRef.current = msg.tracks ?? {}  // update langsung, RAF loop ambil sendiri
+          employeeRef.current = new Set((msg.pegawai ?? []).map(Number))
         } else if (msg.type === 'event') {
           eventsRef.current = [msg, ...eventsRef.current].slice(0, 50)
           setEvents(ev => [msg, ...ev].slice(0, 50))  // update UI
@@ -379,6 +385,7 @@ export default function LivePage() {
     }
 
     poseRef.current   = {}
+    employeeRef.current = new Set()
     eventsRef.current = []
     setWsState('idle')
 
@@ -539,6 +546,7 @@ export default function LivePage() {
             }}>
               {[
                 { color: C_NORMAL, label: 'Hijau = Gerakan normal' },
+                { color: C_EMPLOYEE, label: 'Biru = Pegawai terdaftar' },
                 { color: C_HELP,   label: 'Oranye = Butuh bantuan' },
                 { color: C_FALL,   label: 'Merah = Jatuh terdeteksi' },
               ].map(({ color, label }) => (

@@ -1,0 +1,4 @@
+kelas,precision,recall,f1,dukungan
+normal,0.9251,0.9315,0.9283,15336
+oleng,0.8437,0.8125,0.8278,4816
+jatuh,0.8502,0.8662,0.8581,3812

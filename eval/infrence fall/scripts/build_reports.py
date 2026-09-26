@@ -178,7 +178,7 @@ def build():
     write_json(ROOT/'metadata/frame_provenance.json',proof)
     required=[dict(slice='yaw/pitch kamera dan kombinasi yaw x pitch',status='unavailable',reason='Tidak ada metadata sudut atau NPZ augmentasi; arah jatuh pada nama file bukan sudut kamera.'),
               dict(slice='performer',status='unavailable',reason='Tidak ada ID subjek yang terverifikasi; tidak menebak identitas dari wajah/pakaian.'),
-              dict(slice='F1 interaksi per pasangan kelas',status='unavailable',reason='Hanya video jatuh tersedia; kepala interaksi dinonaktifkan dan tidak ada label/prediksi OOF interaksi.')]
+              dict(slice='F1 interaksi per pasangan kelas',status='available_aggregate',reason='Dihitung dari confusion matrix OOF agregat; prediksi ke kelas di luar pasangan tetap dihitung sebagai kesalahan.',artifact='../../hasil/interaction_f1_per_pasangan.csv')]
     write_json(reports/'requested_slices_status.json',required)
     fig,axes=plt.subplots(1,2,figsize=(11,4.6))
     for ax,dataset in zip(axes,NAMES):
@@ -200,8 +200,10 @@ def build():
     slice_md='# Analisis per-irisan data (SLICE)\n\nIrisan dihitung dari metadata video yang terukur, tanpa mengubah model. Hasil dipisahkan per dataset untuk menghindari pencampuran sumber.\n\n'
     slice_md+='![Recall per sumber](../figures/recall_by_dataset.png)\n\n![Recall per FPS](../figures/recall_slices_fps.png)\n\n'
     slice_md+=md_table(['Dataset','Irisan','Nilai','N positif','TP','FN','Recall'],[[r['dataset'],r['dimension'],r['value'],r['positive_support'],r['tp'],r['fn'],percent(r['recall'])] for r in slice_rows])
-    slice_md+='\n\n## Yang belum dapat dihitung\n\n'
-    for r in required:slice_md+=f"- **{r['slice']}**: {r['reason']}\n"
+    slice_md+='\n\n## Status irisan yang diminta\n\n'
+    for r in required:
+        suffix=f" [Artefak]({r['artifact']})" if r.get('artifact') else ''
+        slice_md+=f"- **{r['slice']} — {r['status']}**: {r['reason']}{suffix}\n"
     slice_md+='\nHipotesis bahwa yaw ekstrem menurunkan recall **belum diuji**. Dua belas/15 kombinasi augmentasi tidak boleh direkonstruksi dari nama file atau contoh video. Temuan dataset kecil ini bersifat deskriptif; FPS, resolusi, subjek, dan jenis gerakan bisa saling terkait. Tidak ada uji signifikansi atau klaim generalisasi.\n'
     (reports/'SLICE.md').write_text(slice_md,encoding='utf-8')
     readme = '''# SAPA — baseline inference jatuh
@@ -226,6 +228,7 @@ Artefak sebelum pemindahan struktur dipertahankan di `archive/pre-structure/`. H
 - [Laporan video asli](reports/vidio_asli/README.md)
 - [Analisis per-irisan data](reports/SLICE.md)
 - [Status irisan yang diminta](reports/requested_slices_status.json)
+- [Baseline OOF agregat jatuh dan interaksi](../hasil/README.md)
 - [Inventaris video dan metadata](metadata/video_inventory.csv)
 - [Bukti reproducibility](reproducibility/verification.json)
 - [Log dan ringkasan validasi](reproducibility/README.md)
@@ -239,7 +242,7 @@ Inference memakai target 15 FPS, window 45, stride 15, ambang probabilitas jatuh
 
 Data yang tersedia mendukung irisan berdasarkan sumber dataset, resolusi, FPS, dan durasi. Hasilnya bersifat deskriptif karena hanya ada 10 video dan seluruhnya positif.
 
-Yaw/pitch kamera, performer, dan pasangan kelas interaksi belum dapat dihitung karena metadata dan prediksi OOF belum tersedia. Nilai tersebut tidak diperkirakan dari nama file, wajah, pakaian, atau arah jatuh. `scripts/evaluate_oof.py` dan template di `inputs/` siap digunakan ketika data valid tersedia.
+F1 interaksi per pasangan kelas tersedia dari confusion matrix OOF agregat di `eval/hasil/interaction_f1_per_pasangan.csv`. Prediksi per sampel tidak tersedia, sehingga yaw/pitch kamera dan performer tetap belum dapat dihitung. Nilai yang hilang tidak diperkirakan dari nama file, wajah, pakaian, atau arah jatuh. `scripts/evaluate_oof.py` dan template di `inputs/` siap digunakan ketika ekspor OOF mentah tersedia.
 
 ## Reproduksi
 
@@ -264,9 +267,11 @@ backend/.venv/bin/python -m unittest discover -s "eval/infrence fall/tests" -v
 Cuplikan PNG di `reports/*/frames/` berasal dari video sumber dan disertai indeks frame serta timestamp. Cuplikan itu adalah bukti input dan keputusan per klip, bukan anotasi ground-truth waktu kejadian dan bukan bukti bahwa seluruh rentang prediksi tepat.
 '''
     (ROOT/'README.md').write_text(readme,encoding='utf-8')
+    aggregate_inputs={name:sha(REPO/'eval'/name) for name in ('fall_cv_summary.json','interaction_cv_summary.json')}
     write_json(ROOT/'reproducibility/verification.json',dict(verified_at=datetime.now(timezone.utc).isoformat(),
         isolated_source_snapshot_matches=True,backend_production_untouched=True,
         all_video_hashes_match=True,all_manifest_hashes_match=True,
+        aggregate_oof_inputs_present=True,aggregate_oof_input_sha256=aggregate_inputs,
         configs_identical=all(json.loads((ROOT/'manifests'/f'{k}.json').read_text())['config']==json.loads((ROOT/'manifests/gmgcsa24.json').read_text())['config'] for k in NAMES),
         source_runs=source_runs,n_videos=len(all_rows)))
     # Static portable HTML with local image links and a TP/FN filter.
@@ -275,7 +280,7 @@ Cuplikan PNG di `reports/*/frames/` berasal dari video sumber dan disertai indek
         m=summaries[dataset]
         clips=''.join(f'<article data-result="{r["result"]}"><h3>{html.escape(r["sample_id"])} · {r["result"]}</h3><p>{html.escape(r["video"])}</p><img loading="lazy" src="reports/{dataset}/frames/{r["sample_id"]}.png" alt="Cuplikan sumber {r["sample_id"]}"></article>' for r in all_rows if r['dataset']==dataset)
         blocks.append(f'<section><h2>{title}</h2><p class="lead">{m["tp"]}/{m["n"]} video terdeteksi · recall {percent(m["recall"])} · F1 {percent(m["f1"])}</p><p>Precision {percent(m["precision"])}; negatif n=0, alarm palsu belum terukur.</p><div class="plots"><img src="reports/{dataset}/figures/confusion_matrix.png" alt="Confusion matrix {title}"><img src="reports/{dataset}/figures/metrics.png" alt="Metrik {title}"></div><p><a href="reports/{dataset}/per_video.csv">CSV per video</a> · <a href="{source_runs[dataset]}/evidence.json">Evidence</a> · <a href="{source_runs[dataset]}/execution.log">Log</a></p>{clips}</section>')
-    page='''<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>SAPA — Baseline jatuh</title><style>body{font:16px system-ui;color:#203340;max-width:1160px;margin:32px auto;padding:0 24px;line-height:1.55}h1{font-size:30px}h2{font-size:24px}h3{font-size:18px}.lead{font-size:20px;font-weight:600}aside{background:#fff3d3;padding:18px}section{margin-top:40px;border-top:1px solid #cad3d8;padding-top:20px}.plots{display:grid;grid-template-columns:1fr 1fr;gap:20px}img{max-width:100%;height:auto}article{margin:28px 0}button{padding:10px 16px;margin:10px 8px 0 0;background:white;border:1px solid #6b7e89;cursor:pointer}a{color:#215c80}@media(max-width:700px){.plots{grid-template-columns:1fr}}</style><h1>SAPA — Baseline deteksi jatuh</h1><p>GMGCSA24 dan Video asli dievaluasi terpisah. Model dan aturan inferensi tetap.</p><aside>Seluruh video berlabel jatuh. Precision 100% bukan bukti bebas alarm palsu. Dataset GMGCSA24 telah dipilih ulang setelah hasil terdahulu; skor baru tidak membuktikan peningkatan model. Cuplikan bukan anotasi waktu jatuh.</aside><p><a href="README.md">README GitHub</a> · <a href="reports/video_slices.csv">SLICE CSV</a> · <a href="reports/requested_slices_status.json">Status metadata</a></p><button onclick="filter('all')">Semua video</button><button onclick="filter('TP')">Terdeteksi</button><button onclick="filter('FN')">Terlewat</button>'''+''.join(blocks)+'''<section><h2>Analisis SLICE yang tersedia</h2><img src="figures/recall_by_dataset.png" alt="Recall per dataset"><img src="figures/recall_slices_fps.png" alt="Recall menurut FPS"><p>Yaw/pitch, performer, dan OOF interaksi belum tersedia. Hipotesis sudut ekstrem belum dapat dibuktikan dari dataset ini.</p></section><script>function filter(value){document.querySelectorAll('article[data-result]').forEach(el=>el.hidden=value!=='all'&&el.dataset.result!==value);}</script></html>'''
+    page='''<!doctype html><html lang="id"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>SAPA — Baseline jatuh</title><style>body{font:16px system-ui;color:#203340;max-width:1160px;margin:32px auto;padding:0 24px;line-height:1.55}h1{font-size:30px}h2{font-size:24px}h3{font-size:18px}.lead{font-size:20px;font-weight:600}aside{background:#fff3d3;padding:18px}section{margin-top:40px;border-top:1px solid #cad3d8;padding-top:20px}.plots{display:grid;grid-template-columns:1fr 1fr;gap:20px}img{max-width:100%;height:auto}article{margin:28px 0}button{padding:10px 16px;margin:10px 8px 0 0;background:white;border:1px solid #6b7e89;cursor:pointer}a{color:#215c80}@media(max-width:700px){.plots{grid-template-columns:1fr}}</style><h1>SAPA — Baseline deteksi jatuh</h1><p>GMGCSA24 dan Video asli dievaluasi terpisah. Model dan aturan inferensi tetap.</p><aside>Seluruh video berlabel jatuh. Precision 100% bukan bukti bebas alarm palsu. Dataset GMGCSA24 telah dipilih ulang setelah hasil terdahulu; skor baru tidak membuktikan peningkatan model. Cuplikan bukan anotasi waktu jatuh.</aside><p><a href="README.md">README GitHub</a> · <a href="reports/video_slices.csv">SLICE CSV</a> · <a href="reports/requested_slices_status.json">Status metadata</a> · <a href="../hasil/README.md">OOF jatuh &amp; interaksi</a></p><button onclick="filter('all')">Semua video</button><button onclick="filter('TP')">Terdeteksi</button><button onclick="filter('FN')">Terlewat</button>'''+''.join(blocks)+'''<section><h2>Analisis SLICE yang tersedia</h2><img src="figures/recall_by_dataset.png" alt="Recall per dataset"><img src="figures/recall_slices_fps.png" alt="Recall menurut FPS"><p>F1 pasangan interaksi tersedia dari confusion matrix OOF agregat. Yaw/pitch dan performer belum tersedia karena metadata per sampel tidak ada; hipotesis sudut ekstrem belum dapat dibuktikan.</p></section><script>function filter(value){document.querySelectorAll('article[data-result]').forEach(el=>el.hidden=value!=='all'&&el.dataset.result!==value);}</script></html>'''
     (ROOT/'index.html').write_text(page,encoding='utf-8')
     return summaries
 

@@ -11,7 +11,8 @@
   },
   {
     "slice": "F1 interaksi per pasangan kelas",
-    "status": "unavailable",
-    "reason": "Hanya video jatuh tersedia; kepala interaksi dinonaktifkan dan tidak ada label/prediksi OOF interaksi."
+    "status": "available_aggregate",
+    "reason": "Dihitung dari confusion matrix OOF agregat; prediksi ke kelas di luar pasangan tetap dihitung sebagai kesalahan.",
+    "artifact": "../../hasil/interaction_f1_per_pasangan.csv"
   }
 ]

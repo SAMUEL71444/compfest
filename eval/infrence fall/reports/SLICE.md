@@ -18,10 +18,10 @@ Irisan dihitung dari metadata video yang terukur, tanpa mengubah model. Hasil di
 | vidio_asli | duration_bin | <10 s | 2 | 1 | 1 | 50.00% |
 | vidio_asli | duration_bin | >=10 s | 2 | 1 | 1 | 50.00% |
 
-## Yang belum dapat dihitung
+## Status irisan yang diminta
 
-- **yaw/pitch kamera dan kombinasi yaw x pitch**: Tidak ada metadata sudut atau NPZ augmentasi; arah jatuh pada nama file bukan sudut kamera.
-- **performer**: Tidak ada ID subjek yang terverifikasi; tidak menebak identitas dari wajah/pakaian.
-- **F1 interaksi per pasangan kelas**: Hanya video jatuh tersedia; kepala interaksi dinonaktifkan dan tidak ada label/prediksi OOF interaksi.
+- **yaw/pitch kamera dan kombinasi yaw x pitch — unavailable**: Tidak ada metadata sudut atau NPZ augmentasi; arah jatuh pada nama file bukan sudut kamera.
+- **performer — unavailable**: Tidak ada ID subjek yang terverifikasi; tidak menebak identitas dari wajah/pakaian.
+- **F1 interaksi per pasangan kelas — available_aggregate**: Dihitung dari confusion matrix OOF agregat; prediksi ke kelas di luar pasangan tetap dihitung sebagai kesalahan. [Artefak](../../hasil/interaction_f1_per_pasangan.csv)
 
 Hipotesis bahwa yaw ekstrem menurunkan recall **belum diuji**. Dua belas/15 kombinasi augmentasi tidak boleh direkonstruksi dari nama file atau contoh video. Temuan dataset kecil ini bersifat deskriptif; FPS, resolusi, subjek, dan jenis gerakan bisa saling terkait. Tidak ada uji signifikansi atau klaim generalisasi.

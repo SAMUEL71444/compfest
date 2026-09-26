@@ -1,0 +1,13 @@
+{
+  "task": "fall",
+  "class_names": ["normal", "oleng", "jatuh"],
+  "oof_confusion_matrix": [
+    [14285, 582, 469],
+    [790, 3913, 113],
+    [367, 143, 3302]
+  ],
+  "provenance": {
+    "level": "aggregate_only",
+    "note": "Confusion matrix restored from the previously committed eval/hasil/baseline_analisis.json. Raw per-sample OOF predictions and fold metadata were not supplied."
+  }
+}

@@ -33,6 +33,9 @@ def main():
             existing.write_text(json.dumps(manifest,indent=2,ensure_ascii=False),encoding='utf-8')
             subprocess.run([sys.executable,str(ROOT/'tools/evaluate.py'),'--manifest',str(existing),
                             '--output',str(ROOT/'runs'/dataset)],cwd=BACKEND,check=True)
+    # Regenerate the aggregate OOF fall/interaction report first so every link
+    # in the checkpoint is backed by current, validated source matrices.
+    subprocess.run([sys.executable, str(REPO/'eval/analisis_baseline.py')], check=True)
     subprocess.run([sys.executable,str(ROOT/'scripts/build_reports.py')],check=True)
 
 

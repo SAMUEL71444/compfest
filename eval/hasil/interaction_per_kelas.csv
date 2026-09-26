@@ -1,0 +1,7 @@
+kelas,precision,recall,f1,dukungan
+background,0.7397,0.6836,0.7105,3113
+reach,0.4082,0.4922,0.4463,1666
+retract,0.4349,0.4884,0.4601,1812
+hand_in_shelf,0.5258,0.5484,0.5368,1209
+inspect_product,0.6477,0.4865,0.5556,2709
+inspect_shelf,0.5572,0.6018,0.5786,3656

@@ -1,0 +1,4 @@
+kelas_a,kelas_b,dukungan_a,dukungan_b,a_ke_b,b_ke_a,prediksi_di_luar_pasangan,precision_a,recall_a,f1_a,precision_b,recall_b,f1_b,macro_f1_pasangan
+normal,oleng,15336,4816,582,790,582,0.9476,0.9315,0.9395,0.8705,0.8125,0.8405,0.89
+oleng,jatuh,4816,3812,113,143,1157,0.9647,0.8125,0.8821,0.9669,0.8662,0.9138,0.8979
+normal,jatuh,15336,3812,469,367,725,0.975,0.9315,0.9527,0.8756,0.8662,0.8709,0.9118

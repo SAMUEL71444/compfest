@@ -20,6 +20,7 @@ Artefak sebelum pemindahan struktur dipertahankan di `archive/pre-structure/`. H
 - [Laporan video asli](reports/vidio_asli/README.md)
 - [Analisis per-irisan data](reports/SLICE.md)
 - [Status irisan yang diminta](reports/requested_slices_status.json)
+- [Baseline OOF agregat jatuh dan interaksi](../hasil/README.md)
 - [Inventaris video dan metadata](metadata/video_inventory.csv)
 - [Bukti reproducibility](reproducibility/verification.json)
 - [Log dan ringkasan validasi](reproducibility/README.md)
@@ -33,7 +34,7 @@ Inference memakai target 15 FPS, window 45, stride 15, ambang probabilitas jatuh
 
 Data yang tersedia mendukung irisan berdasarkan sumber dataset, resolusi, FPS, dan durasi. Hasilnya bersifat deskriptif karena hanya ada 10 video dan seluruhnya positif.
 
-Yaw/pitch kamera, performer, dan pasangan kelas interaksi belum dapat dihitung karena metadata dan prediksi OOF belum tersedia. Nilai tersebut tidak diperkirakan dari nama file, wajah, pakaian, atau arah jatuh. `scripts/evaluate_oof.py` dan template di `inputs/` siap digunakan ketika data valid tersedia.
+F1 interaksi per pasangan kelas tersedia dari confusion matrix OOF agregat di `eval/hasil/interaction_f1_per_pasangan.csv`. Prediksi per sampel tidak tersedia, sehingga yaw/pitch kamera dan performer tetap belum dapat dihitung. Nilai yang hilang tidak diperkirakan dari nama file, wajah, pakaian, atau arah jatuh. `scripts/evaluate_oof.py` dan template di `inputs/` siap digunakan ketika ekspor OOF mentah tersedia.
 
 ## Reproduksi
 

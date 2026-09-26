@@ -1,0 +1,23 @@
+{
+  "task": "interaction",
+  "class_names": [
+    "background",
+    "reach",
+    "retract",
+    "hand_in_shelf",
+    "inspect_product",
+    "inspect_shelf"
+  ],
+  "oof_confusion_matrix": [
+    [2128, 141, 149, 38, 83, 574],
+    [42, 820, 261, 203, 106, 234],
+    [62, 308, 885, 181, 130, 246],
+    [40, 225, 185, 663, 51, 45],
+    [169, 173, 276, 124, 1318, 649],
+    [436, 342, 279, 52, 347, 2200]
+  ],
+  "provenance": {
+    "level": "aggregate_only",
+    "note": "Confusion matrix restored from the previously committed eval/hasil/baseline_analisis.json. Raw per-sample OOF predictions and fold metadata were not supplied."
+  }
+}

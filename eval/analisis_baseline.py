@@ -17,10 +17,18 @@ CARA PAKAI
     backend/.venv/bin/python eval/analisis_baseline.py
 """
 
+import csv
 import json
+import os
 from pathlib import Path
+import tempfile
 
 import numpy as np
+
+os.environ.setdefault("MPLCONFIGDIR", str(Path(tempfile.gettempdir()) / "sapa-mpl"))
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 BASE = Path(__file__).resolve().parent
 DIR_HASIL = BASE / "hasil"
@@ -30,6 +38,17 @@ FALL_CLASSES = ["normal", "oleng", "jatuh"]
 INTER_CLASSES = ["background", "reach", "retract", "hand_in_shelf",
                   "inspect_product", "inspect_shelf"]
 INSPECT_IDX = [4, 5]  # inspect_product, inspect_shelf → gabung jadi "inspecting"
+
+
+def validasi_confusion_matrix(cm: np.ndarray, nama_kelas: list, sumber: Path) -> None:
+    """Tolak matriks rusak agar laporan tidak diam-diam menghasilkan angka salah."""
+    n = len(nama_kelas)
+    if cm.shape != (n, n):
+        raise ValueError(f"{sumber}: bentuk confusion matrix harus {n}x{n}, bukan {cm.shape}")
+    if not np.issubdtype(cm.dtype, np.integer) or np.any(cm < 0):
+        raise ValueError(f"{sumber}: confusion matrix harus berisi integer nonnegatif")
+    if int(cm.sum()) == 0:
+        raise ValueError(f"{sumber}: confusion matrix kosong")
 
 
 def metrik_per_kelas(cm: np.ndarray, nama_kelas: list) -> dict:
@@ -97,6 +116,104 @@ def top_pasangan_tertukar(cm: np.ndarray, nama_kelas: list, k: int = 3) -> list:
     return daftar[:k]
 
 
+def f1_per_pasangan_kelas(cm: np.ndarray, nama_kelas: list) -> list:
+    """F1 setiap pasangan berdasarkan baris aktual A/B pada CM agregat.
+
+    Prediksi ke kelas di luar pasangan tetap dihitung sebagai kesalahan. Definisi
+    ini sama dengan evaluator OOF di ``infrence fall/scripts/metrics.py`` dan
+    tidak membuang kesalahan ke kelas ketiga.
+    """
+    hasil = []
+    for i in range(len(nama_kelas)):
+        for j in range(i + 1, len(nama_kelas)):
+            def metrik(kelas, lawan):
+                tp = int(cm[kelas, kelas])
+                fn = int(cm[kelas, :].sum() - tp)
+                fp = int(cm[lawan, kelas])
+                precision = tp / (tp + fp) if tp + fp else 0.0
+                recall = tp / (tp + fn) if tp + fn else 0.0
+                f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+                return precision, recall, f1
+
+            pa, ra, fa = metrik(i, j)
+            pb, rb, fb = metrik(j, i)
+            outside = int(cm[[i, j], :].sum() - cm[i, i] - cm[i, j] - cm[j, i] - cm[j, j])
+            hasil.append({
+                "kelas_a": nama_kelas[i],
+                "kelas_b": nama_kelas[j],
+                "dukungan_a": int(cm[i, :].sum()),
+                "dukungan_b": int(cm[j, :].sum()),
+                "a_ke_b": int(cm[i, j]),
+                "b_ke_a": int(cm[j, i]),
+                "prediksi_di_luar_pasangan": outside,
+                "precision_a": round(pa, 4),
+                "recall_a": round(ra, 4),
+                "f1_a": round(fa, 4),
+                "precision_b": round(pb, 4),
+                "recall_b": round(rb, 4),
+                "f1_b": round(fb, 4),
+                "macro_f1_pasangan": round((fa + fb) / 2, 4),
+            })
+    return sorted(hasil, key=lambda x: (x["macro_f1_pasangan"], x["kelas_a"], x["kelas_b"]))
+
+
+def simpan_csv(path: Path, rows: list) -> None:
+    if not rows:
+        return
+    with path.open("w", encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(rows[0]))
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def plot_confusion_matrix(cm: np.ndarray, nama_kelas: list, judul: str, path: Path) -> None:
+    ukuran = max(6.5, len(nama_kelas) * 1.25)
+    fig, ax = plt.subplots(figsize=(ukuran, ukuran * 0.86))
+    ax.imshow(cm, cmap="Blues")
+    ax.set(xticks=range(len(nama_kelas)), yticks=range(len(nama_kelas)),
+           xticklabels=nama_kelas, yticklabels=nama_kelas,
+           xlabel="Prediksi", ylabel="Aktual", title=judul)
+    plt.setp(ax.get_xticklabels(), rotation=35, ha="right")
+    ambang = float(cm.max()) / 2
+    for i in range(len(nama_kelas)):
+        for j in range(len(nama_kelas)):
+            ax.text(j, i, str(int(cm[i, j])), ha="center", va="center",
+                    color="white" if cm[i, j] > ambang else "black")
+    fig.tight_layout()
+    fig.savefig(path, dpi=170)
+    plt.close(fig)
+
+
+def plot_f1_per_kelas(metrik: dict, judul: str, path: Path) -> None:
+    nama = list(metrik["per_kelas"])
+    nilai = [metrik["per_kelas"][k]["f1"] for k in nama]
+    fig, ax = plt.subplots(figsize=(max(7, len(nama) * 1.35), 4.8))
+    ax.bar(nama, nilai, color="#215c80")
+    for i, value in enumerate(nilai):
+        ax.text(i, value + 0.025, f"{value:.3f}", ha="center")
+    ax.set(ylim=(0, 1.12), ylabel="F1", title=judul)
+    ax.tick_params(axis="x", labelrotation=30)
+    fig.tight_layout()
+    fig.savefig(path, dpi=170)
+    plt.close(fig)
+
+
+def plot_f1_pasangan(rows: list, judul: str, path: Path) -> None:
+    """Tampilkan seluruh pasangan dari F1 terendah ke tertinggi."""
+    labels = [f"{r['kelas_a']} × {r['kelas_b']}" for r in rows]
+    values = [r["macro_f1_pasangan"] for r in rows]
+    fig, ax = plt.subplots(figsize=(10, max(5, len(rows) * 0.46)))
+    positions = np.arange(len(rows))
+    ax.barh(positions, values, color="#ae443e")
+    ax.set(yticks=positions, yticklabels=labels, xlim=(0, 1.08), xlabel="Macro-F1 pasangan", title=judul)
+    ax.invert_yaxis()
+    for y, value in zip(positions, values):
+        ax.text(value + 0.012, y, f"{value:.3f}", va="center", fontsize=9)
+    fig.tight_layout()
+    fig.savefig(path, dpi=170)
+    plt.close(fig)
+
+
 def reevaluasi_2kelas_interaksi(cm: np.ndarray) -> dict:
     """Gabung inspect_product + inspect_shelf → 'inspecting', sisanya
     'other'. Hitung ulang precision/recall/F1 dari confusion matrix asli
@@ -133,6 +250,8 @@ def main():
 
     cm_fall = np.array(fall_cv["oof_confusion_matrix"])
     cm_inter = np.array(inter_cv["oof_confusion_matrix"])
+    validasi_confusion_matrix(cm_fall, FALL_CLASSES, fall_path)
+    validasi_confusion_matrix(cm_inter, INTER_CLASSES, inter_path)
 
     hasil = {
         "sumber": {
@@ -144,19 +263,60 @@ def main():
             "confusion_matrix": cm_fall.tolist(),
             "metrik": metrik_per_kelas(cm_fall, FALL_CLASSES),
             "top_pasangan_tertukar": top_pasangan_tertukar(cm_fall, FALL_CLASSES, k=3),
+            "f1_per_pasangan_kelas": f1_per_pasangan_kelas(cm_fall, FALL_CLASSES),
         },
         "kepala_interaksi": {
             "kelas": INTER_CLASSES,
             "confusion_matrix": cm_inter.tolist(),
             "metrik": metrik_per_kelas(cm_inter, INTER_CLASSES),
             "top_pasangan_tertukar": top_pasangan_tertukar(cm_inter, INTER_CLASSES, k=3),
+            "f1_per_pasangan_kelas": f1_per_pasangan_kelas(cm_inter, INTER_CLASSES),
             "reevaluasi_2kelas_inspecting_vs_other": reevaluasi_2kelas_interaksi(cm_inter),
         },
+        "keterbatasan": [
+            "Metrik berasal dari confusion matrix OOF agregat; prediksi per sampel, fold, yaw/pitch, dan performer tidak tersedia.",
+            "F1 pasangan mempertahankan prediksi ke kelas di luar pasangan sebagai kesalahan.",
+            "Provenance training/fold tidak dapat dibuktikan ulang tanpa ekspor OOF mentah.",
+        ],
     }
 
     DIR_HASIL.mkdir(exist_ok=True)
     out_path = DIR_HASIL / "baseline_analisis.json"
     out_path.write_text(json.dumps(hasil, indent=2, ensure_ascii=False))
+    simpan_csv(DIR_HASIL / "fall_per_kelas.csv", [dict(kelas=k, **v) for k, v in hasil["kepala_jatuh"]["metrik"]["per_kelas"].items()])
+    simpan_csv(DIR_HASIL / "interaction_per_kelas.csv", [dict(kelas=k, **v) for k, v in hasil["kepala_interaksi"]["metrik"]["per_kelas"].items()])
+    simpan_csv(DIR_HASIL / "fall_f1_per_pasangan.csv", hasil["kepala_jatuh"]["f1_per_pasangan_kelas"])
+    simpan_csv(DIR_HASIL / "interaction_f1_per_pasangan.csv", hasil["kepala_interaksi"]["f1_per_pasangan_kelas"])
+    plot_confusion_matrix(cm_fall, FALL_CLASSES, "Kepala jatuh — confusion matrix OOF", DIR_HASIL / "fall_confusion_matrix.png")
+    plot_confusion_matrix(cm_inter, INTER_CLASSES, "Kepala interaksi — confusion matrix OOF", DIR_HASIL / "interaction_confusion_matrix.png")
+    plot_f1_per_kelas(hasil["kepala_jatuh"]["metrik"], "Kepala jatuh — F1 per kelas", DIR_HASIL / "fall_f1_per_kelas.png")
+    plot_f1_per_kelas(hasil["kepala_interaksi"]["metrik"], "Kepala interaksi — F1 per kelas", DIR_HASIL / "interaction_f1_per_kelas.png")
+    plot_f1_pasangan(hasil["kepala_jatuh"]["f1_per_pasangan_kelas"], "Kepala jatuh — F1 per pasangan kelas", DIR_HASIL / "fall_f1_per_pasangan.png")
+    plot_f1_pasangan(hasil["kepala_interaksi"]["f1_per_pasangan_kelas"], "Kepala interaksi — F1 per pasangan kelas", DIR_HASIL / "interaction_f1_per_pasangan.png")
+    weakest = hasil["kepala_interaksi"]["f1_per_pasangan_kelas"][0]
+    (DIR_HASIL / "README.md").write_text(
+        "# Baseline OOF agregat — kepala jatuh dan interaksi\n\n"
+        "Angka dihitung ulang dari confusion matrix OOF agregat di `eval/fall_cv_summary.json` dan "
+        "`eval/interaction_cv_summary.json`. Data prediksi per sampel dan metadata slice belum tersedia.\n\n"
+        "## Kepala jatuh\n\n"
+        "![Confusion matrix kepala jatuh](fall_confusion_matrix.png)\n\n"
+        "![F1 kepala jatuh](fall_f1_per_kelas.png)\n\n"
+        "![F1 pasangan kepala jatuh](fall_f1_per_pasangan.png)\n\n"
+        "- [Metrik per kelas](fall_per_kelas.csv)\n"
+        "- [F1 per pasangan kelas](fall_f1_per_pasangan.csv)\n\n"
+        "## Kepala interaksi\n\n"
+        "![Confusion matrix kepala interaksi](interaction_confusion_matrix.png)\n\n"
+        "![F1 kepala interaksi](interaction_f1_per_kelas.png)\n\n"
+        "![F1 pasangan kepala interaksi](interaction_f1_per_pasangan.png)\n\n"
+        "- [Metrik per kelas](interaction_per_kelas.csv)\n"
+        "- [F1 per pasangan kelas](interaction_f1_per_pasangan.csv)\n"
+        "- [JSON lengkap](baseline_analisis.json)\n\n"
+        f"Pasangan interaksi terlemah adalah **{weakest['kelas_a']} × {weakest['kelas_b']}** "
+        f"dengan macro-F1 {weakest['macro_f1_pasangan']:.4f}. F1 pasangan dihitung pada baris aktual dua kelas terkait. Prediksi ke kelas lain tetap dihitung "
+        "sebagai kesalahan. Hasil ini tidak dapat dipakai untuk analisis yaw/pitch atau performer karena "
+        "metadata dan prediksi OOF mentah tidak tersedia.\n",
+        encoding="utf-8",
+    )
 
     # Ringkasan singkat ke terminal supaya bisa langsung dibaca tanpa buka JSON
     print(f"Ditulis ke {out_path.relative_to(BASE.parent)}\n")

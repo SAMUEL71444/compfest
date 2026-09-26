@@ -1,0 +1,11 @@
+{
+  "candidate": "recall_tertinggi_FARwajar",
+  "T_prob": 0.3,
+  "T_angle": 0.0,
+  "T_speed": 0.0,
+  "oof_recall_jatuh": 0.8676,
+  "oof_precision_jatuh": 0.8417,
+  "oof_f1_jatuh": 0.8544,
+  "oof_false_alarm": 0.0309,
+  "source": "training_artifacts/threshold_best_models.json"
+}

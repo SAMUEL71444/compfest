@@ -1,0 +1,268 @@
+{
+  "created_at": "2026-09-26T09:18:59.963178+00:00",
+  "command": [
+    "eval/inference new train fall/tools/evaluate.py",
+    "--manifest",
+    "eval/inference new train fall/manifests/vidio_asli.json",
+    "--output",
+    "eval/inference new train fall/runs/vidio_asli"
+  ],
+  "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]",
+  "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.13.0",
+    "numpy": "2.5.2",
+    "ultralytics": "8.4.124",
+    "opencv-python-headless": "5.0.0.93"
+  },
+  "seed": 42,
+  "device": "cpu",
+  "config": {
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "fall_thr": 0.3,
+    "fall_angle": 0.0,
+    "fall_speed": 0.0,
+    "fall_confirm": true,
+    "threshold_candidate": "recall_tertinggi_FARwajar",
+    "run_fall": true,
+    "run_interaction": false
+  },
+  "sha256": {
+    "manifest": "04dfe53e9edb262a197df1a4e8dadea379668dd9030362584baaa59e594b447f",
+    "fall_head.json": "64334668b7a86687cbbe1af73b387db208c463653b9b3456cf9bd6c06725bd12",
+    "fall_head.pt": "770735e5b9eb722da403fb91d358f14591b291e32c26fb4efa6d547ff776c733",
+    "training_artifacts/fall_cv_summary.json": "1c4efa1dbdfb4575720e9598041c5c257be789a4dfd1defeb366b4d75dd4605b",
+    "training_artifacts/threshold_best_models.json": "19e5c260356c9703e5524b4d6e44152903eb565e61e95e49ed76cb8d37281ef3",
+    "source/new_train_now.py": "0748a1bf523a67a77b7ae8e61bc44cc813a75daf4a8c4e6e4b5b80cf7e35aad1",
+    "tools/evaluate.py": "ed6d875e463eecab64d8ae2978ced3425d5226c974f6298456615b2c85e6e435",
+    "pipeline/__init__.py": "360d75dd19e082ed6490f410c54d22dd5bd79a78e7df8f7434b82e5505994a59",
+    "pipeline/analyze.py": "0a01f9caa24822f8aa6d5cda233f7cfeb6240d668d0652f1bda9f2191277409e",
+    "pipeline/extract.py": "38d91d187f47b878b9b63dcd4f95201b45bfb02f9f29c5aae9336dbcebbbade8",
+    "pipeline/geometry.py": "d3ea63db8e74620d0b30e31e1aa7099b9eefc8701b3b1c142f97f77c80e2875b",
+    "pipeline/models.py": "01b9673e158e46346c8f906310661f6ca607a96f8d077dc88e794b4abb738dfd",
+    "pipeline/normalize.py": "a33ef16f662c29f99c532e11287f44fc0556ec0b8b2911caf7e3580fa285639b",
+    "pipeline/render.py": "84293910db77ef44ac05614d4ee1b340445ea4b9be56a10e92dec394bab6d85c",
+    "backend/yolov8n-pose.pt": "c6fa93dd1ee4a2c18c900a45c1d864a1c6f7aba75d84f91648a30b7fb641d212"
+  },
+  "fatal_error": null,
+  "cases": [
+    {
+      "id": "vidio_asli-01",
+      "video": "eval/infrence fall/data/vidio-asli/fall.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "bf58f20de023c2100bd3b0692fc2c268c85800d73b528279b4575f659ed79fea",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.03362511261261261,
+          "t1": 3.033625112612613,
+          "skor": 0.9407404661178589,
+          "sudut_torso": 44.02515411376953,
+          "kecepatan_torso": 3.575051784515381,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 1.0336251126126126,
+          "t1": 4.033625112612612,
+          "skor": 0.8909240961074829,
+          "sudut_torso": 69.42498779296875,
+          "kecepatan_torso": 3.575051784515381,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 9.758884375012713
+    },
+    {
+      "id": "vidio_asli-02",
+      "video": "eval/infrence fall/data/vidio-asli/fall1.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "c99edf99eb9bd05a56d1eb884acc1a4fa482415531dbfe23a27829312b9a7433",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.03439333333333333,
+          "t1": 3.0343933333333335,
+          "skor": 0.9211291670799255,
+          "sudut_torso": 32.337100982666016,
+          "kecepatan_torso": 2.5438168048858643,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 1.0343933333333333,
+          "t1": 4.034393333333333,
+          "skor": 0.9662376642227173,
+          "sudut_torso": 79.17762756347656,
+          "kecepatan_torso": 2.5438168048858643,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 2.0343933333333335,
+          "t1": 5.034393333333333,
+          "skor": 0.9829649329185486,
+          "sudut_torso": 89.32320404052734,
+          "kecepatan_torso": 2.5438168048858643,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 3.0343933333333335,
+          "t1": 6.034393333333333,
+          "skor": 0.9588571786880493,
+          "sudut_torso": 89.32320404052734,
+          "kecepatan_torso": 2.13383150100708,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 4.034393333333333,
+          "t1": 7.034393333333333,
+          "skor": 0.8828666806221008,
+          "sudut_torso": 89.32320404052734,
+          "kecepatan_torso": 1.5272903442382812,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 5.034393333333333,
+          "t1": 8.034393333333334,
+          "skor": 0.9221446514129639,
+          "sudut_torso": 88.34217071533203,
+          "kecepatan_torso": 1.21132230758667,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 6.034393333333333,
+          "t1": 9.034393333333334,
+          "skor": 0.9727234840393066,
+          "sudut_torso": 82.49592590332031,
+          "kecepatan_torso": 1.0167477130889893,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 7.034393333333333,
+          "t1": 10.034393333333334,
+          "skor": 0.9346612691879272,
+          "sudut_torso": 88.13253021240234,
+          "kecepatan_torso": 1.1415446996688843,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 8.034393333333334,
+          "t1": 11.034393333333334,
+          "skor": 0.9567908048629761,
+          "sudut_torso": 88.13253021240234,
+          "kecepatan_torso": 2.5732476711273193,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 9.034393333333334,
+          "t1": 12.034393333333334,
+          "skor": 0.9759515523910522,
+          "sudut_torso": 88.13253021240234,
+          "kecepatan_torso": 2.5732476711273193,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 10.034393333333334,
+          "t1": 13.034393333333334,
+          "skor": 0.9668664932250977,
+          "sudut_torso": 77.48491668701172,
+          "kecepatan_torso": 2.5732476711273193,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 9.989976957993349
+    },
+    {
+      "id": "vidio_asli-03",
+      "video": "eval/infrence fall/data/vidio-asli/fall2.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "cab49ad5a43b6eb0f39985d062a8b27fd3e55cc9d4f3c9e784bd1e28cfb3c896",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.035056578947368425,
+          "t1": 3.0350565789473682,
+          "skor": 0.5594832897186279,
+          "sudut_torso": 16.72758674621582,
+          "kecepatan_torso": 1.2916673421859741,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 1.0350565789473685,
+          "t1": 4.035056578947368,
+          "skor": 0.3781149685382843,
+          "sudut_torso": 16.72758674621582,
+          "kecepatan_torso": 1.2916673421859741,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 7.492797332990449
+    },
+    {
+      "id": "vidio_asli-04",
+      "video": "eval/infrence fall/data/vidio-asli/fall3.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "09887a68bc760aff0a9ce85c746db189763be1217274ee3b8f75b987a8646fb0",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.033474087161366316,
+          "t1": 3.033474087161366,
+          "skor": 0.7976649403572083,
+          "sudut_torso": 25.151630401611328,
+          "kecepatan_torso": 1.188919186592102,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 6.905187584023224
+    }
+  ]
+}

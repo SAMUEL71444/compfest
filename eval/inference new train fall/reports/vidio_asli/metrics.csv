@@ -1,0 +1,16 @@
+metric,value
+n,4
+positive_support,4
+negative_support,0
+tp,3
+fn,1
+fp,0
+tn,0
+accuracy,0.75
+precision,1.0
+recall,0.75
+f1,0.8571428571428571
+specificity,
+false_positive_rate,
+false_negative_rate,0.25
+balanced_accuracy,

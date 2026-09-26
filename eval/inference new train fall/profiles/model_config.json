@@ -1,0 +1,48 @@
+{
+  "arch": "FallLSTM",
+  "in_dim": 24,
+  "hidden": 128,
+  "layers": 2,
+  "dropout": 0.3,
+  "n_classes": 3,
+  "class_names": [
+    "normal",
+    "oleng",
+    "jatuh"
+  ],
+  "fall_joints": [
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "use_channels": 2,
+  "window": 45,
+  "stride": 15,
+  "fps": 15,
+  "final_epochs": 25,
+  "cv_macroF1": {
+    "mean": 0.8756,
+    "std": 0.0218
+  },
+  "cv_recall_jatuh": {
+    "mean": 0.8541,
+    "std": 0.0106
+  },
+  "threshold_recommended": {
+    "T_prob": 0.65,
+    "T_angle": 5.0,
+    "T_speed": 0.0,
+    "dari_kandidat": "F1_terbaik"
+  },
+  "speed_metric": "max_frame_step_of_torso_vector_times_fps",
+  "note": "Inferensi: YOLOv8 [T,17,3] -> normalize_pose -> resample_fps(15) -> geom_features (sudut & kecepatan dari vektor torso) -> slice 12 sendi (x,y) -> make_windows(45,15) -> model. JATUH bila prob>=T_prob & sudut>=T_angle & kecepatan>=T_speed."
+}

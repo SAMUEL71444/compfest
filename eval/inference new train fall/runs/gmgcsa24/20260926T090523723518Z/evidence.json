@@ -1,0 +1,257 @@
+{
+  "created_at": "2026-09-26T09:05:57.435539+00:00",
+  "command": [
+    "eval/inference new train fall/tools/evaluate.py",
+    "--manifest",
+    "eval/inference new train fall/manifests/gmgcsa24.json",
+    "--output",
+    "eval/inference new train fall/runs/gmgcsa24"
+  ],
+  "python": "3.13.5 | packaged by Anaconda, Inc. | (main, Jun 12 2025, 11:23:37) [Clang 14.0.6 ]",
+  "platform": "macOS-26.1-arm64-arm-64bit-Mach-O",
+  "packages": {
+    "torch": "2.13.0",
+    "numpy": "2.5.2",
+    "ultralytics": "8.4.124",
+    "opencv-python-headless": "5.0.0.93"
+  },
+  "seed": 42,
+  "device": "cpu",
+  "config": {
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "fall_thr": 0.65,
+    "fall_angle": 5.0,
+    "fall_speed": 0.0,
+    "fall_confirm": true,
+    "run_fall": true,
+    "run_interaction": false
+  },
+  "sha256": {
+    "manifest": "7f3dddfaf4fe165d332b9f1a809dd8f2fc1acf20f484043e31dcad129e1a3a09",
+    "fall_head.json": "64334668b7a86687cbbe1af73b387db208c463653b9b3456cf9bd6c06725bd12",
+    "fall_head.pt": "770735e5b9eb722da403fb91d358f14591b291e32c26fb4efa6d547ff776c733",
+    "training_artifacts/fall_cv_summary.json": "1c4efa1dbdfb4575720e9598041c5c257be789a4dfd1defeb366b4d75dd4605b",
+    "training_artifacts/threshold_best_models.json": "19e5c260356c9703e5524b4d6e44152903eb565e61e95e49ed76cb8d37281ef3",
+    "source/new_train_now.py": "0748a1bf523a67a77b7ae8e61bc44cc813a75daf4a8c4e6e4b5b80cf7e35aad1",
+    "tools/evaluate.py": "ed6d875e463eecab64d8ae2978ced3425d5226c974f6298456615b2c85e6e435",
+    "pipeline/__init__.py": "360d75dd19e082ed6490f410c54d22dd5bd79a78e7df8f7434b82e5505994a59",
+    "pipeline/analyze.py": "0a01f9caa24822f8aa6d5cda233f7cfeb6240d668d0652f1bda9f2191277409e",
+    "pipeline/extract.py": "38d91d187f47b878b9b63dcd4f95201b45bfb02f9f29c5aae9336dbcebbbade8",
+    "pipeline/geometry.py": "d3ea63db8e74620d0b30e31e1aa7099b9eefc8701b3b1c142f97f77c80e2875b",
+    "pipeline/models.py": "7dd11cbc6127a20067c883de4626508620a331a4cffa856dfc1ab195d8254733",
+    "pipeline/normalize.py": "0c5671ba2574c9ffb90872655ec0ec6b7352a4168560bc21df0048646abaaba2",
+    "pipeline/render.py": "84293910db77ef44ac05614d4ee1b340445ea4b9be56a10e92dec394bab6d85c",
+    "backend/yolov8n-pose.pt": "c6fa93dd1ee4a2c18c900a45c1d864a1c6f7aba75d84f91648a30b7fb641d212"
+  },
+  "fatal_error": null,
+  "cases": [
+    {
+      "id": "gmgcsa24-01",
+      "video": "eval/infrence fall/data/vidio-gmgcsa24/Falling (LS) on the bed from sitting on the bed then falling (RS) to the floor.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "aa074bdcf93026e60ea764752763e836c4c0b1b15eaf70b39cc7e1708421fefb",
+      "timeline": [],
+      "predicted": [],
+      "false_positive": [],
+      "false_negative": [
+        "jatuh"
+      ],
+      "seconds": 7.304330208018655
+    },
+    {
+      "id": "gmgcsa24-02",
+      "video": "eval/infrence fall/data/vidio-gmgcsa24/Falling (RS) on the bed from sitting on the bed.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "f9bb9dc48699ec993413554c0b55e9c7bb9acfc6372b69df305a4943a26e5965",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 1.0335277526395172,
+          "t1": 4.033527752639517,
+          "skor": 0.968213677406311,
+          "sudut_torso": 85.18929290771484,
+          "kecepatan_torso": 2.901359796524048,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 2.0335277526395172,
+          "t1": 5.033527752639517,
+          "skor": 0.9946321249008179,
+          "sudut_torso": 89.56290435791016,
+          "kecepatan_torso": 2.901359796524048,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 3.0335277526395172,
+          "t1": 6.033527752639517,
+          "skor": 0.9961580634117126,
+          "sudut_torso": 89.56290435791016,
+          "kecepatan_torso": 2.676910877227783,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 4.033527752639517,
+          "t1": 7.033527752639517,
+          "skor": 0.9935311675071716,
+          "sudut_torso": 89.56290435791016,
+          "kecepatan_torso": 1.240962028503418,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 5.683786124980543
+    },
+    {
+      "id": "gmgcsa24-03",
+      "video": "eval/infrence fall/data/vidio-gmgcsa24/Falling from sitting on the chair to the ground. Left side Fall. Full body not visible.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "9807eb2335544fc18df2438aa4b5a9df6cd01b3d92bc813339dd4fa29306ee6b",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.033820361247947454,
+          "t1": 3.0338203612479475,
+          "skor": 0.9066387414932251,
+          "sudut_torso": 39.19587326049805,
+          "kecepatan_torso": 1.0225379467010498,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 1.0338203612479475,
+          "t1": 4.0338203612479475,
+          "skor": 0.7441747188568115,
+          "sudut_torso": 88.31460571289062,
+          "kecepatan_torso": 2.5191001892089844,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 4.968473249988165
+    },
+    {
+      "id": "gmgcsa24-04",
+      "video": "eval/infrence fall/data/vidio-gmgcsa24/Standing then falling sideways.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "e71633817f5f578b928496f6247262b431a1e68ac8bad423f03362f46071cb0b",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 7.075359363957597,
+          "t1": 9.456167491166077,
+          "skor": 0.9606091976165771,
+          "sudut_torso": 86.2081527709961,
+          "kecepatan_torso": 4.634637832641602,
+          "track_id": 3
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 7.296286125027109
+    },
+    {
+      "id": "gmgcsa24-05",
+      "video": "eval/infrence fall/data/vidio-gmgcsa24/Walking then falling (LS) on the floor.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "7931179693dd93e45cf0510d6e1d8caa3313fbdf2c46a53bcf7646992b11a4ec",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.033537411347517726,
+          "t1": 3.0335374113475178,
+          "skor": 0.7145034074783325,
+          "sudut_torso": 89.21463012695312,
+          "kecepatan_torso": 21.928831100463867,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 4.738191292010015
+    },
+    {
+      "id": "gmgcsa24-06",
+      "video": "eval/infrence fall/data/vidio-gmgcsa24/Walking to falling. Right side fall.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ],
+      "status": "ok",
+      "video_sha256": "e584c98e13100befb24fa1854987d8adb50324e0f73dd6278661a8887b428b86",
+      "timeline": [
+        {
+          "tipe": "jatuh",
+          "t0": 0.03368300653594771,
+          "t1": 3.0336830065359477,
+          "skor": 0.8850276470184326,
+          "sudut_torso": 88.85835266113281,
+          "kecepatan_torso": 2.7480907440185547,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 1.0336830065359477,
+          "t1": 4.033683006535948,
+          "skor": 0.9510189294815063,
+          "sudut_torso": 88.85835266113281,
+          "kecepatan_torso": 2.7480907440185547,
+          "track_id": 1
+        },
+        {
+          "tipe": "jatuh",
+          "t0": 2.0336830065359477,
+          "t1": 5.033683006535948,
+          "skor": 0.973076343536377,
+          "sudut_torso": 88.85835266113281,
+          "kecepatan_torso": 1.778454303741455,
+          "track_id": 1
+        }
+      ],
+      "predicted": [
+        "jatuh"
+      ],
+      "false_positive": [],
+      "false_negative": [],
+      "seconds": 3.698680166999111
+    }
+  ]
+}

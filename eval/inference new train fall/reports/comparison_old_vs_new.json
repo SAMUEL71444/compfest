@@ -1,0 +1,30 @@
+[
+  {
+    "dataset": "gmgcsa24",
+    "metric": "recall",
+    "old": 0.8333333333333334,
+    "new": 0.8333333333333334,
+    "delta": 0.0
+  },
+  {
+    "dataset": "gmgcsa24",
+    "metric": "f1",
+    "old": 0.9090909090909091,
+    "new": 0.9090909090909091,
+    "delta": 0.0
+  },
+  {
+    "dataset": "vidio_asli",
+    "metric": "recall",
+    "old": 0.5,
+    "new": 0.75,
+    "delta": 0.25
+  },
+  {
+    "dataset": "vidio_asli",
+    "metric": "f1",
+    "old": 0.6666666666666666,
+    "new": 0.8571428571428571,
+    "delta": 0.19047619047619047
+  }
+]

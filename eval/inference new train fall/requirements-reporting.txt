@@ -1,0 +1,5 @@
+# Inference dependencies remain in backend/requirements.txt.
+# These packages additionally build figures / inspect video metadata.
+numpy>=1.26.4
+matplotlib>=3.8
+opencv-python-headless>=4.10.0.84

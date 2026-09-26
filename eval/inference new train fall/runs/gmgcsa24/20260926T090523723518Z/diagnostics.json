@@ -1,0 +1,35 @@
+[
+  {
+    "id": "gmgcsa24-01",
+    "video": "Falling (LS) on the bed from sitting on the bed then falling (RS) to the floor.mp4",
+    "reproduced": true,
+    "reason": "below_probability_threshold",
+    "max_fall_probability": 0.46895310282707214,
+    "max_angle": 89.71489715576172,
+    "max_speed": 1.8504319190979004,
+    "windows_above_threshold": 0,
+    "windows_rejected_angle": 0,
+    "windows_rejected_speed": 0,
+    "tracks": [
+      {
+        "pose_frames": 54,
+        "source_fps": 29.85496685500492,
+        "effective_extraction_fps": 14.92748342750246,
+        "low_conf_key_frames": 0,
+        "geometry": [
+          [
+            89.71489715576172,
+            1.8504319190979004
+          ]
+        ],
+        "probabilities": [
+          [
+            0.4963264465332031,
+            0.034720394760370255,
+            0.46895310282707214
+          ]
+        ]
+      }
+    ]
+  }
+]

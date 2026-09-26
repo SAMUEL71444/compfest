@@ -1,0 +1,7 @@
+{
+  "candidate": "F1_terbaik",
+  "T_prob": 0.65,
+  "T_angle": 5.0,
+  "T_speed": 0.0,
+  "source": "training_artifacts/threshold_best_models.json"
+}

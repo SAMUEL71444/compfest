@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import GrafikStatistik from '../components/GrafikStatistik.jsx'
 
 /* ─────────────────────────────────────────────────────────────────────────────
    StatistikPage — laporan penanganan untuk manajer/pemilik toko.
@@ -160,7 +161,6 @@ export default function StatistikPage() {
             </div>
             <div>
               <div className="navbar-title">SAPA</div>
-              <div className="navbar-subtitle">Laporan Penanganan</div>
             </div>
           </button>
         </div>
@@ -220,6 +220,10 @@ export default function StatistikPage() {
                 </div>
               </div>
             ) : (
+              <>
+              {/* ── Grafik ringkas ─────────────────────────────────── */}
+              <GrafikStatistik data={data} />
+
               <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1.2fr)', gap: 24, alignItems: 'start' }}>
                 {/* ── Peringkat staf ─────────────────────────────────── */}
                 <section>
@@ -352,6 +356,7 @@ export default function StatistikPage() {
                   </div>
                 </section>
               </div>
+              </>
             )}
 
             {/* ── Prinsip ─────────────────────────────────────────────── */}

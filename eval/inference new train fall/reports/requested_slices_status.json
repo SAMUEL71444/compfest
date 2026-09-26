@@ -1,0 +1,12 @@
+[
+  {
+    "slice": "yaw/pitch kamera dan kombinasi yaw x pitch",
+    "status": "unavailable",
+    "reason": "Artefak hanya memuat confusion matrix agregat; metadata sudut per sampel tidak disertakan."
+  },
+  {
+    "slice": "performer",
+    "status": "unavailable",
+    "reason": "Artefak hanya memuat confusion matrix agregat; ID performer dan prediksi per sampel tidak disertakan."
+  }
+]

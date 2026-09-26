@@ -1,0 +1,48 @@
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari Falling (LS) on the bed from sitting on the bed then falling (RS) to the floor.mp4 (183 frame, 29.9 fps, 1280×720) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.9fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 2 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 0 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case gmgcsa24-01: ok (7.123s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari Falling (RS) on the bed from sitting on the bed.mp4 (221 frame, 29.8 fps, 1280×720) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.9fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 1 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 4 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case gmgcsa24-02: ok (5.391s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari Falling from sitting on the chair to the ground. Left side Fall. Full body not visible.mp4 (203 frame, 29.6 fps, 1280×720) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.8fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 2 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case gmgcsa24-03: ok (4.976s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari Standing then falling sideways.mp4 (283 frame, 29.8 fps, 1280×720) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.9fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 2 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 2 track valid (dari 2 total).
+INFO:pipeline.analyze:Analisis selesai: 1 jatuh, 0 butuh_bantuan dari 2 track.
+INFO:root:Case gmgcsa24-04: ok (6.983s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari Walking then falling (LS) on the floor.mp4 (188 frame, 29.8 fps, 1280×720) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.9fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 1 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case gmgcsa24-05: ok (4.718s)
+INFO:pipeline.extract:Memuat YOLOv8n-pose (pertama kali, mungkin butuh unduh)...
+INFO:pipeline.extract:YOLOv8n-pose siap.
+INFO:pipeline.extract:Mengekstrak pose dari Walking to falling. Right side fall.mp4 (153 frame, 29.7 fps, 1280×720) [conf≥0.45, bbox≥1.0%frame, kp≥0.25]
+INFO:pipeline.extract:Frame skip=2 (video 30fps → efektif 14.8fps)
+INFO:pipeline.extract:Filter: 0 dibuang (conf), 0 dibuang (bbox kecil), 0 dibuang (kp rendah), 0 dibuang (belum punya track ID)
+INFO:pipeline.extract:Ditemukan 1 track valid (dari 1 total).
+INFO:pipeline.analyze:Analisis selesai: 3 jatuh, 0 butuh_bantuan dari 1 track.
+INFO:root:Case gmgcsa24-06: ok (3.561s)

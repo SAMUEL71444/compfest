@@ -1,0 +1,272 @@
+[
+  {
+    "sample_id": "gmgcsa24-01",
+    "video_sha256": "aa074bdcf93026e60ea764752763e836c4c0b1b15eaf70b39cc7e1708421fefb",
+    "figure": "reports/gmgcsa24/frames/gmgcsa24-01.png",
+    "fps": 29.85496685500492,
+    "frame_count": 183,
+    "width": 1280,
+    "height": 720,
+    "duration_seconds": 6.1296333333333335,
+    "sampled_frames": [
+      {
+        "frame_index": 27,
+        "timestamp_seconds": 0.904372131147541,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 91,
+        "timestamp_seconds": 3.0480690346083787,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 154,
+        "timestamp_seconds": 5.158270673952641,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "gmgcsa24-02",
+    "video_sha256": "f9bb9dc48699ec993413554c0b55e9c7bb9acfc6372b69df305a4943a26e5965",
+    "figure": "reports/gmgcsa24/frames/gmgcsa24-02.png",
+    "fps": 29.826037275798623,
+    "frame_count": 221,
+    "width": 1280,
+    "height": 720,
+    "duration_seconds": 7.409633333333334,
+    "sampled_frames": [
+      {
+        "frame_index": 33,
+        "timestamp_seconds": 1.1064158371040724,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 76,
+        "timestamp_seconds": 2.548109200603318,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 187,
+        "timestamp_seconds": 6.269689743589743,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "gmgcsa24-03",
+    "video_sha256": "9807eb2335544fc18df2438aa4b5a9df6cd01b3d92bc813339dd4fa29306ee6b",
+    "figure": "reports/gmgcsa24/frames/gmgcsa24-03.png",
+    "fps": 29.567986949302313,
+    "frame_count": 203,
+    "width": 1280,
+    "height": 720,
+    "duration_seconds": 6.8655333333333335,
+    "sampled_frames": [
+      {
+        "frame_index": 30,
+        "timestamp_seconds": 1.0146108374384237,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 45,
+        "timestamp_seconds": 1.5219162561576354,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 171,
+        "timestamp_seconds": 5.783281773399015,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "gmgcsa24-04",
+    "video_sha256": "e71633817f5f578b928496f6247262b431a1e68ac8bad423f03362f46071cb0b",
+    "figure": "reports/gmgcsa24/frames/gmgcsa24-04.png",
+    "fps": 29.82180680105799,
+    "frame_count": 283,
+    "width": 1280,
+    "height": 720,
+    "duration_seconds": 9.489700000000001,
+    "sampled_frames": [
+      {
+        "frame_index": 42,
+        "timestamp_seconds": 1.408365371024735,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 246,
+        "timestamp_seconds": 8.248997173144877,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 239,
+        "timestamp_seconds": 8.014269611307421,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "gmgcsa24-05",
+    "video_sha256": "7931179693dd93e45cf0510d6e1d8caa3313fbdf2c46a53bcf7646992b11a4ec",
+    "figure": "reports/gmgcsa24/frames/gmgcsa24-05.png",
+    "fps": 29.817447436175332,
+    "frame_count": 188,
+    "width": 1280,
+    "height": 720,
+    "duration_seconds": 6.305033333333333,
+    "sampled_frames": [
+      {
+        "frame_index": 28,
+        "timestamp_seconds": 0.9390475177304964,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 46,
+        "timestamp_seconds": 1.5427209219858156,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 158,
+        "timestamp_seconds": 5.2989109929078015,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "gmgcsa24-06",
+    "video_sha256": "e584c98e13100befb24fa1854987d8adb50324e0f73dd6278661a8887b428b86",
+    "figure": "reports/gmgcsa24/frames/gmgcsa24-06.png",
+    "fps": 29.688561172019018,
+    "frame_count": 153,
+    "width": 1280,
+    "height": 720,
+    "duration_seconds": 5.153499999999999,
+    "sampled_frames": [
+      {
+        "frame_index": 22,
+        "timestamp_seconds": 0.7410261437908496,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 46,
+        "timestamp_seconds": 1.5494183006535946,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 129,
+        "timestamp_seconds": 4.345107843137255,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "vidio_asli-01",
+    "video_sha256": "bf58f20de023c2100bd3b0692fc2c268c85800d73b528279b4575f659ed79fea",
+    "figure": "reports/vidio_asli/frames/vidio_asli-01.png",
+    "fps": 29.739677351293242,
+    "frame_count": 296,
+    "width": 1920,
+    "height": 1080,
+    "duration_seconds": 9.953033333333332,
+    "sampled_frames": [
+      {
+        "frame_index": 44,
+        "timestamp_seconds": 1.4795049549549548,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 46,
+        "timestamp_seconds": 1.5467551801801802,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 250,
+        "timestamp_seconds": 8.406278153153153,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "vidio_asli-02",
+    "video_sha256": "c99edf99eb9bd05a56d1eb884acc1a4fa482415531dbfe23a27829312b9a7433",
+    "figure": "reports/vidio_asli/frames/vidio_asli-02.png",
+    "fps": 29.07540220973057,
+    "frame_count": 395,
+    "width": 1920,
+    "height": 1080,
+    "duration_seconds": 13.585366666666665,
+    "sampled_frames": [
+      {
+        "frame_index": 59,
+        "timestamp_seconds": 2.0292066666666666,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 45,
+        "timestamp_seconds": 1.5476999999999999,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 334,
+        "timestamp_seconds": 11.487373333333332,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "vidio_asli-03",
+    "video_sha256": "cab49ad5a43b6eb0f39985d062a8b27fd3e55cc9d4f3c9e784bd1e28cfb3c896",
+    "figure": "reports/vidio_asli/frames/vidio_asli-03.png",
+    "fps": 28.5253162181436,
+    "frame_count": 304,
+    "width": 1920,
+    "height": 1080,
+    "duration_seconds": 10.657200000000001,
+    "sampled_frames": [
+      {
+        "frame_index": 45,
+        "timestamp_seconds": 1.577546052631579,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 151,
+        "timestamp_seconds": 5.2935434210526315,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 257,
+        "timestamp_seconds": 9.009540789473684,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  },
+  {
+    "sample_id": "vidio_asli-04",
+    "video_sha256": "09887a68bc760aff0a9ce85c746db189763be1217274ee3b8f75b987a8646fb0",
+    "figure": "reports/vidio_asli/frames/vidio_asli-04.png",
+    "fps": 29.87385421981386,
+    "frame_count": 283,
+    "width": 1920,
+    "height": 1080,
+    "duration_seconds": 9.473166666666666,
+    "sampled_frames": [
+      {
+        "frame_index": 42,
+        "timestamp_seconds": 1.4059116607773852,
+        "selection": "cuplikan konteks"
+      },
+      {
+        "frame_index": 46,
+        "timestamp_seconds": 1.5398080094228503,
+        "selection": "midpoint jendela prediksi"
+      },
+      {
+        "frame_index": 239,
+        "timestamp_seconds": 8.000306831566549,
+        "selection": "cuplikan konteks"
+      }
+    ]
+  }
+]

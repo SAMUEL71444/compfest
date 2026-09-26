@@ -1,0 +1,50 @@
+{
+  "n_folds": 5,
+  "summary_mean_std": {
+    "acc": {
+      "mean": 0.9002,
+      "std": 0.0188
+    },
+    "bal_acc": {
+      "mean": 0.8725,
+      "std": 0.0233
+    },
+    "macroF1": {
+      "mean": 0.8756,
+      "std": 0.0218
+    },
+    "weightedF1": {
+      "mean": 0.8999,
+      "std": 0.0191
+    },
+    "recall_jatuh": {
+      "mean": 0.8541,
+      "std": 0.0106
+    },
+    "mcc": {
+      "mean": 0.8086,
+      "std": 0.0354
+    },
+    "kappa": {
+      "mean": 0.8084,
+      "std": 0.0355
+    }
+  },
+  "oof_confusion_matrix_argmax": [
+    [
+      53493,
+      2427,
+      1590
+    ],
+    [
+      3035,
+      14659,
+      366
+    ],
+    [
+      1634,
+      476,
+      12185
+    ]
+  ]
+}

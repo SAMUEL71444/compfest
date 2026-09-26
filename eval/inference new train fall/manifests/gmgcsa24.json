@@ -1,0 +1,67 @@
+{
+  "dataset": "gmgcsa24",
+  "source_folder": "vidio-gmgcsa24",
+  "label_source": "Keterangan pengguna: video jatuh. Belum anotasi waktu kejadian.",
+  "config": {
+    "target_fps": 15,
+    "window": 45,
+    "stride": 15,
+    "fall_thr": 0.65,
+    "fall_angle": 5.0,
+    "fall_speed": 0.0,
+    "fall_confirm": true,
+    "threshold_candidate": "F1_terbaik",
+    "run_fall": true,
+    "run_interaction": false
+  },
+  "cases": [
+    {
+      "id": "gmgcsa24-01",
+      "video": "../../infrence fall/data/vidio-gmgcsa24/Falling (LS) on the bed from sitting on the bed then falling (RS) to the floor.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "gmgcsa24-02",
+      "video": "../../infrence fall/data/vidio-gmgcsa24/Falling (RS) on the bed from sitting on the bed.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "gmgcsa24-03",
+      "video": "../../infrence fall/data/vidio-gmgcsa24/Falling from sitting on the chair to the ground. Left side Fall. Full body not visible.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "gmgcsa24-04",
+      "video": "../../infrence fall/data/vidio-gmgcsa24/Standing then falling sideways.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "gmgcsa24-05",
+      "video": "../../infrence fall/data/vidio-gmgcsa24/Walking then falling (LS) on the floor.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    },
+    {
+      "id": "gmgcsa24-06",
+      "video": "../../infrence fall/data/vidio-gmgcsa24/Walking to falling. Right side fall.mp4",
+      "camera": "lorong",
+      "expected": [
+        "jatuh"
+      ]
+    }
+  ]
+}

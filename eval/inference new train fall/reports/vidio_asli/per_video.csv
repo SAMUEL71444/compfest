@@ -1,0 +1,5 @@
+dataset,sample_id,video,source_video,video_sha256,actual,predicted,result,processing_seconds,fps,frame_count,duration_seconds,resolution,fps_bin,duration_bin,yaw_deg,pitch_deg,performer
+vidio_asli,vidio_asli-01,fall.mp4,eval/infrence fall/data/vidio-asli/fall.mp4,bf58f20de023c2100bd3b0692fc2c268c85800d73b528279b4575f659ed79fea,1,1,TP,9.822724750003545,29.739677351293242,296,9.953033333333332,1920x1080,>20 FPS,<10 s,,,
+vidio_asli,vidio_asli-02,fall1.mp4,eval/infrence fall/data/vidio-asli/fall1.mp4,c99edf99eb9bd05a56d1eb884acc1a4fa482415531dbfe23a27829312b9a7433,1,1,TP,10.260240666015306,29.07540220973057,395,13.585366666666665,1920x1080,>20 FPS,>=10 s,,,
+vidio_asli,vidio_asli-03,fall2.mp4,eval/infrence fall/data/vidio-asli/fall2.mp4,cab49ad5a43b6eb0f39985d062a8b27fd3e55cc9d4f3c9e784bd1e28cfb3c896,1,0,FN,7.734767040994484,28.5253162181436,304,10.657200000000001,1920x1080,>20 FPS,>=10 s,,,
+vidio_asli,vidio_asli-04,fall3.mp4,eval/infrence fall/data/vidio-asli/fall3.mp4,09887a68bc760aff0a9ce85c746db189763be1217274ee3b8f75b987a8646fb0,1,1,TP,7.417254291998688,29.87385421981386,283,9.473166666666666,1920x1080,>20 FPS,<10 s,,,

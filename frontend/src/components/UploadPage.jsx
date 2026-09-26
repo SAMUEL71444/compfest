@@ -521,7 +521,7 @@ export default function UploadPage({ onAnalyze, error, onClearError }) {
           <path d="M7 1L2 3v4c0 2.8 2.1 5.4 5 6 2.9-.6 5-3.2 5-6V3L7 1z"
             stroke="var(--ink-faint)" strokeWidth="1.4" fill="none" strokeLinejoin="round" />
         </svg>
-        Video diproses lokal di server Anda · Wajah tidak dikenali · Tidak ada data yang dikirim ke cloud
+        Diproses di server Anda sendiri · Wajah tidak dipakai untuk deteksi · Tanpa pengenalan identitas
       </div>
     </main>
   )

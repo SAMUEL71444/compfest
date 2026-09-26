@@ -442,7 +442,6 @@ export default function LivePage() {
             </div>
             <div>
               <div className="navbar-title">SAPA</div>
-              <div className="navbar-subtitle">Melihat Kebutuhan, Bukan Wajah</div>
             </div>
           </button>
         </div>
@@ -603,7 +602,7 @@ export default function LivePage() {
                 <path d="M6.5 1L1.5 3v3.5c0 3 2.2 5.8 5 6.5 2.8-.7 5-3.5 5-6.5V3L6.5 1z"
                   stroke="var(--ink-faint)" strokeWidth="1.3" fill="none" strokeLinejoin="round" />
               </svg>
-              Video hanya diproses di server lokal — tidak direkam atau disimpan
+              Video diproses di server lokal — deteksi memakai kerangka tubuh, bukan wajah
             </div>
           </div>
 

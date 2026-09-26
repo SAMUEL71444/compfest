@@ -467,7 +467,7 @@ function HeroSection({ onCTA, onScrollHow }) {
             marginTop: 28,
             display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
           }}>
-            {['Gratis', 'Tanpa akun', 'Video dihapus otomatis'].map((t, i) => (
+            {['Gratis', 'Tanpa akun', 'Tanpa pengenalan wajah'].map((t, i) => (
               <span key={i} style={{
                 display: 'inline-flex', alignItems: 'center', gap: 5,
                 fontSize: 12, color: 'var(--ink-faint)', fontWeight: 500,
@@ -888,6 +888,63 @@ function LiveTeaserSection({ onLive }) {
   )
 }
 
+/* ── Teaser laporan penanganan ───────────────────────────────────────────────── */
+function LaporanTeaserSection({ onStatistik }) {
+  return (
+    <div style={{ padding: '0 40px 80px', background: 'var(--paper-2)' }}>
+      <div style={{
+        maxWidth: 1160, margin: '0 auto',
+        padding: '32px 36px',
+        borderRadius: 18,
+        background: 'var(--sigap)',
+        display: 'flex', alignItems: 'center', gap: 28, flexWrap: 'wrap',
+        boxShadow: '0 12px 40px rgba(44,93,75,0.18)',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Mini ilustrasi donut (dekoratif) */}
+        <svg width="96" height="96" viewBox="0 0 96 96" fill="none" aria-hidden="true" style={{ flexShrink: 0 }}>
+          <circle cx="48" cy="48" r="38" stroke="rgba(255,255,255,0.18)" strokeWidth="14" />
+          <circle cx="48" cy="48" r="38" fill="none" stroke="#ffffff" strokeWidth="14"
+            strokeDasharray="150 89" strokeDashoffset="0" transform="rotate(-90 48 48)" strokeLinecap="round" />
+          <circle cx="48" cy="48" r="38" fill="none" stroke="rgba(217,138,41,0.9)" strokeWidth="14"
+            strokeDasharray="55 184" strokeDashoffset="-150" transform="rotate(-90 48 48)" strokeLinecap="round" />
+        </svg>
+
+        <div style={{ flex: 1, minWidth: 220 }}>
+          <div style={{
+            fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase',
+            color: 'rgba(255,255,255,0.6)', marginBottom: 8,
+          }}>
+            Untuk Manajer & Pemilik
+          </div>
+          <h3 style={{
+            fontSize: 'clamp(20px, 2.6vw, 26px)', fontWeight: 800, color: 'white',
+            letterSpacing: '-0.02em', marginBottom: 8, lineHeight: 1.2,
+          }}>
+            Lihat laporan penanganan toko
+          </h3>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.75)', lineHeight: 1.6, margin: 0, maxWidth: 560 }}>
+            Berapa kejadian ditangani, seberapa cepat tim merespons, dan siapa yang
+            paling sigap — semua terangkum dalam grafik yang mudah dibaca.
+          </p>
+        </div>
+
+        <button type="button" onClick={onStatistik}
+          style={{
+            background: 'white', border: 'none', borderRadius: 50,
+            color: 'var(--sigap-dark)', fontSize: 14, fontWeight: 700, fontFamily: 'inherit',
+            padding: '12px 26px', cursor: 'pointer', flexShrink: 0,
+            boxShadow: '0 4px 14px rgba(0,0,0,0.12)', transition: 'transform 120ms',
+          }}
+          onMouseOver={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}>
+          Lihat Laporan →
+        </button>
+      </div>
+    </div>
+  )
+}
+
 /* ── Privacy section ─────────────────────────────────────────────────────────── */
 function PrivasiSection() {
   const poin = [
@@ -896,8 +953,8 @@ function PrivasiSection() {
       desc: 'SAPA hanya memproses koordinat sendi. Tidak ada modul pengenalan wajah secara arsitektur.',
     },
     {
-      title: 'Video tidak disimpan permanen',
-      desc: 'File video dihapus otomatis setelah diproses. Hanya metadata kejadian yang disimpan.',
+      title: 'Deteksi tanpa pengenalan wajah',
+      desc: 'SAPA menganalisis kerangka/pose tubuh, bukan wajah. Sistem tidak pernah mengidentifikasi siapa orangnya.',
     },
     {
       title: 'Bisa dijalankan on-premise',
@@ -1054,7 +1111,7 @@ function CTAFinal({ onCTA }) {
           <span>·</span>
           <span>Tanpa akun</span>
           <span>·</span>
-          <span>Video dihapus setelah diproses</span>
+          <span>Tanpa pengenalan wajah</span>
         </div>
       </div>
     </section>
@@ -1102,6 +1159,7 @@ export default function LandingPage() {
       <FiturSection />
       <CaraKerjaSection />
       <LiveTeaserSection onLive={goLive} />
+      <LaporanTeaserSection onStatistik={goStatistik} />
       <PrivasiSection />
       <CTAFinal onCTA={goCTA} />
       <Footer />

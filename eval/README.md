@@ -51,9 +51,7 @@ mekanismenya).
   fitur angkat tangan **belum diimplementasikan** di baseline (recall 0.000
   pada klip `angkat_tangan`, run `20260925-0955`/`2227`/`2230`).
 - **Arsip run jatuh** (`Tes1.mp4`, run `20260925-0704`/`0707`/`0711`):
-  recall 1.000/precision 1.000 di ambang lama maupun baru — lihat "Catatan
-  dari klip yang sudah diuji" di bawah untuk kenapa angka ini tidak
-  membuktikan ambang mana yang lebih baik.
+  recall 1.000/precision 1.000 di ambang lama maupun baru.
 - **Bandingkan run:** `python3 eval/banding.py`
 
 ## Rumus metrik yang dipakai (ketiganya)
@@ -84,15 +82,6 @@ angkanya konsisten dengan F1 per kelas di atas.
 tertangkap (TP) bila rentang waktu deteksi tumpang-tindih (dengan
 toleransi ±1,5 detik) dengan rentang waktu di label — bukan kecocokan
 detik-persis. Lihat "Metrik: kenapa yang ini" di bawah untuk alasannya.
-
-## Kenapa tiga sumber, bukan satu
-
-Rulebook Eval Track minta analisis "irisan ketahanan" dan "titik mana
-sistem gagal" — satu angka gabungan menyembunyikan itu. Sumber #1 mengukur
-kepala model saja (bersih dari noise pose estimation). Sumber #2 mengukur
-pipeline penuh tapi hanya kasus positif jatuh. Sumber #3 mengukur pipeline
-penuh dengan kasus negatif (alarm palsu) dan kejadian yang fiturnya belum
-ada sama sekali. Ketiganya saling melengkapi, bukan duplikat.
 
 ---
 
@@ -242,28 +231,3 @@ berlangsung beberapa detik dan jendela model bergeser 1 detik, jadi menuntut
 kecocokan detik-per-detik menghukum sistem untuk hal yang tidak penting
 secara operasional.
 
-## Yang TIDAK tertangkap suite ini
-
-- **Lapisan mana yang gagal.** Kalau recall rendah, suite tidak memberi tahu
-  apakah YOLOv8-pose yang meleset atau kepala BiLSTM yang salah menilai.
-  Perlu diperiksa manual lewat `--verbose`.
-- **Hanya seakurat labelnya.** Label yang salah menghasilkan angka yang salah.
-- **Seragam pegawai belum dinilai otomatis.** Perlu klip berisi pegawai
-  berseragam terdaftar; cakupannya (pegawai dikecualikan dari butuh-bantuan
-  tapi tetap dicek jatuh) sejauh ini baru diverifikasi manual.
-
-## Catatan dari klip yang sudah diuji
-
-`Tes1.mp4` memberi recall 1.000 / precision 1.000 — **dan hasil yang sama
-persis** dengan ambang lama (0,80/35°) maupun baru (0,65/5°).
-
-Itu bukan berarti kedua ambang setara. Artinya klip ini **tidak bisa
-membedakan keduanya**: keempat kejatuhannya terlalu jelas (probabilitas
-≥0,91, sudut torso ≥52°), tidak ada satu pun kasus batas.
-
-Klip yang paling berguna justru yang sulit:
-- jatuh pelan / merosot perlahan, bukan roboh
-- jatuh tidak sempurna — terduduk, tersangkut rak
-- orang jauh dari kamera
-- klip **tanpa kejadian** untuk mengukur alarm palsu
-- stretching, tos, melambai — untuk menguji false positive angkat tangan

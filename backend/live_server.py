@@ -30,6 +30,7 @@ import base64
 import json
 import logging
 import os
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -41,6 +42,7 @@ from production.worker import muat_yolo
 import notifier
 import statistik
 from pipeline.render import buat_frame_notif
+from pipeline import uniform as _uniform
 
 logger = logging.getLogger(__name__)
 
@@ -64,6 +66,7 @@ FALL_THRESH    = float(os.getenv("FALL_THRESH",   0.57))
 DWELL_THRESH   = float(os.getenv("DWELL_THRESH",  0.60))
 TORSO_THRESH   = float(os.getenv("TORSO_THRESH",  5.0))  # derajat — kalibrasi atan2, lihat geometry.py
 INSPECT_THRESH = float(os.getenv("INSPECT_THRESH", 0.50))
+SERAGAM_PATH = Path(__file__).resolve().parent / "data" / "seragam.json"
 
 # Jendela analisis dalam DETIK. Browser mengirim frame ~5fps, tapi laju itu
 # bergoyang mengikuti beban perangkat klien — menyimpan "45 frame terakhir"
@@ -229,6 +232,12 @@ async def ws_live(websocket: WebSocket):
         min_frames=6,            # ~5fps × 3 dtk = 15 sampel ideal
     )
 
+    # Sidik seragam dimuat saat sesi dimulai. Status positif dipertahankan
+    # sepanjang track agar warna kerangka pegawai tidak berkedip.
+    daftar_seragam = _uniform.muat_daftar_signature(SERAGAM_PATH)
+    signature_seragam = _uniform.daftar_signature_objects(daftar_seragam)
+    status_pegawai: dict[int, bool] = {}
+
     try:
         while True:
             try:
@@ -296,6 +305,11 @@ async def ws_live(websocket: WebSocket):
             # Push ke buffer dengan stempel waktu dari klien
             for tid, kps in track_kps.items():
                 buf.push(tid, kps, t_now)
+                if signature_seragam and not status_pegawai.get(tid, False):
+                    patch = _uniform.crop_torso(frame, kps)
+                    cocok = _uniform.cocokkan_seragam_terdaftar(patch, signature_seragam)
+                    if cocok is True:
+                        status_pegawai[tid] = True
 
             # Kirim pose ke browser untuk overlay langsung
             tracks_json = {
@@ -306,6 +320,7 @@ async def ws_live(websocket: WebSocket):
                 "type":   "pose",
                 "t":      round(t_now, 3),
                 "tracks": tracks_json,
+                "pegawai": [int(tid) for tid, cocok in status_pegawai.items() if cocok],
             })
 
             # Inferensi untuk jendela yang siap. Bagian berat dikerjakan di
@@ -323,6 +338,11 @@ async def ws_live(websocket: WebSocket):
                     continue
 
                 for ev in kejadian:
+                    # Seragam hanya mengecualikan sinyal pelayanan. Kejadian
+                    # jatuh milik pegawai tetap dikirim sebagai darurat.
+                    if (status_pegawai.get(jendela.track_id, False)
+                            and ev.get("tipe") == "butuh_bantuan"):
+                        continue
                     await websocket.send_json(ev)
                     logger.info(
                         f"[live] {ev['tipe']} track={ev['track_id']} skor={ev['skor']}"

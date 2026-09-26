@@ -4,12 +4,17 @@ pipeline/uniform.py — SAPA
 Pengenalan pegawai via kecocokan pakaian ("seragam"), dengan OpenCV murni
 (cv2.calcHist + cv2.compareHist) — NOL model, NOL training.
 
-KENAPA "LEVEL 1.5" (histogram DAN pola, bukan warna dominan tunggal):
+KENAPA "LEVEL 1.5" (histogram dan pola, bukan warna dominan tunggal):
 Kaus biru polos vs seragam biru+pink memberi korelasi histogram HSV 0,919
 — cukup tinggi untuk lolos ambang 0,60 sendirian. Yang menolaknya adalah
 syarat pola (jumlah warna dominan, rasio antar-warna, hue tiap warna, blok
 terbagi horizontal). Tanpa syarat pola, pelanggan berkaus polos warna mirip
 akan dianggap pegawai.
+
+Pola selalu wajib cocok. Histogram menjadi bukti utama; bila saturation
+berubah karena auto-exposure kamera, hue tiga blok yang sangat dekat dapat
+menjadi bukti cadangan. Jalur cadangan ini tetap tidak meloloskan pakaian
+dengan pola berbeda.
 
 HSV, bukan RGB — hue relatif stabil saat pencahayaan berubah (diverifikasi:
 kaus seragam tetap dikenali di kondisi cahaya redup, skor histogram 0,671).
@@ -44,9 +49,13 @@ import numpy as np
 # Torso di bawah ini terlalu kecil untuk histogram yang stabil — lewati.
 MIN_TORSO_AREA_PX = 1200
 
-# Ambang korelasi histogram HSV — perlu DAN dengan syarat pola (lihat
-# _pola_cocok) supaya kaus polos warna mirip tidak lolos sendirian.
+# Ambang korelasi histogram HSV. Histogram 2D hue+saturation tetap dipakai,
+# tetapi perubahan pencahayaan kamera dapat mengubah saturation cukup besar.
 AMBANG_HISTOGRAM = 0.60
+
+# Bila pola tiga blok sangat dekat, izinkan jalur warna dominan yang lebih
+# tahan perubahan saturation. Nilai ini lebih ketat daripada toleransi pola.
+TOLERANSI_HUE_KETAT = 12.0
 
 # Toleransi syarat pola.
 TOLERANSI_JUMLAH_WARNA = 1        # beda jumlah warna dominan maks 1
@@ -220,20 +229,37 @@ def cocokkan_seragam(patch: np.ndarray, signature: SignatureSeragam) -> bool | N
     Bandingkan satu patch torso terhadap satu signature terdaftar.
 
     Returns:
-      True  — cocok (histogram DAN pola sama-sama lolos ambang)
+      True  — cocok berdasarkan pola dan histogram, atau berdasarkan pola
+              dengan hue yang sangat dekat saat saturation kamera berubah
       False — tidak cocok
       None  — tidak dapat dinilai (patch di bawah MIN_TORSO_AREA_PX)
     """
     if patch is None or _torso_area(0, 0, patch.shape[1], patch.shape[0]) < MIN_TORSO_AREA_PX:
         return None
 
-    hist_patch = _histogram_hsv(patch)
-    skor_histogram = float(cv2.compareHist(hist_patch, signature.histogram, cv2.HISTCMP_CORREL))
-    if skor_histogram < AMBANG_HISTOGRAM:
+    hue_patch, rasio_patch = _fitur_pola(patch)
+    pola_cocok = _pola_cocok(
+        hue_patch, rasio_patch,
+        signature.warna_dominan_hue, signature.warna_dominan_rasio,
+    )
+    if not pola_cocok:
         return False
 
-    hue_patch, rasio_patch = _fitur_pola(patch)
-    return _pola_cocok(hue_patch, rasio_patch, signature.warna_dominan_hue, signature.warna_dominan_rasio)
+    hist_patch = _histogram_hsv(patch)
+    skor_histogram = float(cv2.compareHist(
+        hist_patch, signature.histogram, cv2.HISTCMP_CORREL,
+    ))
+    if skor_histogram >= AMBANG_HISTOGRAM:
+        return True
+
+    # Histogram hue+saturation bisa turun tajam pada seragam yang sama ketika
+    # kamera auto-exposure/white-balance berubah. Karena pola sudah cocok,
+    # gunakan beda hue yang lebih ketat sebagai jalur cadangan.
+    beda_hue = [
+        min(abs(a - b), 180 - abs(a - b))
+        for a, b in zip(hue_patch, signature.warna_dominan_hue)
+    ]
+    return bool(beda_hue and max(beda_hue) <= TOLERANSI_HUE_KETAT)
 
 
 def cocokkan_seragam_terdaftar(patch: np.ndarray, daftar_signature: list) -> bool | None:

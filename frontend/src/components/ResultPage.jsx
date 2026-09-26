@@ -338,6 +338,7 @@ export default function ResultPage({ result, onReset }) {
           }}>
             {[
               { bg: 'rgba(80,180,80,0.9)',   label: 'Hijau — gerakan normal' },
+              { bg: 'rgba(35,125,220,0.95)', label: 'Biru — pegawai terdaftar' },
               { bg: 'rgba(240,140,30,0.95)', label: 'Oranye — tampak butuh bantuan' },
               { bg: 'rgba(210,40,40,0.95)',  label: 'Merah — jatuh terdeteksi' },
             ].map(({ bg, label }) => (

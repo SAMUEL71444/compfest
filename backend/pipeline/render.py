@@ -53,7 +53,7 @@ COLOR_NORMAL  = (80, 180, 80)      # Hijau  — gerakan normal biasa
 COLOR_FALL    = (40,  40, 210)     # Merah  — deteksi jatuh
 COLOR_HELP    = (30, 140, 240)     # Oranye — tampak butuh bantuan (sinyal pasif)
 COLOR_ANGKAT  = (200, 60, 160)     # Ungu   — angkat tangan minta bantuan (sinyal aktif)
-COLOR_PEGAWAI = (150, 150, 150)    # Abu    — pegawai terdaftar (dikecualikan dari bantuan)
+COLOR_PEGAWAI = (220, 125, 35)      # Biru   — pegawai terdaftar (dikecualikan dari bantuan)
 COLOR_WHITE   = (255, 255, 255)
 COLOR_BLACK   = (0,   0,   0)
 CONF_THRESHOLD = 0.3              # minimum confidence untuk menggambar sendi
@@ -64,7 +64,7 @@ def _get_person_color(events_active: list, is_pegawai: bool = False) -> tuple:
 
     Jatuh SELALU diprioritaskan di atas status pegawai — pegawai yang jatuh
     tetap darurat (lihat pipeline/uniform.py, "CAKUPAN"). Status pegawai
-    hanya membuat warna default (tanpa kejadian) jadi abu, bukan hijau.
+    hanya membuat warna default (tanpa kejadian) jadi biru, bukan hijau.
     """
     if any(e["tipe"] == "jatuh" for e in events_active):
         return COLOR_FALL

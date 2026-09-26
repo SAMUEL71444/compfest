@@ -1,0 +1,16 @@
+video,expected,source
+Jason (bingung).mp4,inspecting,nama file dan eval/label.csv sebelumnya
+Mama (bingung).mp4,inspecting,nama file dan eval/label.csv sebelumnya
+Jason (angkat tangan).mp4,angkat_tangan,nama file dan eval/label.csv sebelumnya
+Mama (angkat tangan).mp4,angkat_tangan,nama file dan eval/label.csv sebelumnya
+Jason (streching 1).mp4,negative,nama file dan eval/label.csv sebelumnya
+Jason (streching 2).mp4,negative,nama file dan eval/label.csv sebelumnya
+Mama (streching).mp4,negative,nama file dan eval/label.csv sebelumnya
+Jason (ambil langsung).mp4,negative,nama file dan eval/label.csv sebelumnya
+Jason (ambil langsung 2).mp4,negative,nama file dan eval/label.csv sebelumnya
+Mama (langsung ambil).mp4,negative,nama file dan eval/label.csv sebelumnya
+put(normal).mp4,negative,nama file dan eval/label.csv sebelumnya
+take(normal).mp4,negative,nama file dan eval/label.csv sebelumnya
+vidio1.mp4,butuh_bantuan,keterangan langsung pengguna
+vidio2.mp4,butuh_bantuan,keterangan langsung pengguna
+vidio3.mp4,butuh_bantuan,keterangan langsung pengguna

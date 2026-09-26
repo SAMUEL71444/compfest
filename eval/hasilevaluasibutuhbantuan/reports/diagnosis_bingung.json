@@ -1,0 +1,28 @@
+{
+  "purpose": "Membedakan prediksi kelas inspecting dari pembentukan event butuh_bantuan",
+  "rules": {
+    "class_decision": "argmax kelas 1 (inspecting), sesuai notebook training",
+    "help_min_win": 2,
+    "event_decision": "dua window inspecting aktif berturut-turut",
+    "camera_mode_tested": "rak",
+    "rack_dwell_behavior": "is_dwell dilewati sesuai backend/pipeline/analyze.py"
+  },
+  "results": [
+    {
+      "video": "Jason (bingung).mp4",
+      "model_predicted_inspecting": true,
+      "event_created": true,
+      "event_count": 2,
+      "event_scores": [0.628, 0.620],
+      "explanation": "Track 6 memiliki rangkaian dua dan tiga window aktif, sehingga memenuhi help_min_win=2."
+    },
+    {
+      "video": "Mama (bingung).mp4",
+      "model_predicted_inspecting": true,
+      "maximum_observed_inspecting_probability": 0.983,
+      "event_created": false,
+      "event_count": 0,
+      "explanation": "Prediksi positif tersebar pada track terfragmentasi yang masing-masing hanya menghasilkan satu window, sehingga tidak memenuhi help_min_win=2."
+    }
+  ]
+}

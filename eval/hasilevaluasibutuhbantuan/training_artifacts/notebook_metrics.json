@@ -1,0 +1,25 @@
+{
+  "source": "BILSTMandOther_2Class (1).ipynb output cells",
+  "cv": {
+    "n_folds": 5,
+    "n_windows": 10948,
+    "macro_f1_mean": 0.7676,
+    "macro_f1_std": 0.013,
+    "recall_inspecting_mean": 0.749,
+    "recall_inspecting_std": 0.010,
+    "confusion_matrix_labels": ["other", "inspecting"],
+    "confusion_matrix": [[4723, 1294], [1239, 3692]]
+  },
+  "holdout": {
+    "n_windows": 3217,
+    "accuracy": 0.763,
+    "balanced_accuracy": 0.759,
+    "macro_f1": 0.760,
+    "weighted_f1": 0.763,
+    "recall_inspecting": 0.725,
+    "mcc": 0.520,
+    "kappa": 0.520,
+    "confusion_matrix_labels": ["other", "inspecting"],
+    "confusion_matrix": [[1416, 367], [395, 1039]]
+  }
+}

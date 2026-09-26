@@ -1,20 +1,14 @@
 {
-  "arch": "InteractionLSTM",
+  "arch": "InteractionLSTM2",
   "in_dim": 51,
   "hidden": 128,
   "layers": 2,
   "dropout": 0.3,
-  "n_classes": 6,
-  "class_names": [
-    "background",
-    "reach",
-    "retract",
-    "hand_in_shelf",
-    "inspect_product",
-    "inspect_shelf"
-  ],
+  "n_classes": 2,
+  "class_names": ["other", "inspecting"],
+  "joints": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
   "use_channels": 3,
-  "inspect_idx": [4, 5],
+  "inspect_idx": [1],
   "window": 45,
   "stride": 15,
   "fps": 15

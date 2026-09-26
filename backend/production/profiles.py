@@ -83,12 +83,14 @@ class CameraProfile:
     track_ttl_seconds: float = 5.0   # track tak terlihat selama ini → dilupakan
 
     # ── Ambang Kepala Jatuh (dipakai bila jenis="lorong") ─────────────────────
-    fall_thr: float = 0.80
-    fall_angle: float = 35.0
+    # Sesuai preset "prob_sudut" di pipeline/thresholds.py.
+    fall_thr: float = 0.57
+    fall_angle: float = 5.0
 
     # ── Ambang Kepala Interaksi (dipakai bila jenis="rak") ────────────────────
+    # Model 2-kelas (other=0, inspecting=1) — lihat interaction_head.json.
     inspect_thr: float = 0.40
-    inspect_idx: list = field(default_factory=lambda: [3, 4, 5])
+    inspect_idx: list = field(default_factory=lambda: [1])
     dwell_ratio: float = 0.4
     skip_dwell: bool = False
 

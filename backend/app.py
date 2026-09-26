@@ -35,6 +35,7 @@ from fastapi.staticfiles import StaticFiles
 from pipeline.models import load_head
 from pipeline.analyze import analyze
 from pipeline.render import render
+from pipeline.thresholds import ambil_preset, cfg_dari_preset
 from live_server import router as live_router
 from production.api import router as produksi_router, ws_router as produksi_ws_router
 from production.api import pasang_manager
@@ -324,22 +325,19 @@ async def analyze_video(
 
 
 
+    # Threshold deteksi jatuh — dipusatkan di pipeline/thresholds.py supaya
+    # unggah, Live, dan Produksi memakai definisi yang sama. Lihat docstring
+    # modul itu untuk kalibrasi & buktinya.
+    preset_ambang = cfg_dari_preset(ambil_preset())
+
     cfg = {
         "run_fall": run_fall,
         "run_interaction": run_interaction,
-        # Threshold deteksi jatuh
-        "fall_thr":    0.80,
-        "fall_angle":  35.0,        # turunkan dari 55° agar tidak false positive
-        "fall_confirm": True,
+        **preset_ambang,   # fall_thr, fall_confirm, fall_angle
         "fall_joints": fall_joints,
-        # MERL classes: 0=background,1=reach,2=retract,3=hand_in_shelf,4=inspect_product,5=inspect_shelf
-        # Ambil dari config model, JANGAN di-hardcode. Kepala Interaksi.ipynb
-        # menetapkan INSPECT_IDX = [4, 5] ("aksi yang penting utk butuh bantuan")
-        # dan menyimpannya ke interaction_head.json. Nilai [1, 3, 4, 5] yang
-        # dipakai sebelumnya ikut memasukkan kelas 1 = "reach" — mengambil barang
-        # dari rak adalah belanja normal, bukan tanda seseorang butuh bantuan,
-        # sehingga deteksi jadi jauh lebih berisik daripada yang dimaksud tim.
-        "inspect_idx": _state["inter_cfg"].get("inspect_idx", [4, 5]),
+        # Model 2-kelas (other=0, inspecting=1) — lihat interaction_head.json.
+        # Ambil dari config model, JANGAN di-hardcode.
+        "inspect_idx": _state["inter_cfg"].get("inspect_idx", [1]),
         # Untuk kamera rak: 1 window cukup (is_dwell di-skip, false positive rendah)
         # Untuk kamera lorong: butuh 2 window berturut (tanpa dwell skip)
         # Minimal jendela berturut sebelum dianggap kejadian. Satu jendela

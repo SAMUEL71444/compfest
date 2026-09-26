@@ -94,14 +94,14 @@ def analyze(
     if camera_type == "rak":
         run_fall = False
         logger.info("camera_type='rak' → deteksi jatuh DIMATIKAN (kamera top-down).")
-    fall_thr    = float(cfg.get("fall_thr", 0.80))
-    fall_ang    = float(cfg.get("fall_angle", 35.0))   # turunkan dari 55°
+    # Default mengikuti preset "prob_sudut" di pipeline/thresholds.py bila
+    # pemanggil tidak menyediakan cfg — lihat docstring modul itu utk kalibrasi.
+    fall_thr    = float(cfg.get("fall_thr", 0.57))
+    fall_ang    = float(cfg.get("fall_angle", 5.0))
     fall_confirm= bool(cfg.get("fall_confirm", True))
-    # MERL label (dari geometry.py INTERACTION_CLASS_NAMES):
-    # 0=background, 1=reach, 2=retract, 3=hand_in_shelf, 4=inspect_product, 5=inspect_shelf
-    # Default [4, 5] mengikuti INSPECT_IDX di Kepala Interaksi.ipynb — hanya
-    # "menimbang produk" dan "memandangi rak" yang menandakan butuh bantuan.
-    inspect_idx = list(cfg.get("inspect_idx", [4, 5]))
+    # Label (dari geometry.py INTERACTION_CLASS_NAMES): 0=other, 1=inspecting.
+    # Model 2-kelas (BILSTMandOther_2Class.ipynb) — default [1].
+    inspect_idx = list(cfg.get("inspect_idx", [1]))
     help_min_win= int(cfg.get("help_min_win", 2))
     # dwell_ratio berbeda untuk top-down vs samping:
     # top-down: torso_length sangat kecil karena kompresi perspektif → pakai nilai besar
@@ -209,17 +209,10 @@ def analyze(
                 inspect_prob = float(sum(inter_probs[w, i] for i in inspect_idx))
                 stationary   = skip_dwell or is_dwell(raw_windows[w], dwell_ratio)
 
-                # Kelas prediksi harus BENAR-BENAR salah satu kelas inspect,
-                # sesuai Kepala Interaksi.ipynb:
-                #     browsing = np.isin(act_pred, INSPECT_IDX) & (dwell < ...)
-                #
-                # Versi sebelumnya memakai jumlah probabilitas dengan ambang
-                # 0,30 untuk kamera rak. Aturan itu jauh lebih longgar: pada
-                # klip CCTV top-down 129 detik, ia menandai 62% dari seluruh
-                # jendela sebagai "butuh bantuan", sementara aturan argmax
-                # menandai 38%. Ambang jumlah juga memperkenalkan angka sihir
-                # yang tidak pernah divalidasi tim, sedangkan argmax langsung
-                # memakai keputusan model.
+                # Kelas prediksi harus BENAR-BENAR "inspecting" (argmax == 1),
+                # bukan ambang jumlah probabilitas — argmax langsung memakai
+                # keputusan model 2-kelas, tanpa angka ambang tambahan yang
+                # belum divalidasi.
                 inspect_aktif = int(np.argmax(inter_probs[w])) in inspect_idx
 
                 if skip_dwell:

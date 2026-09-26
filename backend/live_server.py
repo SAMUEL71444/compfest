@@ -58,9 +58,11 @@ router = APIRouter()
 # ── Konfigurasi (sama dengan analyze.py) ──────────────────────────────────────
 WINDOW_SIZE    = 45     # frame per jendela BiLSTM setelah resample (= 3 dtk @15fps)
 FPS_TUJUAN     = 15.0   # HARUS sama dengan saat training (fall_head.json: fps=15)
-FALL_THRESH    = float(os.getenv("FALL_THRESH",   0.55))
+# Default sesuai preset "prob_sudut" di pipeline/thresholds.py — bisa dioverride
+# lewat env var untuk uji coba tanpa mengubah kode.
+FALL_THRESH    = float(os.getenv("FALL_THRESH",   0.57))
 DWELL_THRESH   = float(os.getenv("DWELL_THRESH",  0.60))
-TORSO_THRESH   = float(os.getenv("TORSO_THRESH",  45.0))  # derajat
+TORSO_THRESH   = float(os.getenv("TORSO_THRESH",  5.0))  # derajat — kalibrasi atan2, lihat geometry.py
 INSPECT_THRESH = float(os.getenv("INSPECT_THRESH", 0.50))
 
 # Jendela analisis dalam DETIK. Browser mengirim frame ~5fps, tapi laju itu
@@ -155,8 +157,8 @@ def _inferensi_jendela(jendela, camera_type, fall_head, interaction_head) -> lis
     if camera_type != "lorong" and interaction_head is not None:
         x = torch.from_numpy(masukan["interaction_input"][-1:])
         proba = predict_proba(interaction_head, x)
-        # Kelas 3,4,5 = hand_in_shelf, inspect_product, inspect_shelf
-        skor = float(proba[0, 3:6].sum())
+        # Model 2-kelas (other=0, inspecting=1) — lihat interaction_head.json.
+        skor = float(proba[0, 1])
         if skor >= INSPECT_THRESH and is_dwell(raw, dwell_ratio=DWELL_THRESH):
             kejadian.append({
                 "type": "event", "tipe": "butuh_bantuan",

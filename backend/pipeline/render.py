@@ -197,6 +197,25 @@ def render(video_path: str, analysis_result: dict, output_path: str,
 
     logger.info(f"Merender {total} frame ke {Path(output_path).name}...")
 
+    # Pose diekstrak hanya di frame kelipatan frame_skip (lihat extract.py),
+    # tapi setiap frame video asli tetap dirender. Tanpa "menahan" pose
+    # terakhir, skeleton hanya tampil di frame yang punya anotasi persis dan
+    # berkedip hilang-muncul di frame-frame di antaranya. terakhir_kps
+    # menyimpan pose terbaru + frame_idx saat itu per track_id, agar overlay
+    # tetap tampil stabil di frame yang belum diproses ulang.
+    #
+    # Kedaluwarsa dibutuhkan supaya orang yang benar-benar keluar frame
+    # tidak meninggalkan skeleton "hantu" menempel selamanya di posisi
+    # terakhir — TTL beberapa kali frame_skip cukup menutupi jeda deteksi
+    # normal tanpa membuat skeleton bertahan lama setelah orang hilang.
+    # Deteksi frame_skip dari selisih dua kunci frame_annotations terurut,
+    # bukan tebakan tetap — lebih andal daripada mengasumsikan nilai tertentu.
+    kunci_terurut = sorted(frame_annotations.keys())
+    frame_skip_est = (kunci_terurut[1] - kunci_terurut[0]) if len(kunci_terurut) >= 2 else 1
+    TTL_FRAME = max(1, frame_skip_est) * 3
+
+    terakhir_kps: dict = {}   # {track_id: (keypoints, action_label, frame_idx_terakhir)}
+
     frame_idx = 0
     while True:
         ret, frame = cap.read()
@@ -211,43 +230,50 @@ def render(video_path: str, analysis_result: dict, output_path: str,
             if e["t0"] <= current_time <= e["t1"]
         ]
 
-        # Gambar kerangka tiap orang
+        # Update cache pose terakhir dari anotasi frame ini (bila ada)
         if frame_idx in frame_annotations:
             for ann in frame_annotations[frame_idx]:
-                track_id = ann["track_id"]
-                kps = ann["keypoints"]  # [17, 3]
-                action = ann["action_label"]
+                terakhir_kps[ann["track_id"]] = (ann["keypoints"], ann["action_label"], frame_idx)
 
-                # Cek apakah track ini sedang dalam kejadian
-                person_events = [e for e in events_active if e["track_id"] == track_id]
-                color = _get_person_color(person_events)
+        # Buang entri yang sudah kedaluwarsa (track hilang, bukan sekadar jeda)
+        kadaluwarsa = [tid for tid, (_, _, fi) in terakhir_kps.items()
+                       if frame_idx - fi > TTL_FRAME]
+        for tid in kadaluwarsa:
+            del terakhir_kps[tid]
 
-                # Gambar kerangka
-                _draw_skeleton(frame, kps, color,
-                               thickness=3 if person_events else 2,
-                               topdown=topdown)
+        # Gambar kerangka tiap orang — dari cache, supaya tidak berkedip
+        # di frame yang belum diperbarui.
+        for track_id, (kps, action, _) in terakhir_kps.items():
+            # Cek apakah track ini sedang dalam kejadian
+            person_events = [e for e in events_active if e["track_id"] == track_id]
+            color = _get_person_color(person_events)
 
-                # Label: ID + status mudah dibaca (di atas kepala)
-                nose_x, nose_y, nose_c = kps[0]
-                # Fallback: gunakan bahu jika hidung tidak terdeteksi
-                if nose_c <= CONF_THRESHOLD:
-                    sh_x = (kps[5][0] + kps[6][0]) / 2
-                    sh_y = (kps[5][1] + kps[6][1]) / 2
-                    nose_x, nose_y = sh_x, sh_y
-                    nose_c = min(kps[5][2], kps[6][2])
+            # Gambar kerangka
+            _draw_skeleton(frame, kps, color,
+                           thickness=3 if person_events else 2,
+                           topdown=topdown)
 
-                if nose_c > CONF_THRESHOLD:
-                    # Teks status yang mudah dimengerti
-                    if any(e["tipe"] == "jatuh" for e in person_events):
-                        status_txt = "JATUH!"
-                    elif any(e["tipe"] == "butuh_bantuan" for e in person_events):
-                        status_txt = "BUTUH BANTUAN"
-                    else:
-                        status_txt = "Normal"
-                    label = f"ID:{track_id}  {status_txt}"
-                    lx = max(int(nose_x) - 40, 4)
-                    ly = max(int(nose_y) - 18, 20)
-                    _draw_label(frame, label, lx, ly, color)
+            # Label: ID + status mudah dibaca (di atas kepala)
+            nose_x, nose_y, nose_c = kps[0]
+            # Fallback: gunakan bahu jika hidung tidak terdeteksi
+            if nose_c <= CONF_THRESHOLD:
+                sh_x = (kps[5][0] + kps[6][0]) / 2
+                sh_y = (kps[5][1] + kps[6][1]) / 2
+                nose_x, nose_y = sh_x, sh_y
+                nose_c = min(kps[5][2], kps[6][2])
+
+            if nose_c > CONF_THRESHOLD:
+                # Teks status yang mudah dimengerti
+                if any(e["tipe"] == "jatuh" for e in person_events):
+                    status_txt = "JATUH!"
+                elif any(e["tipe"] == "butuh_bantuan" for e in person_events):
+                    status_txt = "BUTUH BANTUAN"
+                else:
+                    status_txt = "Normal"
+                label = f"ID:{track_id}  {status_txt}"
+                lx = max(int(nose_x) - 40, 4)
+                ly = max(int(nose_y) - 18, 20)
+                _draw_label(frame, label, lx, ly, color)
 
         # Banner kejadian
         if events_active:

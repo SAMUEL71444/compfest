@@ -88,25 +88,65 @@ def _muat_state():
         logger.warning(f"[statistik] Gagal memuat log: {e}")
 
 
+# Dedup berbasis waktu: kejadian dari window berturut untuk (track_id, tipe)
+# yang sama dianggap SATU peristiwa selama jeda antar-kemunculan < ambang ini.
+# Mengikuti logika dedupeEvents.js di frontend (jatuh rapat, bantuan lebih longgar).
+GAP_GABUNG_DETIK = float(os.getenv("SAPA_GAP_GABUNG", "6"))
+
+# Kejadian "aktif" per (track_id, tipe) → id record yang sedang berjalan + waktu
+# kemunculan terakhir, untuk memutuskan gabung vs buat baru.
+_aktif: dict[tuple, dict] = {}
+
+
 def catat_muncul(event: dict, on_terlewat=None):
     """
-    Catat kejadian baru muncul (status 'menunggu') dan jadwalkan timer terlewat.
+    Catat kejadian muncul (status 'menunggu') + jadwalkan timer terlewat.
+
+    DEDUP: kejadian dari window berturut untuk orang & tipe yang sama digabung
+    jadi SATU record selama jeda antar-kemunculan < GAP_GABUNG_DETIK. Ini
+    mencegah "spam" satu peristiwa berkelanjutan menjadi puluhan baris —
+    menyamakan perilaku dengan panel Live yang memakai dedupeEvents.js.
 
     event    : dict punya id (kunci_kejadian), tipe, track_id, skor, t0
-    on_terlewat: callback opsional dipanggil saat kejadian jadi terlewat
-                 (dipakai live_server untuk sinkron ke Telegram bila perlu).
+    on_terlewat: callback opsional dipanggil saat kejadian jadi terlewat.
     """
     _muat_state()
     kid = event["id"]
+    tipe = event.get("tipe")
+    track_id = event.get("track_id")
+    kunci_aktif = (track_id, tipe)
+    now = time.time()
+
     with _lock:
-        # Jangan timpa bila kejadian ini sudah ada (dedup lintas window).
+        # 1. Persis id yang sama sudah tercatat → abaikan (dedup lintas window identik).
         if kid in _state:
             return
+
+        # 2. Ada kejadian berjalan untuk (orang, tipe) sama & masih dalam gap →
+        #    perpanjang yang lama, JANGAN buat record baru.
+        akt = _aktif.get(kunci_aktif)
+        if akt is not None and (now - akt["last"]) <= GAP_GABUNG_DETIK:
+            rec = _state.get(akt["id"])
+            if rec is not None and rec["status"] == "menunggu":
+                akt["last"] = now
+                # Perbarui skor maksimum bila kejadian baru lebih yakin.
+                if event.get("skor") is not None:
+                    rec["skor"] = max(rec.get("skor") or 0, event["skor"])
+                # Reset timer terlewat: selama peristiwa masih berlangsung,
+                # hitungan 1 menit dimulai dari kemunculan terakhir.
+                _batalkan_timer(akt["id"])
+                t = threading.Timer(BATAS_TERLEWAT_DETIK, _tandai_terlewat, args=(akt["id"], on_terlewat))
+                t.daemon = True
+                _timers[akt["id"]] = t
+                t.start()
+                return
+
+        # 3. Kejadian baru (atau peristiwa lama sudah selesai/direspons).
         rec = {
             "id": kid,
-            "tipe": event.get("tipe"),
-            "track_id": event.get("track_id"),
-            "t_muncul": time.time(),
+            "tipe": tipe,
+            "track_id": track_id,
+            "t_muncul": now,
             "skor": event.get("skor"),
             "status": "menunggu",
             "oleh": None,
@@ -115,9 +155,9 @@ def catat_muncul(event: dict, on_terlewat=None):
             "t_selesai": None,
         }
         _state[kid] = rec
+        _aktif[kunci_aktif] = {"id": kid, "last": now}
         _tulis_baris(rec)
 
-        # Jadwalkan timer terlewat.
         t = threading.Timer(BATAS_TERLEWAT_DETIK, _tandai_terlewat, args=(kid, on_terlewat))
         t.daemon = True
         _timers[kid] = t
@@ -142,6 +182,7 @@ def _tandai_terlewat(kid: str, on_terlewat=None):
         rec["t_selesai"] = time.time()
         _tulis_baris(rec)
         _timers.pop(kid, None)
+        _lepas_aktif(kid)
     logger.info(f"[statistik] Kejadian {kid} TERLEWAT (>{BATAS_TERLEWAT_DETIK:.0f} dtk).")
     if on_terlewat:
         try:
@@ -174,7 +215,15 @@ def _selesaikan(kid: str, status: str, oleh: str | None, sumber: str) -> dict | 
         rec["t_selesai"] = now
         rec["respons_detik"] = round(now - rec["t_muncul"], 1) if rec.get("t_muncul") else None
         _tulis_baris(rec)
+        _lepas_aktif(kid)
         return rec
+
+
+def _lepas_aktif(kid: str):
+    """Lepas kejadian dari daftar aktif agar kemunculan berikutnya jadi record baru."""
+    for k, v in list(_aktif.items()):
+        if v.get("id") == kid:
+            _aktif.pop(k, None)
 
 
 def catat_ditangani(kid: str, oleh: str | None = None, sumber: str = "telegram"):
@@ -213,6 +262,7 @@ def hapus_semua() -> int:
                 pass
         _timers.clear()
         _state.clear()
+        _aktif.clear()
         try:
             if _LOG_PATH.exists():
                 _LOG_PATH.unlink()

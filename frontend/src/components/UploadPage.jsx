@@ -36,20 +36,6 @@ function IconShelf() {
   )
 }
 
-function IconBoth() {
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      {/* Gabungan: orang berdiri + simbol kamera kecil */}
-      <circle cx="16" cy="5" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <line x1="16" y1="8"  x2="16" y2="19" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="16" y1="12" x2="10" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="16" y1="12" x2="22" y2="16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="16" y1="19" x2="12" y2="27" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <line x1="16" y1="19" x2="20" y2="27" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  )
-}
-
 const CAMERA_OPTIONS = [
   {
     id: 'lorong',
@@ -72,17 +58,6 @@ const CAMERA_OPTIONS = [
     colorClass: 'selected-rak',
     chipClass: 'chip-bantu',
     labelColor: 'var(--bantu)',
-  },
-  {
-    id: 'both',
-    Icon: IconBoth,
-    label: 'Semua Fitur',
-    desc: 'Aktifkan kedua jenis deteksi sekaligus',
-    feature: 'Jatuh + pelayanan',
-    note: 'Cocok untuk klip kamera general yang mencakup lorong sekaligus area rak.',
-    colorClass: 'selected-both',
-    chipClass: 'chip-sigap',
-    labelColor: 'var(--sigap)',
   },
 ]
 
@@ -164,7 +139,7 @@ function CameraCard({ option, selected, onSelect }) {
 
 export default function UploadPage({ onAnalyze, error, onClearError }) {
   const [file, setFile] = useState(null)
-  const [cameraType, setCameraType] = useState('both')
+  const [cameraType, setCameraType] = useState('lorong')
   const [isDragging, setIsDragging] = useState(false)
   // Error validasi format file — ditampilkan sebagai banner dalam UI, BUKAN window.alert.
   const [fileError, setFileError] = useState(null)

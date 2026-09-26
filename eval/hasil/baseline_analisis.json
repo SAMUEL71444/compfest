@@ -1,0 +1,231 @@
+{
+  "sumber": {
+    "fall": "eval/fall_cv_summary.json",
+    "interaction": "eval/interaction_cv_summary.json"
+  },
+  "kepala_jatuh": {
+    "kelas": [
+      "normal",
+      "oleng",
+      "jatuh"
+    ],
+    "confusion_matrix": [
+      [
+        14285,
+        582,
+        469
+      ],
+      [
+        790,
+        3913,
+        113
+      ],
+      [
+        367,
+        143,
+        3302
+      ]
+    ],
+    "metrik": {
+      "per_kelas": {
+        "normal": {
+          "precision": 0.9251,
+          "recall": 0.9315,
+          "f1": 0.9283,
+          "dukungan": 15336
+        },
+        "oleng": {
+          "precision": 0.8437,
+          "recall": 0.8125,
+          "f1": 0.8278,
+          "dukungan": 4816
+        },
+        "jatuh": {
+          "precision": 0.8502,
+          "recall": 0.8662,
+          "f1": 0.8581,
+          "dukungan": 3812
+        }
+      },
+      "akurasi": 0.8972,
+      "macro_f1": 0.8714
+    },
+    "top_pasangan_tertukar": [
+      {
+        "kelas_a": "normal",
+        "kelas_b": "oleng",
+        "normal_ke_oleng": 582,
+        "oleng_ke_normal": 790,
+        "total_tertukar": 1372
+      },
+      {
+        "kelas_a": "normal",
+        "kelas_b": "jatuh",
+        "normal_ke_jatuh": 469,
+        "jatuh_ke_normal": 367,
+        "total_tertukar": 836
+      },
+      {
+        "kelas_a": "oleng",
+        "kelas_b": "jatuh",
+        "oleng_ke_jatuh": 113,
+        "jatuh_ke_oleng": 143,
+        "total_tertukar": 256
+      }
+    ]
+  },
+  "kepala_interaksi": {
+    "kelas": [
+      "background",
+      "reach",
+      "retract",
+      "hand_in_shelf",
+      "inspect_product",
+      "inspect_shelf"
+    ],
+    "confusion_matrix": [
+      [
+        2128,
+        141,
+        149,
+        38,
+        83,
+        574
+      ],
+      [
+        42,
+        820,
+        261,
+        203,
+        106,
+        234
+      ],
+      [
+        62,
+        308,
+        885,
+        181,
+        130,
+        246
+      ],
+      [
+        40,
+        225,
+        185,
+        663,
+        51,
+        45
+      ],
+      [
+        169,
+        173,
+        276,
+        124,
+        1318,
+        649
+      ],
+      [
+        436,
+        342,
+        279,
+        52,
+        347,
+        2200
+      ]
+    ],
+    "metrik": {
+      "per_kelas": {
+        "background": {
+          "precision": 0.7397,
+          "recall": 0.6836,
+          "f1": 0.7105,
+          "dukungan": 3113
+        },
+        "reach": {
+          "precision": 0.4082,
+          "recall": 0.4922,
+          "f1": 0.4463,
+          "dukungan": 1666
+        },
+        "retract": {
+          "precision": 0.4349,
+          "recall": 0.4884,
+          "f1": 0.4601,
+          "dukungan": 1812
+        },
+        "hand_in_shelf": {
+          "precision": 0.5258,
+          "recall": 0.5484,
+          "f1": 0.5368,
+          "dukungan": 1209
+        },
+        "inspect_product": {
+          "precision": 0.6477,
+          "recall": 0.4865,
+          "f1": 0.5556,
+          "dukungan": 2709
+        },
+        "inspect_shelf": {
+          "precision": 0.5572,
+          "recall": 0.6018,
+          "f1": 0.5786,
+          "dukungan": 3656
+        }
+      },
+      "akurasi": 0.5658,
+      "macro_f1": 0.548
+    },
+    "top_pasangan_tertukar": [
+      {
+        "kelas_a": "background",
+        "kelas_b": "inspect_shelf",
+        "background_ke_inspect_shelf": 574,
+        "inspect_shelf_ke_background": 436,
+        "total_tertukar": 1010
+      },
+      {
+        "kelas_a": "inspect_product",
+        "kelas_b": "inspect_shelf",
+        "inspect_product_ke_inspect_shelf": 649,
+        "inspect_shelf_ke_inspect_product": 347,
+        "total_tertukar": 996
+      },
+      {
+        "kelas_a": "reach",
+        "kelas_b": "inspect_shelf",
+        "reach_ke_inspect_shelf": 234,
+        "inspect_shelf_ke_reach": 342,
+        "total_tertukar": 576
+      }
+    ],
+    "reevaluasi_2kelas_inspecting_vs_other": {
+      "per_kelas": {
+        "other": {
+          "precision": 0.7738,
+          "recall": 0.8117,
+          "f1": 0.7923,
+          "dukungan": 7800
+        },
+        "inspecting": {
+          "precision": 0.7545,
+          "recall": 0.7092,
+          "f1": 0.7311,
+          "dukungan": 6365
+        }
+      },
+      "akurasi": 0.7656,
+      "macro_f1": 0.7617,
+      "confusion_matrix_2x2": [
+        [
+          6331,
+          1469
+        ],
+        [
+          1851,
+          4514
+        ]
+      ],
+      "catatan": "inspecting = inspect_product + inspect_shelf (indeks [4, 5]); other = 4 kelas lain. Ini metrik yang relevan untuk fitur 'butuh bantuan' karena pipeline (lihat analyze.py) hanya memakai argmax masuk ke inspect_idx, bukan 6 kelas penuh."
+    }
+  }
+}

@@ -103,13 +103,35 @@ export default function SeragamPage() {
   return (
     <div className="page-container seragam-page">
       <nav className="navbar">
-        <div className="seragam-nav-left">
-          <button className="seragam-back" onClick={() => navigate('/')} aria-label="Kembali ke halaman utama">
-            <span aria-hidden="true">‹</span> Home
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Tombol kembali eksplisit — konsisten dgn halaman lain */}
+          <button
+            onClick={() => navigate('/')}
+            aria-label="Kembali ke halaman utama"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.14)',
+              border: '1.5px solid rgba(255,255,255,0.28)',
+              borderRadius: 50, color: 'white',
+              fontSize: 13, fontWeight: 600,
+              padding: '6px 14px 6px 10px',
+              cursor: 'pointer', fontFamily: 'inherit',
+              transition: 'background 150ms',
+            }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.24)'}
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M9 2L4 7l5 5" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Home
           </button>
-          <button className="navbar-brand" onClick={() => navigate('/')}>
+
+          <button className="navbar-brand" onClick={() => navigate('/')}
+            style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}
+            aria-label="Kembali ke halaman utama">
             <div className="navbar-logo"><img src="/sapa.png" alt="SAPA Logo" /></div>
-            <div><div className="navbar-title">SAPA</div><div className="navbar-subtitle">Kelola Seragam</div></div>
+            <div><div className="navbar-title">SAPA</div></div>
           </button>
         </div>
         <div className="navbar-badge">Tanpa wajah · Hanya ciri pakaian</div>
